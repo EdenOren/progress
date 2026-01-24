@@ -1,6 +1,5 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppError } from '@progress/shared';
 
 // Create a client with default options
 const queryClient = new QueryClient({
@@ -18,14 +17,6 @@ const queryClient = new QueryClient({
     mutations: {
       // Retry mutations once
       retry: 1,
-      // Handle errors globally
-      onError: (error) => {
-        if (error instanceof AppError) {
-          console.error(`[${error.code}] ${error.message}`);
-        } else {
-          console.error('Mutation error:', error);
-        }
-      },
     },
   },
 });

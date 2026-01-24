@@ -10,12 +10,10 @@ import {
 
 export interface ErrorHandlerOptions {
   showAlert?: boolean;
-  logToConsole?: boolean;
 }
 
 const defaultOptions: ErrorHandlerOptions = {
   showAlert: true,
-  logToConsole: __DEV__,
 };
 
 /**
@@ -71,14 +69,6 @@ export function handleError(
   const opts = { ...defaultOptions, ...options };
   const message = getErrorMessage(error);
 
-  // Log to console in development
-  if (opts.logToConsole) {
-    if (error instanceof AppError) {
-      console.error(`[${error.code}] ${error.message}`, error);
-    } else {
-      console.error('Error:', error);
-    }
-  }
 
   // Show alert to user
   if (opts.showAlert) {

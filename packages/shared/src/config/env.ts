@@ -53,9 +53,7 @@ export interface EnvValidationResult {
  * @throws Error if validation fails
  */
 export function validateEnv(env: Record<string, unknown>): Env {
-  console.log(env);
   const result = envSchema.safeParse(env);
-  console.log('Validating environment variables...', result);
   if (!result.success) {
     const errors = result.error.issues.map((issue) => {
       const path = issue.path.join('.');

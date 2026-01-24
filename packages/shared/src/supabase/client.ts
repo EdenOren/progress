@@ -255,8 +255,6 @@ let supabaseInstance: SupabaseClient<Database> | null = null;
  * ```
  */
 export function initSupabase(env: Env): SupabaseClient<Database> {
-  console.log(supabaseInstance, env);
-  
   if (supabaseInstance) {
     return supabaseInstance;
   }
