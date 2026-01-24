@@ -58,7 +58,7 @@ export default function SignupScreen(): React.ReactElement {
       router.replace('/(tabs)');
     } else {
       router.replace({
-        pathname: '/(auth)signup-success',
+        pathname: '/(auth)/signup-success' as any,
         params: { email: data.email },
       });
     }
