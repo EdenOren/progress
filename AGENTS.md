@@ -12,6 +12,7 @@ This document defines the three agents responsible for building Progress, their 
 | **UI/UX Designer** | `docs/design/`, `tamagui.config.ts` | Defines HOW it looks and feels |
 | **Backend** | `supabase/`, `packages/shared/` | Defines data layer and API |
 | **Frontend** | `apps/mobile/` | Implements the UI |
+| **QA** | `docs/qa/` | Finds bugs, validates quality |
 
 ---
 
@@ -215,6 +216,68 @@ export { subjectSchema, subjectInsertSchema } from './schemas/subject';
 - Screen descriptions
 - User flows
 - UI requirements
+
+---
+
+## QA / Testing Agent
+
+### Ownership
+- `docs/qa/` - QA reports, test findings, regression notes
+
+### Responsibilities
+- Review the entire app codebase for bugs, logic errors, and edge cases
+- Identify UX issues (missing states, dead-end flows, unclear feedback)
+- Identify code quality issues (missing error handling, type safety gaps)
+- Identify architectural violations (direct Supabase access, missing validation)
+- Verify acceptance criteria from story specs
+- Produce a categorized report of findings
+
+### Review Checklist
+1. **Auth flows**: signup, login, logout, session expiry, email verification
+2. **CRUD operations**: create, read, update, delete for all entities
+3. **Error states**: network failures, validation errors, not-found, unauthorized
+4. **Loading states**: spinners, skeletons, disabled buttons during async ops
+5. **Empty states**: first-time user experience, no data scenarios
+6. **Navigation**: back buttons, deep links, tab switching, route params
+7. **Data integrity**: cascade deletes, orphaned records, stale cache
+8. **Type safety**: any types, missing null checks, unvalidated data
+9. **UX consistency**: spacing, colors, fonts match design tokens
+10. **Platform**: web vs native differences, safe areas, keyboard handling
+
+### Report Format
+```markdown
+## QA Report - [Date]
+
+### Critical Bugs
+| # | Location | Issue | Impact |
+|---|----------|-------|--------|
+
+### Non-Critical Bugs
+| # | Location | Issue | Impact |
+|---|----------|-------|--------|
+
+### UX Improvements
+| # | Screen | Suggestion | Priority |
+|---|--------|------------|----------|
+
+### Code Quality
+| # | File | Issue | Severity |
+|---|------|-------|----------|
+```
+
+### Does NOT
+- Fix bugs directly (reports them for Frontend/Backend to fix)
+- Create stories (hands findings to Product)
+- Make design decisions (flags issues for UI/UX Designer)
+
+### Handoff TO Product
+Provide:
+- Categorized findings report
+- Severity ratings (critical, high, medium, low)
+- Reproduction steps for bugs
+- Suggestions for feature improvements
+
+Product then creates stories/fixes from the report.
 
 ---
 
