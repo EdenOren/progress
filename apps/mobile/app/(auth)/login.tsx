@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Image } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { Link, router } from 'expo-router';
@@ -67,6 +68,11 @@ export default function LoginScreen(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }}>
       <YStack flex={1} padding="$5" justifyContent="center" gap="$4">
+        <Image
+          source={require('../../assets/logo.png')}
+          style={{ width: 64, height: 64, marginBottom: 16 }}
+        />
+
         <YStack gap="$2" marginBottom="$6">
           <Text fontSize={28} fontWeight="700" color="$color">
             Welcome back
