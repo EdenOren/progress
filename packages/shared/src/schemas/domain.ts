@@ -7,8 +7,8 @@ import { z } from 'zod';
 /** UUID validation */
 export const uuidSchema = z.string().uuid('Invalid UUID format');
 
-/** ISO 8601 date-time string */
-export const isoDateTimeSchema = z.string().datetime({ message: 'Invalid datetime format' });
+/** ISO 8601 date-time string (accepts both Z and +HH:MM offset formats from Supabase) */
+export const isoDateTimeSchema = z.string().datetime({ offset: true, message: 'Invalid datetime format' });
 
 /** ISO 8601 date string (YYYY-MM-DD) */
 export const isoDateSchema = z.string().regex(
