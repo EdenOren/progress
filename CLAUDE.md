@@ -224,24 +224,26 @@ A task is complete when:
 3. Handle loading and error states
 4. Use `Stack.Screen` options for header customization
 
-### Story Branching
+### Branching Convention
 
-Each story gets its own branch off `develop`. Branch naming:
+All work (features and bug fixes) gets its own branch off `develop`.
 
 ```
-story/<number>-<short-description>
+story/<number>-<short-description>   # Features
+fix/<number>-<short-description>     # Bug fixes
 ```
 
 Examples:
 - `story/1-signup-feedback`
-- `story/2-entry-notes`
-- `story/3-dark-mode-toggle`
+- `story/2-delete-workout`
+- `fix/1-datetime-schema`
+- `fix/2-route-path`
 
 Workflow:
 1. Create branch from `develop`: `git checkout -b story/<n>-<name> develop`
-2. Implement the story with commits on that branch
+2. Implement with commits on that branch
 3. Push and merge back to `develop` when complete
-4. **Always** delete the story branch after merge (local + remote)
+4. **Always** delete the branch after merge (local + remote)
 
 ---
 
