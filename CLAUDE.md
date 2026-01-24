@@ -224,6 +224,26 @@ A task is complete when:
 3. Handle loading and error states
 4. Use `Stack.Screen` options for header customization
 
+### Story Branching
+
+Each story gets its own branch off `develop`. Branch naming:
+
+```
+story/<number>-<short-description>
+```
+
+Examples:
+- `story/1-signup-feedback`
+- `story/2-entry-notes`
+- `story/3-dark-mode-toggle`
+
+Workflow:
+1. Create branch from `develop`: `git checkout -b story/<n>-<name> develop`
+2. Implement the story with commits on that branch
+3. Push and merge back to `develop` when complete
+
+---
+
 ### Modifying Database Schema
 
 1. Create new migration file in `supabase/migrations/`
