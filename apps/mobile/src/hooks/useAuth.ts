@@ -25,16 +25,21 @@ export interface SignInParams {
   password: string;
 }
 
+export interface SignUpResult {
+  confirmed: boolean;
+}
+
 export interface UseAuthReturn {
   user: ReturnType<typeof useSupabaseContext>['user'];
   session: ReturnType<typeof useSupabaseContext>['session'];
   isLoading: boolean;
   isAuthenticated: boolean;
-  signUp: (params: SignUpParams) => Promise<Result<void>>;
+  signUp: (params: SignUpParams) => Promise<Result<SignUpResult>>;
   signIn: (params: SignInParams) => Promise<Result<void>>;
   signInWithGoogle: () => Promise<Result<void>>;
   signOut: () => Promise<Result<void>>;
   resetPassword: (email: string) => Promise<Result<void>>;
+  resendVerification: (email: string) => Promise<Result<void>>;
 }
 
 export function useAuth(): UseAuthReturn {
@@ -42,10 +47,10 @@ export function useAuth(): UseAuthReturn {
 
   const isAuthenticated = useMemo(() => !!session, [session]);
 
-  const signUp = useCallback(async (params: SignUpParams): Promise<Result<void>> => {
+  const signUp = useCallback(async (params: SignUpParams): Promise<Result<SignUpResult>> => {
     try {
       const supabase = getSupabase();
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: params.email,
         password: params.password,
         options: {
@@ -59,7 +64,8 @@ export function useAuth(): UseAuthReturn {
         return err(mapSupabaseAuthError(error));
       }
 
-      return ok(undefined);
+      const confirmed = !!data.session;
+      return ok({ confirmed });
     } catch (e) {
       return err(new AppError('Sign up failed', 'SIGNUP_ERROR'));
     }
@@ -170,6 +176,24 @@ export function useAuth(): UseAuthReturn {
     }
   }, []);
 
+  const resendVerification = useCallback(async (email: string): Promise<Result<void>> => {
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+
+      if (error) {
+        return err(mapSupabaseAuthError(error));
+      }
+
+      return ok(undefined);
+    } catch (e) {
+      return err(new AppError('Failed to resend verification email', 'RESEND_ERROR'));
+    }
+  }, []);
+
   return {
     user,
     session,
@@ -180,5 +204,6 @@ export function useAuth(): UseAuthReturn {
     signInWithGoogle,
     signOut,
     resetPassword,
+    resendVerification,
   };
 }

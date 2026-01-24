@@ -6,7 +6,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert } from 'react-native';
 import { Button, Input } from '../../src/components';
 import { useAuth } from '../../src/hooks';
 import { getErrorMessage } from '../../src/utils';
@@ -55,17 +54,13 @@ export default function SignupScreen(): React.ReactElement {
 
     if (!result.success) {
       setError(getErrorMessage(result.error));
+    } else if (result.data.confirmed) {
+      router.replace('/(tabs)');
     } else {
-      Alert.alert(
-        'Check your email',
-        'We sent you a confirmation link. Please verify your email to continue.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(auth)/login'),
-          },
-        ]
-      );
+      router.replace({
+        pathname: '/(auth)signup-success',
+        params: { email: data.email },
+      });
     }
 
     setIsLoading(false);
