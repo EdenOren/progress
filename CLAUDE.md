@@ -241,6 +241,7 @@ Workflow:
 1. Create branch from `develop`: `git checkout -b story/<n>-<name> develop`
 2. Implement the story with commits on that branch
 3. Push and merge back to `develop` when complete
+4. **Always** delete the story branch after merge (local + remote)
 
 ---
 
