@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ScrollView, Alert } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
-import { Text } from '@tamagui/core';
-import { useLocalSearchParams, Stack, router } from 'expo-router';
+import { Text, Stack, useTheme } from '@tamagui/core';
+import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, compareItemProgress } from '@progress/shared';
 import type { ItemWithSets } from '@progress/shared';
@@ -26,6 +26,7 @@ export default function EntryScreen(): React.ReactElement {
   const completeEntry = useCompleteEntry();
   const deleteEntry = useDeleteEntry();
   const [showAddItem, setShowAddItem] = useState(false);
+  const theme = useTheme();
 
   const handleComplete = async (): Promise<void> => {
     if (!id) return;
@@ -68,7 +69,6 @@ export default function EntryScreen(): React.ReactElement {
     );
   };
 
-  // Get comparison data for items
   const getItemComparison = (item: ItemWithSets) => {
     if (!lastEntry) return null;
     const comparisons = compareItemProgress([item], lastEntry.items);
@@ -94,7 +94,7 @@ export default function EntryScreen(): React.ReactElement {
 
   return (
     <>
-      <Stack.Screen
+      <RouterStack.Screen
         options={{
           title: formatDate(entry.performed_at),
           headerBackTitle: 'Back',
@@ -105,56 +105,60 @@ export default function EntryScreen(): React.ReactElement {
           ),
         }}
       />
-      <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
         >
           {/* Status */}
-          <Card style={{ marginBottom: 16 }}>
-            <XStack justifyContent="space-between" alignItems="center">
-              <Text fontSize="$3" color="$placeholderColor">
-                Status
-              </Text>
-              {entry.is_completed ? (
-                <YStack
-                  backgroundColor="$success"
-                  paddingHorizontal="$3"
-                  paddingVertical="$1.5"
-                  borderRadius="$2"
-                >
-                  <Text fontSize="$2" color="white" fontWeight="600">
-                    Completed
-                  </Text>
-                </YStack>
-              ) : (
-                <YStack
-                  backgroundColor="$warning"
-                  paddingHorizontal="$3"
-                  paddingVertical="$1.5"
-                  borderRadius="$2"
-                >
-                  <Text fontSize="$2" color="white" fontWeight="600">
-                    In Progress
-                  </Text>
-                </YStack>
-              )}
-            </XStack>
-          </Card>
+          <Stack marginBottom={16}>
+            <Card>
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text fontSize={14} color="$textSecondary">
+                  Status
+                </Text>
+                {entry.is_completed ? (
+                  <Stack
+                    backgroundColor="rgba(16, 185, 129, 0.15)"
+                    paddingHorizontal={12}
+                    paddingVertical={6}
+                    borderRadius={9999}
+                  >
+                    <Text fontSize={13} color="$success" fontWeight="600">
+                      Completed
+                    </Text>
+                  </Stack>
+                ) : (
+                  <Stack
+                    backgroundColor="rgba(245, 158, 11, 0.15)"
+                    paddingHorizontal={12}
+                    paddingVertical={6}
+                    borderRadius={9999}
+                  >
+                    <Text fontSize={13} color="$warning" fontWeight="600">
+                      In Progress
+                    </Text>
+                  </Stack>
+                )}
+              </XStack>
+            </Card>
+          </Stack>
 
           {/* Last time comparison hint */}
           {lastEntry && (
-            <Card style={{ marginBottom: 16, backgroundColor: '#1f2937' }}>
-              <Text fontSize="$2" color="$placeholderColor">
-                Comparing with your session from {formatDate(lastEntry.performed_at)}
-              </Text>
-            </Card>
+            <Stack marginBottom={16}>
+              <Card>
+                <Text fontSize={13} color="$textSecondary">
+                  Comparing with your session from {formatDate(lastEntry.performed_at)}
+                </Text>
+              </Card>
+            </Stack>
           )}
 
           {/* Items list */}
-          <YStack gap="$3">
+          <YStack gap={16}>
             <XStack justifyContent="space-between" alignItems="center">
-              <Text fontSize="$5" fontWeight="600" color="$color">
+              <Text fontSize={18} fontWeight="600" color="$color">
                 Exercises
               </Text>
               <Button
@@ -168,8 +172,8 @@ export default function EntryScreen(): React.ReactElement {
 
             {entry.items.length === 0 ? (
               <Card>
-                <YStack alignItems="center" padding="$4" gap="$2">
-                  <Text color="$placeholderColor" textAlign="center">
+                <YStack alignItems="center" padding={16} gap={12}>
+                  <Text color="$textSecondary" textAlign="center">
                     No exercises yet. Add your first exercise to get started.
                   </Text>
                   <Button
@@ -195,39 +199,43 @@ export default function EntryScreen(): React.ReactElement {
 
           {/* Notes */}
           {entry.notes && (
-            <Card style={{ marginTop: 16 }}>
-              <YStack gap="$2">
-                <Text fontSize="$3" fontWeight="600" color="$color">
-                  Notes
-                </Text>
-                <Text fontSize="$3" color="$placeholderColor">
-                  {entry.notes}
-                </Text>
-              </YStack>
-            </Card>
+            <Stack marginTop={16}>
+              <Card>
+                <YStack gap={8}>
+                  <Text fontSize={14} fontWeight="600" color="$color">
+                    Notes
+                  </Text>
+                  <Text fontSize={14} color="$textSecondary">
+                    {entry.notes}
+                  </Text>
+                </YStack>
+              </Card>
+            </Stack>
           )}
         </ScrollView>
 
         {/* Bottom actions */}
         {!entry.is_completed && (
-          <YStack
+          <Stack
             position="absolute"
-            bottom={20}
-            left={0}
-            right={0}
-            paddingHorizontal="$4"
-            gap="$2"
+            bottom={24}
+            right={24}
+            backgroundColor="$primary"
+            borderRadius={9999}
+            paddingHorizontal={24}
+            height={52}
+            alignItems="center"
+            justifyContent="center"
+            pressStyle={{
+              scale: 0.94,
+              backgroundColor: '$primaryDark',
+            }}
+            onPress={handleComplete}
           >
-            <Button
-              variant="primary"
-              fullWidth
-              size="large"
-              loading={completeEntry.isPending}
-              onPress={handleComplete}
-            >
+            <Text color="white" fontWeight="600" fontSize={15}>
               Complete Session
-            </Button>
-          </YStack>
+            </Text>
+          </Stack>
         )}
 
         <AddItemModal

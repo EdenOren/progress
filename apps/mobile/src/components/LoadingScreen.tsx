@@ -1,30 +1,28 @@
 import React from 'react';
-import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { YStack } from '@tamagui/stacks';
+import { Text, useTheme } from '@tamagui/core';
 
 interface LoadingScreenProps {
   message?: string;
 }
 
 export function LoadingScreen({ message }: LoadingScreenProps): React.ReactElement {
+  const theme = useTheme();
+
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#60a5fa" />
+    <YStack
+      flex={1}
+      justifyContent="center"
+      alignItems="center"
+      backgroundColor="$background"
+    >
+      <ActivityIndicator size="large" color={theme.primary?.val ?? '#8B5CF6'} />
       {message && (
-        <Text style={styles.message}>{message}</Text>
+        <Text marginTop={16} fontSize={14} color="$textSecondary">
+          {message}
+        </Text>
       )}
-    </View>
+    </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#0a0a0a',
-  },
-  message: {
-    marginTop: 16,
-    color: '#9ca3af',
-  },
-});

@@ -1,12 +1,12 @@
 import React from 'react';
 import { FlatList, RefreshControl } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
-import { Text } from '@tamagui/core';
-import { useLocalSearchParams, Stack, router } from 'expo-router';
+import { Text, Stack, useTheme } from '@tamagui/core';
+import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
-import { Card, Button, EmptyState, LoadingScreen } from '../../src/components';
+import { Card, EmptyState, LoadingScreen } from '../../src/components';
 import { useSubject, useEntries, useCreateEntry } from '../../src/hooks';
 
 export default function SubjectDetailScreen(): React.ReactElement {
@@ -14,6 +14,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
   const { data: subject, isLoading: subjectLoading } = useSubject(id);
   const { data: entries, isLoading: entriesLoading, refetch, isRefetching } = useEntries(id);
   const createEntry = useCreateEntry();
+  const theme = useTheme();
 
   const handleStartEntry = async (): Promise<void> => {
     if (!id) return;
@@ -41,52 +42,48 @@ export default function SubjectDetailScreen(): React.ReactElement {
   };
 
   const renderEntry = ({ item }: { item: Entry }): React.ReactElement => (
-    <Card
-      pressable
-      onPress={() => handleEntryPress(item)}
-      style={{ marginHorizontal: 16, marginBottom: 12 }}
-    >
-      <XStack justifyContent="space-between" alignItems="center">
-        <YStack gap="$1">
-          <Text fontSize="$4" fontWeight="600" color="$color">
-            {formatDate(item.performed_at)}
-          </Text>
-          <Text fontSize="$2" color="$placeholderColor">
-            {formatRelativeDate(item.performed_at)}
-          </Text>
-        </YStack>
-        <XStack alignItems="center" gap="$2">
+    <Stack marginHorizontal={16} marginBottom={12}>
+      <Card pressable onPress={() => handleEntryPress(item)}>
+        <XStack justifyContent="space-between" alignItems="center">
+          <YStack gap={4}>
+            <Text fontSize={16} fontWeight="600" color="$color">
+              {formatDate(item.performed_at)}
+            </Text>
+            <Text fontSize={14} color="$textMuted">
+              {formatRelativeDate(item.performed_at)}
+            </Text>
+          </YStack>
           {item.is_completed ? (
-            <YStack
-              backgroundColor="$success"
-              paddingHorizontal="$2"
-              paddingVertical="$1"
-              borderRadius="$2"
+            <Stack
+              backgroundColor="rgba(16, 185, 129, 0.15)"
+              paddingHorizontal={10}
+              paddingVertical={4}
+              borderRadius={9999}
             >
-              <Text fontSize="$1" color="white" fontWeight="600">
+              <Text fontSize={12} fontWeight="600" color="$success">
                 Completed
               </Text>
-            </YStack>
+            </Stack>
           ) : (
-            <YStack
-              backgroundColor="$warning"
-              paddingHorizontal="$2"
-              paddingVertical="$1"
-              borderRadius="$2"
+            <Stack
+              backgroundColor="rgba(245, 158, 11, 0.15)"
+              paddingHorizontal={10}
+              paddingVertical={4}
+              borderRadius={9999}
             >
-              <Text fontSize="$1" color="white" fontWeight="600">
+              <Text fontSize={12} fontWeight="600" color="$warning">
                 In Progress
               </Text>
-            </YStack>
+            </Stack>
           )}
         </XStack>
-      </XStack>
-      {item.notes && (
-        <Text fontSize="$2" color="$placeholderColor" marginTop="$2" numberOfLines={2}>
-          {item.notes}
-        </Text>
-      )}
-    </Card>
+        {item.notes && (
+          <Text fontSize={14} color="$textSecondary" marginTop={8} numberOfLines={2} fontStyle="italic">
+            {item.notes}
+          </Text>
+        )}
+      </Card>
+    </Stack>
   );
 
   if (subjectLoading || entriesLoading) {
@@ -106,17 +103,17 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
   return (
     <>
-      <Stack.Screen
+      <RouterStack.Screen
         options={{
           title: subject.name,
           headerBackTitle: 'Back',
         }}
       />
-      <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
         <YStack flex={1}>
           {subject.description && (
-            <YStack padding="$4" paddingBottom="$2">
-              <Text fontSize="$3" color="$placeholderColor">
+            <YStack paddingHorizontal={16} paddingTop={16} paddingBottom={8}>
+              <Text fontSize={14} color="$textSecondary">
                 {subject.description}
               </Text>
             </YStack>
@@ -145,23 +142,26 @@ export default function SubjectDetailScreen(): React.ReactElement {
           />
 
           {(entries?.length ?? 0) > 0 && (
-            <YStack
+            <Stack
               position="absolute"
-              bottom={20}
-              left={0}
-              right={0}
-              paddingHorizontal="$4"
+              bottom={24}
+              right={24}
+              backgroundColor="$primary"
+              borderRadius={9999}
+              paddingHorizontal={24}
+              height={52}
+              alignItems="center"
+              justifyContent="center"
+              pressStyle={{
+                scale: 0.94,
+                backgroundColor: '$primaryDark',
+              }}
+              onPress={handleStartEntry}
             >
-              <Button
-                variant="primary"
-                fullWidth
-                size="large"
-                loading={createEntry.isPending}
-                onPress={handleStartEntry}
-              >
-                Start Today's Session
-              </Button>
-            </YStack>
+              <Text color="white" fontWeight="600" fontSize={15}>
+                + Start Session
+              </Text>
+            </Stack>
           )}
         </YStack>
       </SafeAreaView>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { Stack, Text, useTheme } from '@tamagui/core';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'small' | 'medium' | 'large';
@@ -16,17 +17,10 @@ interface ButtonProps {
   backgroundColor?: string;
 }
 
-const variantStyles: Record<ButtonVariant, { bg: string; text: string; border?: string }> = {
-  primary: { bg: '#3b82f6', text: '#ffffff' },
-  secondary: { bg: '#1f2937', text: '#f9fafb', border: '#374151' },
-  ghost: { bg: 'transparent', text: '#60a5fa' },
-  danger: { bg: '#ef4444', text: '#ffffff' },
-};
-
-const sizeStyles: Record<ButtonSize, { height: number; px: number; fontSize: number }> = {
-  small: { height: 36, px: 12, fontSize: 13 },
-  medium: { height: 44, px: 16, fontSize: 15 },
-  large: { height: 52, px: 20, fontSize: 16 },
+const sizeConfig: Record<ButtonSize, { height: number; px: number; fontSize: number }> = {
+  small: { height: 36, px: 16, fontSize: 13 },
+  medium: { height: 44, px: 24, fontSize: 15 },
+  large: { height: 52, px: 32, fontSize: 16 },
 };
 
 export function Button({
@@ -38,39 +32,72 @@ export function Button({
   onPress,
   children,
   flex,
-  backgroundColor,
+  backgroundColor: bgOverride,
 }: ButtonProps): React.ReactElement {
-  const v = variantStyles[variant];
-  const s = sizeStyles[size];
+  const theme = useTheme();
+  const s = sizeConfig[size];
   const isDisabled = disabled || loading;
 
+  const variantStyles = {
+    primary: {
+      bg: theme.primary?.val ?? '#8B5CF6',
+      text: '#FFFFFF',
+      border: 'transparent',
+      pressedBg: theme.primaryDark?.val ?? '#7C3AED',
+    },
+    secondary: {
+      bg: 'transparent',
+      text: theme.primary?.val ?? '#8B5CF6',
+      border: theme.primary?.val ?? '#8B5CF6',
+      pressedBg: 'rgba(139, 92, 246, 0.1)',
+    },
+    ghost: {
+      bg: 'transparent',
+      text: theme.primaryLight?.val ?? '#A78BFA',
+      border: 'transparent',
+      pressedBg: 'rgba(139, 92, 246, 0.1)',
+    },
+    danger: {
+      bg: theme.error?.val ?? '#EF4444',
+      text: '#FFFFFF',
+      border: 'transparent',
+      pressedBg: '#DC2626',
+    },
+  };
+
+  const v = variantStyles[variant];
+
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={isDisabled}
-      style={({ pressed }) => [
-        {
-          height: s.height,
-          paddingHorizontal: s.px,
-          backgroundColor: backgroundColor || v.bg,
-          borderRadius: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: isDisabled ? 0.6 : pressed ? 0.8 : 1,
-          borderWidth: v.border ? 1 : 0,
-          borderColor: v.border,
-        },
-        fullWidth && { width: '100%' },
-        flex !== undefined && { flex },
-      ]}
+    <Stack
+      onPress={isDisabled ? undefined : onPress}
+      opacity={isDisabled ? 0.5 : 1}
+      height={s.height}
+      paddingHorizontal={s.px}
+      backgroundColor={bgOverride ?? v.bg}
+      borderRadius={8}
+      alignItems="center"
+      justifyContent="center"
+      borderWidth={v.border === 'transparent' ? 0 : 1}
+      borderColor={v.border}
+      width={fullWidth ? '100%' : undefined}
+      flex={flex}
+      pressStyle={{
+        backgroundColor: v.pressedBg,
+        scale: 0.96,
+      }}
+      cursor={isDisabled ? 'not-allowed' : 'pointer'}
     >
       {loading ? (
         <ActivityIndicator size="small" color={v.text} />
       ) : (
-        <Text style={{ color: v.text, fontSize: s.fontSize, fontWeight: '600' }}>
+        <Text
+          color={v.text}
+          fontSize={s.fontSize}
+          fontWeight="600"
+        >
           {children}
         </Text>
       )}
-    </Pressable>
+    </Stack>
   );
 }

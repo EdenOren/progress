@@ -111,7 +111,7 @@ export function ItemCard({ item, comparison, entryId }: ItemCardProps): React.Re
                 justifyContent="space-between"
                 alignItems="center"
               >
-                <Text fontSize="$2" color="$placeholderColor">
+                <Text fontSize="$2" color="$textMuted">
                   Set {index + 1}
                 </Text>
                 <XStack gap="$3">
@@ -184,7 +184,7 @@ export function ItemCard({ item, comparison, entryId }: ItemCardProps): React.Re
 
         {/* Feedback buttons */}
         <YStack gap="$2">
-          <Text fontSize="$2" color="$placeholderColor">
+          <Text fontSize="$2" color="$textMuted">
             How did it go?
           </Text>
           <XStack gap="$2">

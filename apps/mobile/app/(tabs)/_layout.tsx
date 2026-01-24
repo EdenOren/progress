@@ -4,22 +4,22 @@ import { useColorScheme } from 'react-native';
 
 export default function TabsLayout(): React.ReactElement {
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = colorScheme !== 'light';
 
   return (
     <Tabs
       screenOptions={{
         headerShown: true,
         headerStyle: {
-          backgroundColor: isDark ? '#0a0a0a' : '#ffffff',
+          backgroundColor: isDark ? '#09090B' : '#FFFFFF',
         },
-        headerTintColor: isDark ? '#ffffff' : '#111827',
+        headerTintColor: isDark ? '#FAFAFA' : '#18181B',
         tabBarStyle: {
-          backgroundColor: isDark ? '#0a0a0a' : '#ffffff',
-          borderTopColor: isDark ? '#1f2937' : '#e5e7eb',
+          backgroundColor: isDark ? '#18181B' : '#FFFFFF',
+          borderTopColor: isDark ? '#27272A' : '#E4E4E7',
         },
-        tabBarActiveTintColor: '#3b82f6',
-        tabBarInactiveTintColor: isDark ? '#6b7280' : '#9ca3af',
+        tabBarActiveTintColor: '#8B5CF6',
+        tabBarInactiveTintColor: isDark ? '#71717A' : '#A1A1AA',
       }}
     >
       <Tabs.Screen

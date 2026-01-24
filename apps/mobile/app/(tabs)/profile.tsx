@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
-import { Text } from '@tamagui/core';
+import { Text, Stack, useTheme } from '@tamagui/core';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Alert } from 'react-native';
 import { router } from 'expo-router';
@@ -12,6 +11,7 @@ import { useSupabaseContext } from '../../src/providers';
 export default function ProfileScreen(): React.ReactElement {
   const { user } = useSupabaseContext();
   const { signOut } = useAuth();
+  const theme = useTheme();
 
   const handleSignOut = (): void => {
     Alert.alert(
@@ -34,29 +34,29 @@ export default function ProfileScreen(): React.ReactElement {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
-      <YStack flex={1} padding="$4" gap="$4">
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
+      <YStack flex={1} padding={16} gap={16}>
         <Card>
-          <YStack gap="$3">
-            <YStack
-              width={80}
-              height={80}
-              borderRadius={40}
+          <YStack gap={16}>
+            <Stack
+              width={100}
+              height={100}
+              borderRadius={50}
               backgroundColor="$primary"
               justifyContent="center"
               alignItems="center"
               alignSelf="center"
             >
-              <Text fontSize="$8" fontWeight="700" color="white">
+              <Text fontSize={36} fontWeight="700" color="white">
                 {user?.email?.charAt(0).toUpperCase() ?? 'U'}
               </Text>
-            </YStack>
+            </Stack>
 
-            <YStack alignItems="center" gap="$1">
-              <Text fontSize="$5" fontWeight="600" color="$color">
+            <YStack alignItems="center" gap={4}>
+              <Text fontSize={18} fontWeight="600" color="$color">
                 {user?.user_metadata?.['display_name'] ?? 'User'}
               </Text>
-              <Text fontSize="$3" color="$placeholderColor">
+              <Text fontSize={14} color="$textSecondary">
                 {user?.email}
               </Text>
             </YStack>
@@ -64,20 +64,20 @@ export default function ProfileScreen(): React.ReactElement {
         </Card>
 
         <Card>
-          <YStack gap="$3">
-            <Text fontSize="$4" fontWeight="600" color="$color">
+          <YStack gap={16}>
+            <Text fontSize={16} fontWeight="600" color="$color">
               Account
             </Text>
-            <View style={styles.separator} />
+            <Stack height={1} backgroundColor="$borderColor" />
 
             <XStack justifyContent="space-between" alignItems="center">
-              <Text color="$color">Email</Text>
-              <Text color="$placeholderColor">{user?.email}</Text>
+              <Text fontSize={14} color="$color">Email</Text>
+              <Text fontSize={14} color="$textSecondary">{user?.email}</Text>
             </XStack>
 
             <XStack justifyContent="space-between" alignItems="center">
-              <Text color="$color">Member since</Text>
-              <Text color="$placeholderColor">
+              <Text fontSize={14} color="$color">Member since</Text>
+              <Text fontSize={14} color="$textSecondary">
                 {user?.created_at
                   ? new Date(user.created_at).toLocaleDateString()
                   : '-'}
@@ -95,10 +95,3 @@ export default function ProfileScreen(): React.ReactElement {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  separator: {
-    height: 1,
-    backgroundColor: '#374151',
-  },
-});

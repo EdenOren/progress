@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { FlatList, RefreshControl, ActivityIndicator } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
-import { Text } from '@tamagui/core';
+import { Text, Stack, useTheme } from '@tamagui/core';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatRelativeDate } from '@progress/shared';
-import { Card, Button, EmptyState } from '../../src/components';
+import { Card, EmptyState } from '../../src/components';
 import { useSubjectsWithStats } from '../../src/hooks';
 import { CreateSubjectModal } from '../../src/components/CreateSubjectModal';
 import type { SubjectWithStats } from '@progress/shared';
@@ -13,6 +13,7 @@ import type { SubjectWithStats } from '@progress/shared';
 export default function WorkoutsScreen(): React.ReactElement {
   const { data: subjects, isLoading, refetch, isRefetching } = useSubjectsWithStats();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const theme = useTheme();
 
   const handleSubjectPress = (subject: SubjectWithStats): void => {
     router.push({
@@ -22,44 +23,57 @@ export default function WorkoutsScreen(): React.ReactElement {
   };
 
   const renderSubject = ({ item }: { item: SubjectWithStats }): React.ReactElement => (
-    <Card
-      pressable
-      onPress={() => handleSubjectPress(item)}
-      style={{ marginHorizontal: 16, marginBottom: 12 }}
-    >
-      <YStack gap="$2">
-        <Text fontSize="$5" fontWeight="600" color="$color">
-          {item.name}
-        </Text>
-        {item.description && (
-          <Text fontSize="$2" color="$placeholderColor" numberOfLines={2}>
-            {item.description}
-          </Text>
-        )}
-        <XStack justifyContent="space-between" marginTop="$1">
-          <Text fontSize="$2" color="$placeholderColor">
-            {item.entry_count} {item.entry_count === 1 ? 'entry' : 'entries'}
-          </Text>
-          {item.last_entry_date && (
-            <Text fontSize="$2" color="$placeholderColor">
-              Last: {formatRelativeDate(item.last_entry_date)}
+    <Stack marginHorizontal={16} marginBottom={12}>
+      <Card pressable onPress={() => handleSubjectPress(item)}>
+        <XStack gap={16}>
+          <Stack
+            width={3}
+            backgroundColor="$primary"
+            borderRadius={9999}
+            alignSelf="stretch"
+          />
+          <YStack flex={1} gap={8}>
+            <Text fontSize={18} fontWeight="600" color="$color">
+              {item.name}
             </Text>
-          )}
+            {item.description && (
+              <Text fontSize={14} color="$textSecondary" numberOfLines={2}>
+                {item.description}
+              </Text>
+            )}
+            <XStack justifyContent="space-between" alignItems="center" marginTop={4}>
+              <Stack
+                backgroundColor="$surfaceHover"
+                paddingHorizontal={10}
+                paddingVertical={4}
+                borderRadius={9999}
+              >
+                <Text fontSize={12} color="$textSecondary">
+                  {item.entry_count} {item.entry_count === 1 ? 'entry' : 'entries'}
+                </Text>
+              </Stack>
+              {item.last_entry_date && (
+                <Text fontSize={12} color="$textMuted">
+                  {formatRelativeDate(item.last_entry_date)}
+                </Text>
+              )}
+            </XStack>
+          </YStack>
         </XStack>
-      </YStack>
-    </Card>
+      </Card>
+    </Stack>
   );
 
   if (isLoading) {
     return (
-      <YStack flex={1} justifyContent="center" alignItems="center">
-        <ActivityIndicator size="large" color="#60a5fa" />
+      <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
+        <ActivityIndicator size="large" color={theme.primary?.val ?? '#8B5CF6'} />
       </YStack>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
       <YStack flex={1}>
         <FlatList
           data={subjects ?? []}
@@ -84,22 +98,28 @@ export default function WorkoutsScreen(): React.ReactElement {
         />
 
         {(subjects?.length ?? 0) > 0 && (
-          <YStack
+          <Stack
             position="absolute"
-            bottom={20}
-            left={0}
-            right={0}
-            paddingHorizontal="$4"
+            bottom={24}
+            right={24}
+            backgroundColor="$primary"
+            borderRadius={9999}
+            paddingHorizontal={24}
+            height={52}
+            alignItems="center"
+            justifyContent="center"
+
+            pressStyle={{
+              scale: 0.94,
+              backgroundColor: '$primaryDark',
+            }}
+
+            onPress={() => setShowCreateModal(true)}
           >
-            <Button
-              variant="primary"
-              fullWidth
-              size="large"
-              onPress={() => setShowCreateModal(true)}
-            >
-              New Workout
-            </Button>
-          </YStack>
+            <Text color="white" fontWeight="600" fontSize={15}>
+              + New Workout
+            </Text>
+          </Stack>
         )}
 
         <CreateSubjectModal

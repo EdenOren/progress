@@ -1,91 +1,92 @@
 import { config } from '@tamagui/config/v3';
 import { createTamagui } from '@tamagui/core';
 
-// Custom color palette
-const customColors = {
-  // Primary - Blue
-  primary: '#3b82f6',
-  primaryLight: '#60a5fa',
-  primaryDark: '#2563eb',
+const colors = {
+  // Primary - Violet
+  primary: '#8B5CF6',
+  primaryLight: '#A78BFA',
+  primaryDark: '#7C3AED',
 
-  // Success - Green
-  success: '#22c55e',
-  successLight: '#4ade80',
-  successDark: '#16a34a',
+  // Semantic
+  success: '#10B981',
+  successLight: '#34D399',
+  warning: '#F59E0B',
+  warningLight: '#FBBF24',
+  error: '#EF4444',
+  errorLight: '#F87171',
 
-  // Warning - Yellow/Orange
-  warning: '#f59e0b',
-  warningLight: '#fbbf24',
-  warningDark: '#d97706',
-
-  // Error - Red
-  error: '#ef4444',
-  errorLight: '#f87171',
-  errorDark: '#dc2626',
-
-  // Neutral grays
-  gray1: '#f9fafb',
-  gray2: '#f3f4f6',
-  gray3: '#e5e7eb',
-  gray4: '#d1d5db',
-  gray5: '#9ca3af',
-  gray6: '#6b7280',
-  gray7: '#4b5563',
-  gray8: '#374151',
-  gray9: '#1f2937',
-  gray10: '#111827',
-  gray11: '#0a0a0a',
+  // Zinc neutral scale
+  zinc50: '#FAFAFA',
+  zinc100: '#F4F4F5',
+  zinc200: '#E4E4E7',
+  zinc400: '#A1A1AA',
+  zinc500: '#71717A',
+  zinc600: '#52525B',
+  zinc800: '#27272A',
+  zinc900: '#18181B',
+  zinc950: '#09090B',
 };
 
-// Custom themes
 const lightTheme = {
-  background: '#ffffff',
-  backgroundHover: customColors.gray2,
-  backgroundPress: customColors.gray3,
-  backgroundFocus: customColors.gray2,
-  backgroundStrong: customColors.gray1,
+  background: '#FFFFFF',
+  backgroundHover: colors.zinc100,
+  backgroundPress: colors.zinc200,
+  backgroundFocus: colors.zinc100,
+  backgroundStrong: colors.zinc100,
   backgroundTransparent: 'transparent',
-  color: customColors.gray10,
-  colorHover: customColors.gray11,
-  colorPress: customColors.gray9,
-  colorFocus: customColors.gray10,
+  color: colors.zinc900,
+  colorHover: colors.zinc950,
+  colorPress: colors.zinc800,
+  colorFocus: colors.zinc900,
   colorTransparent: 'transparent',
-  borderColor: customColors.gray3,
-  borderColorHover: customColors.gray4,
-  borderColorFocus: customColors.primary,
-  borderColorPress: customColors.gray4,
-  placeholderColor: customColors.gray5,
-  // Semantic colors
-  primary: customColors.primary,
-  primaryHover: customColors.primaryDark,
-  success: customColors.success,
-  warning: customColors.warning,
-  error: customColors.error,
+  borderColor: colors.zinc200,
+  borderColorHover: colors.zinc400,
+  borderColorFocus: colors.primary,
+  borderColorPress: colors.zinc400,
+  placeholderColor: colors.zinc400,
+  // Semantic
+  primary: colors.primary,
+  primaryLight: colors.primaryLight,
+  primaryDark: colors.primaryDark,
+  success: colors.success,
+  warning: colors.warning,
+  error: colors.error,
+  // Surface tokens
+  surface: colors.zinc100,
+  surfaceHover: colors.zinc200,
+  textSecondary: colors.zinc600,
+  textMuted: colors.zinc400,
 };
 
 const darkTheme = {
-  background: customColors.gray11,
-  backgroundHover: customColors.gray9,
-  backgroundPress: customColors.gray8,
-  backgroundFocus: customColors.gray9,
-  backgroundStrong: customColors.gray10,
+  background: colors.zinc950,
+  backgroundHover: colors.zinc800,
+  backgroundPress: colors.zinc800,
+  backgroundFocus: colors.zinc900,
+  backgroundStrong: colors.zinc900,
   backgroundTransparent: 'transparent',
-  color: customColors.gray1,
-  colorHover: '#ffffff',
-  colorPress: customColors.gray2,
-  colorFocus: customColors.gray1,
+  color: colors.zinc50,
+  colorHover: '#FFFFFF',
+  colorPress: colors.zinc100,
+  colorFocus: colors.zinc50,
   colorTransparent: 'transparent',
-  borderColor: customColors.gray8,
-  borderColorHover: customColors.gray7,
-  borderColorFocus: customColors.primaryLight,
-  borderColorPress: customColors.gray7,
-  placeholderColor: customColors.gray6,
-  // Semantic colors
-  primary: customColors.primaryLight,
-  primaryHover: customColors.primary,
-  success: customColors.successLight,
-  warning: customColors.warningLight,
-  error: customColors.errorLight,
+  borderColor: colors.zinc800,
+  borderColorHover: colors.zinc500,
+  borderColorFocus: colors.primary,
+  borderColorPress: colors.zinc500,
+  placeholderColor: colors.zinc500,
+  // Semantic
+  primary: colors.primary,
+  primaryLight: colors.primaryLight,
+  primaryDark: colors.primaryDark,
+  success: colors.success,
+  warning: colors.warning,
+  error: colors.error,
+  // Surface tokens
+  surface: colors.zinc900,
+  surfaceHover: colors.zinc800,
+  textSecondary: colors.zinc400,
+  textMuted: colors.zinc500,
 };
 
 const tamaguiConfig = createTamagui({

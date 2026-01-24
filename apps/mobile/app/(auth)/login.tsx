@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
-import { Text } from '@tamagui/core';
+import { Text, Stack, useTheme } from '@tamagui/core';
 import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
@@ -23,6 +22,7 @@ export default function LoginScreen(): React.ReactElement {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const theme = useTheme();
 
   const {
     control,
@@ -65,28 +65,27 @@ export default function LoginScreen(): React.ReactElement {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }}>
       <YStack flex={1} padding="$5" justifyContent="center" gap="$4">
-        <YStack gap="$2" marginBottom="$4">
-          <Text fontSize="$9" fontWeight="700" color="$color">
+        <YStack gap="$2" marginBottom="$6">
+          <Text fontSize={28} fontWeight="700" color="$color">
             Welcome back
           </Text>
-          <Text fontSize="$4" color="$placeholderColor">
+          <Text fontSize={16} color="$textSecondary">
             Sign in to continue tracking your progress
           </Text>
         </YStack>
 
         {error && (
-          <YStack
-            backgroundColor="$error"
-            padding="$3"
-            borderRadius="$3"
-            opacity={0.9}
+          <Stack
+            backgroundColor="rgba(239, 68, 68, 0.15)"
+            padding={16}
+            borderRadius={8}
           >
-            <Text color="white" fontSize="$2">
+            <Text color="$error" fontSize={14}>
               {error}
             </Text>
-          </YStack>
+          </Stack>
         )}
 
         <YStack gap="$3">
@@ -126,7 +125,7 @@ export default function LoginScreen(): React.ReactElement {
             )}
           />
 
-          <View style={{ marginTop: 8 }}>
+          <Stack marginTop={8}>
             <Button
               variant="primary"
               fullWidth
@@ -135,15 +134,15 @@ export default function LoginScreen(): React.ReactElement {
             >
               Sign In
             </Button>
-          </View>
+          </Stack>
         </YStack>
 
         <XStack alignItems="center" gap="$3" marginVertical="$2">
-          <View style={separatorStyles.line} />
-          <Text color="$placeholderColor" fontSize="$2">
+          <Stack flex={1} height={1} backgroundColor="$borderColor" />
+          <Text color="$textMuted" fontSize={12}>
             or
           </Text>
-          <View style={separatorStyles.line} />
+          <Stack flex={1} height={1} backgroundColor="$borderColor" />
         </XStack>
 
         <Button
@@ -156,9 +155,9 @@ export default function LoginScreen(): React.ReactElement {
         </Button>
 
         <XStack justifyContent="center" gap="$2" marginTop="$4">
-          <Text color="$placeholderColor">Don't have an account?</Text>
+          <Text color="$textSecondary">Don't have an account?</Text>
           <Link href="/(auth)/signup" asChild>
-            <Text color="$primary" fontWeight="600" pressStyle={{ opacity: 0.7 }}>
+            <Text color="$primaryLight" fontWeight="600" pressStyle={{ opacity: 0.7 }}>
               Sign Up
             </Text>
           </Link>
@@ -167,11 +166,3 @@ export default function LoginScreen(): React.ReactElement {
     </SafeAreaView>
   );
 }
-
-const separatorStyles = StyleSheet.create({
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#374151',
-  },
-});

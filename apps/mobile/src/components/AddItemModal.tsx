@@ -107,12 +107,11 @@ export function AddItemModal({
         {error && (
           <YStack
             marginBottom="$4"
-            backgroundColor="$error"
-            opacity={0.9}
-            padding="$3"
-            borderRadius="$3"
+            backgroundColor="rgba(239, 68, 68, 0.15)"
+            padding={16}
+            borderRadius={8}
           >
-            <Text color="white" fontSize="$2">
+            <Text color="$error" fontSize={14}>
               {error}
             </Text>
           </YStack>

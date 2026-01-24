@@ -1,55 +1,30 @@
 import React from 'react';
-import { View, Pressable, StyleSheet, ViewStyle } from 'react-native';
+import { Stack, useTheme } from '@tamagui/core';
 
 interface CardProps {
   children: React.ReactNode;
   pressable?: boolean;
-  elevated?: boolean;
   onPress?: () => void;
-  style?: ViewStyle;
+  padding?: number;
 }
 
-export function Card({ children, pressable, elevated, onPress, style }: CardProps): React.ReactElement {
-  const cardStyle = [
-    styles.card,
-    elevated && styles.elevated,
-    style,
-  ];
-
-  if (pressable && onPress) {
-    return (
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [
-          ...cardStyle,
-          pressed && styles.pressed,
-        ]}
-      >
-        {children}
-      </Pressable>
-    );
-  }
+export function Card({ children, pressable, onPress, padding }: CardProps): React.ReactElement {
+  const theme = useTheme();
 
   return (
-    <View style={cardStyle}>
+    <Stack
+      backgroundColor={theme.surface?.val ?? '#18181B'}
+      borderRadius={12}
+      padding={padding ?? 16}
+      borderWidth={1}
+      borderColor={theme.borderColor?.val ?? '#27272A'}
+      onPress={pressable && onPress ? onPress : undefined}
+      pressStyle={pressable ? {
+        backgroundColor: theme.surfaceHover?.val ?? '#27272A',
+        scale: 0.98,
+      } : undefined}
+    >
       {children}
-    </View>
+    </Stack>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#0a0a0a',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#374151',
-  },
-  elevated: {
-    elevation: 3,
-  },
-  pressed: {
-    backgroundColor: '#1f2937',
-    transform: [{ scale: 0.98 }],
-  },
-});

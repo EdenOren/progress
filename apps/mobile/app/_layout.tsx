@@ -6,15 +6,16 @@ import { AppProviders } from '../src/providers';
 
 export default function RootLayout(): React.ReactElement {
   const colorScheme = useColorScheme();
+  const isDark = colorScheme !== 'light';
 
   return (
     <AppProviders>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: colorScheme === 'dark' ? '#0a0a0a' : '#ffffff',
+            backgroundColor: isDark ? '#09090B' : '#FFFFFF',
           },
         }}
       />

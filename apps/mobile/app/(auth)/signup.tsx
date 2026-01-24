@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { YStack, XStack } from '@tamagui/stacks';
-import { Text } from '@tamagui/core';
+import { Text, Stack, useTheme } from '@tamagui/core';
 import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
@@ -27,6 +27,7 @@ export default function SignupScreen(): React.ReactElement {
   const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const theme = useTheme();
 
   const {
     control,
@@ -71,28 +72,27 @@ export default function SignupScreen(): React.ReactElement {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }}>
       <YStack flex={1} padding="$5" justifyContent="center" gap="$4">
-        <YStack gap="$2" marginBottom="$4">
-          <Text fontSize="$9" fontWeight="700" color="$color">
+        <YStack gap="$2" marginBottom="$6">
+          <Text fontSize={28} fontWeight="700" color="$color">
             Create account
           </Text>
-          <Text fontSize="$4" color="$placeholderColor">
+          <Text fontSize={16} color="$textSecondary">
             Start tracking your progress today
           </Text>
         </YStack>
 
         {error && (
-          <YStack
-            backgroundColor="$error"
-            padding="$3"
-            borderRadius="$3"
-            opacity={0.9}
+          <Stack
+            backgroundColor="rgba(239, 68, 68, 0.15)"
+            padding={16}
+            borderRadius={8}
           >
-            <Text color="white" fontSize="$2">
+            <Text color="$error" fontSize={14}>
               {error}
             </Text>
-          </YStack>
+          </Stack>
         )}
 
         <YStack gap="$3">
@@ -166,20 +166,22 @@ export default function SignupScreen(): React.ReactElement {
             )}
           />
 
-          <Button
-            variant="primary"
-            fullWidth
-            loading={isLoading}
-            onPress={handleSubmit(onSubmit)}
-          >
-            Create Account
-          </Button>
+          <Stack marginTop={8}>
+            <Button
+              variant="primary"
+              fullWidth
+              loading={isLoading}
+              onPress={handleSubmit(onSubmit)}
+            >
+              Create Account
+            </Button>
+          </Stack>
         </YStack>
 
         <XStack justifyContent="center" gap="$2" marginTop="$4">
-          <Text color="$placeholderColor">Already have an account?</Text>
+          <Text color="$textSecondary">Already have an account?</Text>
           <Link href="/(auth)/login" asChild>
-            <Text color="$primary" fontWeight="600" pressStyle={{ opacity: 0.7 }}>
+            <Text color="$primaryLight" fontWeight="600" pressStyle={{ opacity: 0.7 }}>
               Sign In
             </Text>
           </Link>
