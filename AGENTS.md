@@ -9,6 +9,7 @@ This document defines the three agents responsible for building Progress, their 
 | Agent | Owns | Focus |
 |-------|------|-------|
 | **Product** | `docs/`, `CLAUDE.md`, `AGENTS.md` | Defines WHAT to build |
+| **UI/UX Designer** | `docs/design/`, `tamagui.config.ts` | Defines HOW it looks and feels |
 | **Backend** | `supabase/`, `packages/shared/` | Defines data layer and API |
 | **Frontend** | `apps/mobile/` | Implements the UI |
 
@@ -48,6 +49,78 @@ Provide:
 - User flows (step-by-step interactions)
 - UI requirements (what information to display)
 - Example: "Subject list screen shows all active subjects grouped by domain. Each item displays name, last entry date, and entry count."
+
+---
+
+## UI/UX Designer Agent
+
+### Ownership
+- `docs/design/` - Design specs and guidelines:
+  - `docs/design/tokens.md` - Color palette, typography, spacing scale
+  - `docs/design/components.md` - Component design specs
+  - `docs/design/screens.md` - Screen layouts and wireframes
+  - `docs/design/patterns.md` - Interaction patterns and animations
+- `apps/mobile/tamagui.config.ts` - Theme token definitions (co-owned with Frontend)
+
+### Responsibilities
+- Define visual design system (colors, typography, spacing, radii, shadows)
+- Specify component appearance and states (default, hover, pressed, disabled, error)
+- Design screen layouts with spacing and hierarchy
+- Define interaction patterns (transitions, gestures, feedback)
+- Ensure accessibility (contrast ratios, touch targets, font scaling)
+- Maintain consistency across screens and components
+- Specify responsive behavior and platform adaptations
+
+### Design Tokens Format
+Provide design decisions as Tamagui-compatible tokens:
+```typescript
+// Example token spec
+colors: {
+  primary: '#6366F1',    // Interactive elements, CTAs
+  background: '#0a0a0a', // App background
+  surface: '#1a1a1a',    // Cards, modals
+  text: '#FAFAFA',       // Primary text
+  textMuted: '#A1A1AA',  // Secondary text
+  error: '#EF4444',      // Error states
+  success: '#22C55E',    // Success feedback
+}
+spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 }
+radii: { sm: 4, md: 8, lg: 16, full: 9999 }
+```
+
+### Does NOT
+- Write implementation code (components, hooks, etc.)
+- Modify files outside owned directories (except `tamagui.config.ts`)
+- Make data model or API decisions
+
+### Handoff TO Frontend
+Provide:
+- Component specs with exact tokens, states, and variants
+- Screen layouts with spacing, alignment, and hierarchy
+- Interaction specs (what animates, durations, easing)
+- Asset requirements (icons, illustrations)
+
+Example:
+```markdown
+## Component: SubjectCard
+- Container: surface background, md radius, md padding
+- Title: text color, fontSize 16, fontWeight 600
+- Subtitle: textMuted color, fontSize 14
+- States:
+  - Pressed: opacity 0.8, scale 0.98 (150ms ease-out)
+  - Disabled: opacity 0.5
+- Touch target: minimum 44x44
+```
+
+### Receives FROM Product
+- Feature descriptions and user flows
+- Target audience and brand direction
+- Priority of screens/features to design
+
+### Handoff TO Product
+- Flag UX concerns with proposed features
+- Suggest flow improvements based on design patterns
+- Report accessibility issues with requirements
 
 ---
 
@@ -188,13 +261,32 @@ export { subjectSchema, subjectInsertSchema } from './schemas/subject';
 3. Wait for Frontend to migrate
 4. Remove old function/type
 
-### 3. Frontend → Product
+### 3. Product → UI/UX Designer
+**Before design work begins:**
+- Product provides feature description and user flow
+- Product specifies target audience context
+- Product identifies priority screens
+
+### 4. UI/UX Designer → Frontend
+**Before Frontend builds a screen/component:**
+- Designer provides component specs with tokens and states
+- Designer provides screen layout with spacing
+- Designer provides interaction/animation specs
+- Designer updates `tamagui.config.ts` if new tokens are needed
+
+### 5. Frontend → UI/UX Designer
+**When implementation reveals design issues:**
+- Report platform limitations affecting design
+- Request clarification on edge case states
+- Propose alternatives if design is technically difficult
+
+### 6. Frontend → Product
 **When UI implementation reveals issues:**
 - Report UX problems discovered during implementation
 - Request clarification on edge cases
 - Propose alternatives if spec is technically difficult
 
-### 4. All Agents
+### 7. All Agents
 - Update `CLAUDE.md` if conventions change
 - Follow TypeScript strict mode
 - No `any` types
@@ -230,9 +322,15 @@ When handing off to another agent, use this format:
 1. **Product** creates spec:
    - Entry entity requirements
    - UI flow for creating an entry
-   - Hands off to Backend
+   - Hands off to Backend and UI/UX Designer
 
-2. **Backend** implements:
+2. **UI/UX Designer** designs:
+   - Entry list and detail screen layouts
+   - Component specs (EntryCard, CreateEntryModal)
+   - Interaction patterns (swipe to delete, pull to refresh)
+   - Hands off to Frontend
+
+3. **Backend** implements:
    - SQL migration for `entries` table
    - TypeScript `Entry` interface
    - Zod `entrySchema`
@@ -240,7 +338,8 @@ When handing off to another agent, use this format:
    - Exports in `index.ts`
    - Hands off to Frontend
 
-3. **Frontend** implements:
+4. **Frontend** implements:
    - `useEntries` hook using `getEntries`
-   - `app/entry/[id].tsx` screen using Expo Router
+   - `app/entry/[id].tsx` screen following Designer specs
+   - Components matching design tokens and states
    - Error handling for failed operations
