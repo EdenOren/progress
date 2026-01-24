@@ -1,0 +1,18 @@
+{
+  "name": "progress",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@progress/shared",
+    "test": "npm run test --workspace=@progress/shared",
+    "lint": "npm run lint --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
