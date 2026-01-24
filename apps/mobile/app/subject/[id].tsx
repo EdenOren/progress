@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { FlatList, RefreshControl, Alert } from 'react-native';
+import { FlatList, RefreshControl, Alert, ActivityIndicator } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router';
@@ -18,7 +18,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
   const theme = useTheme();
 
   const handleDelete = useCallback((): void => {
-    if (!subject) return;
+    if (!subject || hardDelete.isPending) return;
     Alert.alert(
       'Delete Workout?',
       `This will permanently delete "${subject.name}" and all its sessions, exercises, and sets. This cannot be undone.`,
@@ -38,7 +38,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
   }, [subject, hardDelete, id]);
 
   const handleStartEntry = async (): Promise<void> => {
-    if (!id) return;
+    if (!id || createEntry.isPending) return;
 
     try {
       const entry = await createEntry.mutateAsync({
@@ -50,8 +50,8 @@ export default function SubjectDetailScreen(): React.ReactElement {
         pathname: '/entry/[id]',
         params: { id: entry.id },
       });
-    } catch (e) {
-      // Error handled by mutation
+    } catch {
+      // Error shown by mutation's onError handler
     }
   };
 
@@ -128,7 +128,9 @@ export default function SubjectDetailScreen(): React.ReactElement {
         options={{
           title: subject.name,
           headerBackTitle: 'Back',
-          headerRight: () => (
+          headerRight: () => hardDelete.isPending ? (
+            <ActivityIndicator size="small" color={theme.error?.val} />
+          ) : (
             <Stack
               paddingHorizontal={8}
               paddingVertical={4}
@@ -186,15 +188,20 @@ export default function SubjectDetailScreen(): React.ReactElement {
               height={52}
               alignItems="center"
               justifyContent="center"
+              opacity={createEntry.isPending ? 0.7 : 1}
               pressStyle={{
                 scale: 0.94,
                 backgroundColor: '$primaryDark',
               }}
               onPress={handleStartEntry}
             >
-              <Text color="white" fontWeight="600" fontSize={15}>
-                + Start Session
-              </Text>
+              {createEntry.isPending ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text color="white" fontWeight="600" fontSize={15}>
+                  + Start Session
+                </Text>
+              )}
             </Stack>
           )}
         </YStack>

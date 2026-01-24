@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, Alert } from 'react-native';
+import { ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router';
@@ -18,7 +18,7 @@ import {
 
 export default function EntryScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: entry, isLoading } = useEntryWithItems(id);
+  const { data: entry, isLoading, isError } = useEntryWithItems(id);
   const { data: lastEntry } = useLastEntry(
     entry?.subject_id ?? '',
     entry?.performed_at
@@ -28,8 +28,8 @@ export default function EntryScreen(): React.ReactElement {
   const [showAddItem, setShowAddItem] = useState(false);
   const theme = useTheme();
 
-  const handleComplete = async (): Promise<void> => {
-    if (!id) return;
+  const handleComplete = (): void => {
+    if (!id || completeEntry.isPending) return;
 
     Alert.alert(
       'Complete Session',
@@ -38,8 +38,8 @@ export default function EntryScreen(): React.ReactElement {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Complete',
-          onPress: async () => {
-            await completeEntry.mutateAsync(id);
+          onPress: () => {
+            completeEntry.mutate(id);
           },
         },
       ]
@@ -47,7 +47,7 @@ export default function EntryScreen(): React.ReactElement {
   };
 
   const handleDelete = (): void => {
-    if (!entry) return;
+    if (!entry || deleteEntry.isPending) return;
 
     Alert.alert(
       'Delete Entry',
@@ -57,12 +57,11 @@ export default function EntryScreen(): React.ReactElement {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            await deleteEntry.mutateAsync({
-              entryId: entry.id,
-              subjectId: entry.subject_id,
-            });
-            router.back();
+          onPress: () => {
+            deleteEntry.mutate(
+              { entryId: entry.id, subjectId: entry.subject_id },
+              { onSuccess: () => router.back() }
+            );
           },
         },
       ]
@@ -81,11 +80,11 @@ export default function EntryScreen(): React.ReactElement {
     return <LoadingScreen />;
   }
 
-  if (!entry) {
+  if (isError || !entry) {
     return (
       <EmptyState
         title="Not Found"
-        message="This entry could not be found"
+        message="This session could not be found"
         actionLabel="Go Back"
         onAction={() => router.back()}
       />
@@ -98,7 +97,9 @@ export default function EntryScreen(): React.ReactElement {
         options={{
           title: formatDate(entry.performed_at),
           headerBackTitle: 'Back',
-          headerRight: () => (
+          headerRight: () => deleteEntry.isPending ? (
+            <ActivityIndicator size="small" color={theme.error?.val} />
+          ) : (
             <Button variant="ghost" size="small" onPress={handleDelete}>
               Delete
             </Button>
@@ -226,15 +227,20 @@ export default function EntryScreen(): React.ReactElement {
             height={52}
             alignItems="center"
             justifyContent="center"
+            opacity={completeEntry.isPending ? 0.7 : 1}
             pressStyle={{
               scale: 0.94,
               backgroundColor: '$primaryDark',
             }}
             onPress={handleComplete}
           >
-            <Text color="white" fontWeight="600" fontSize={15}>
-              Complete Session
-            </Text>
+            {completeEntry.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text color="white" fontWeight="600" fontSize={15}>
+                Complete Session
+              </Text>
+            )}
           </Stack>
         )}
 

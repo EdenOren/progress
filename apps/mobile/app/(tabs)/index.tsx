@@ -24,6 +24,7 @@ export default function WorkoutsScreen(): React.ReactElement {
   };
 
   const handleSubjectLongPress = useCallback((subject: SubjectWithStats): void => {
+    if (hardDelete.isPending) return;
     Alert.alert(
       'Delete Workout?',
       `This will permanently delete "${subject.name}" and all its sessions, exercises, and sets. This cannot be undone.`,
