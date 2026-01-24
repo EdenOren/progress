@@ -6,6 +6,7 @@ export {
   useCreateSubject,
   useUpdateSubject,
   useDeleteSubject,
+  useHardDeleteSubject,
 } from './useSubjects';
 export {
   useEntries,

@@ -6,6 +6,7 @@ import {
   createSubject,
   updateSubject,
   deleteSubject,
+  hardDeleteSubject,
   type Subject,
   type SubjectInsert,
   type SubjectUpdate,
@@ -168,6 +169,33 @@ export function useDeleteSubject() {
     },
     onSuccess: (_, subjectId) => {
       // Remove from cache
+      queryClient.removeQueries({ queryKey: QUERY_KEYS.subject(subjectId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjects });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjectsWithStats });
+    },
+    onError: (error) => {
+      handleError(error);
+    },
+  });
+}
+
+/**
+ * Hook to permanently delete a subject and all its children
+ */
+export function useHardDeleteSubject() {
+  const queryClient = useQueryClient();
+  const { user } = useSupabaseContext();
+
+  return useMutation({
+    mutationFn: async (subjectId: string): Promise<void> => {
+      if (!user) throw new Error('Not authenticated');
+
+      const result = await hardDeleteSubject(user.id, subjectId);
+      if (!result.success) {
+        throw result.error;
+      }
+    },
+    onSuccess: (_, subjectId) => {
       queryClient.removeQueries({ queryKey: QUERY_KEYS.subject(subjectId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjects });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjectsWithStats });

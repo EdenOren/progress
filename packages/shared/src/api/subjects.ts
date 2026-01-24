@@ -266,3 +266,26 @@ export async function restoreSubject(
 ): Promise<Result<Subject>> {
   return updateSubject(userId, subjectId, { is_active: true });
 }
+
+/**
+ * Permanently delete a subject and all children (entries, items, sets, feedback, goals).
+ * DB foreign keys with ON DELETE CASCADE handle child removal.
+ */
+export async function hardDeleteSubject(
+  userId: string,
+  subjectId: string
+): Promise<Result<void>> {
+  const supabase = getSupabase();
+
+  const { error } = await supabase
+    .from('subjects')
+    .delete()
+    .eq('id', subjectId)
+    .eq('user_id', userId);
+
+  if (error) {
+    return err(mapSupabaseError(error));
+  }
+
+  return ok(undefined);
+}

@@ -1,5 +1,5 @@
-import React from 'react';
-import { FlatList, RefreshControl } from 'react-native';
+import React, { useCallback } from 'react';
+import { FlatList, RefreshControl, Alert } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router';
@@ -7,14 +7,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
 import { Card, EmptyState, LoadingScreen } from '../../src/components';
-import { useSubject, useEntries, useCreateEntry } from '../../src/hooks';
+import { useSubject, useEntries, useCreateEntry, useHardDeleteSubject } from '../../src/hooks';
 
 export default function SubjectDetailScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: subject, isLoading: subjectLoading } = useSubject(id);
   const { data: entries, isLoading: entriesLoading, refetch, isRefetching } = useEntries(id);
   const createEntry = useCreateEntry();
+  const hardDelete = useHardDeleteSubject();
   const theme = useTheme();
+
+  const handleDelete = useCallback((): void => {
+    if (!subject) return;
+    Alert.alert(
+      'Delete Workout?',
+      `This will permanently delete "${subject.name}" and all its sessions, exercises, and sets. This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            hardDelete.mutate(id, {
+              onSuccess: () => router.back(),
+            });
+          },
+        },
+      ]
+    );
+  }, [subject, hardDelete, id]);
 
   const handleStartEntry = async (): Promise<void> => {
     if (!id) return;
@@ -107,6 +128,19 @@ export default function SubjectDetailScreen(): React.ReactElement {
         options={{
           title: subject.name,
           headerBackTitle: 'Back',
+          headerRight: () => (
+            <Stack
+              paddingHorizontal={8}
+              paddingVertical={4}
+              borderRadius={6}
+              pressStyle={{ opacity: 0.6 }}
+              onPress={handleDelete}
+            >
+              <Text color="$error" fontSize={15} fontWeight="500">
+                Delete
+              </Text>
+            </Stack>
+          ),
         }}
       />
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>

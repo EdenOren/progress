@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
-import { FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { FlatList, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatRelativeDate } from '@progress/shared';
 import { Card, EmptyState } from '../../src/components';
-import { useSubjectsWithStats } from '../../src/hooks';
+import { useSubjectsWithStats, useHardDeleteSubject } from '../../src/hooks';
 import { CreateSubjectModal } from '../../src/components/CreateSubjectModal';
 import type { SubjectWithStats } from '@progress/shared';
 
 export default function WorkoutsScreen(): React.ReactElement {
   const { data: subjects, isLoading, refetch, isRefetching } = useSubjectsWithStats();
+  const hardDelete = useHardDeleteSubject();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const theme = useTheme();
 
@@ -22,9 +23,24 @@ export default function WorkoutsScreen(): React.ReactElement {
     });
   };
 
+  const handleSubjectLongPress = useCallback((subject: SubjectWithStats): void => {
+    Alert.alert(
+      'Delete Workout?',
+      `This will permanently delete "${subject.name}" and all its sessions, exercises, and sets. This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => hardDelete.mutate(subject.id),
+        },
+      ]
+    );
+  }, [hardDelete]);
+
   const renderSubject = ({ item }: { item: SubjectWithStats }): React.ReactElement => (
     <Stack marginHorizontal={16} marginBottom={12}>
-      <Card pressable onPress={() => handleSubjectPress(item)}>
+      <Card pressable onPress={() => handleSubjectPress(item)} onLongPress={() => handleSubjectLongPress(item)}>
         <XStack gap={16}>
           <Stack
             width={3}

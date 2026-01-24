@@ -22,6 +22,7 @@ export {
   updateSubject,
   deleteSubject,
   restoreSubject,
+  hardDeleteSubject,
 } from './subjects';
 
 // Entry API

@@ -202,6 +202,7 @@ export {
   updateSubject,
   deleteSubject,
   restoreSubject,
+  hardDeleteSubject,
 
   // Entries
   getEntriesBySubject,
