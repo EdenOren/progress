@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Platform } from 'react-native';
 import { YStack } from '@tamagui/stacks';
 import { useTheme } from '@tamagui/core';
 
@@ -10,7 +10,8 @@ export function LoadingScreen(): React.ReactElement {
     <YStack
       flex={1}
       width="100%"
-      height="100%"
+      // Use minHeight for web to ensure vertical centering works
+      {...(Platform.OS === 'web' ? { minHeight: '100vh' as unknown as number } : { height: '100%' })}
       justifyContent="center"
       alignItems="center"
       backgroundColor="$background"

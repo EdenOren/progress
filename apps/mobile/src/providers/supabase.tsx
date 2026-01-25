@@ -8,6 +8,7 @@ interface SupabaseContextValue {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
+  error: string | null;
 }
 
 const SupabaseContext = createContext<SupabaseContextValue>({
@@ -15,6 +16,7 @@ const SupabaseContext = createContext<SupabaseContextValue>({
   session: null,
   user: null,
   isLoading: true,
+  error: null,
 });
 
 export function useSupabaseContext(): SupabaseContextValue {
@@ -29,46 +31,60 @@ export function SupabaseProvider({ children }: SupabaseProviderProps): React.Rea
   const [isInitialized, setIsInitialized] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Initialize Supabase client
-    const env: Env = validateEnv({
-      SUPABASE_URL: process.env['EXPO_PUBLIC_SUPABASE_URL'],
-      SUPABASE_ANON_KEY: process.env['EXPO_PUBLIC_SUPABASE_ANON_KEY'],
-    });
+    let subscription: { unsubscribe: () => void } | null = null;
+    let appStateSubscription: { remove: () => void } | null = null;
 
-    initSupabase(env);
-    setIsInitialized(true);
+    const initialize = async (): Promise<void> => {
+      try {
+        // Initialize Supabase client
+        const env: Env = validateEnv({
+          SUPABASE_URL: process.env['EXPO_PUBLIC_SUPABASE_URL'],
+          SUPABASE_ANON_KEY: process.env['EXPO_PUBLIC_SUPABASE_ANON_KEY'],
+        });
 
-    const supabase = getSupabase();
+        initSupabase(env);
+        setIsInitialized(true);
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setIsLoading(false);
-    });
+        const supabase = getSupabase();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
-        setSession(newSession);
-      }
-    );
+        // Get initial session
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        setIsLoading(false);
 
-    // Handle app state changes for token refresh
-    const handleAppStateChange = (state: AppStateStatus): void => {
-      if (state === 'active') {
-        supabase.auth.startAutoRefresh();
-      } else {
-        supabase.auth.stopAutoRefresh();
+        // Listen for auth changes
+        const { data } = supabase.auth.onAuthStateChange(
+          (_event, newSession) => {
+            setSession(newSession);
+          }
+        );
+        subscription = data.subscription;
+
+        // Handle app state changes for token refresh
+        const handleAppStateChange = (state: AppStateStatus): void => {
+          if (state === 'active') {
+            supabase.auth.startAutoRefresh();
+          } else {
+            supabase.auth.stopAutoRefresh();
+          }
+        };
+
+        appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to initialize';
+        setError(message);
+        setIsLoading(false);
       }
     };
 
-    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+    initialize();
 
     return () => {
-      subscription.unsubscribe();
-      appStateSubscription.remove();
+      subscription?.unsubscribe();
+      appStateSubscription?.remove();
     };
   }, []);
 
@@ -77,6 +93,7 @@ export function SupabaseProvider({ children }: SupabaseProviderProps): React.Rea
     session,
     user: session?.user ?? null,
     isLoading,
+    error,
   };
 
   return (
