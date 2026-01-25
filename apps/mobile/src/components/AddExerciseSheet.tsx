@@ -1,8 +1,10 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Modal, FlatList, TextInput as RNTextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
-import { YStack, XStack, Text, Button, Input } from 'tamagui';
+import { YStack, XStack } from '@tamagui/stacks';
+import { Text, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTheme } from 'tamagui';
+import { Button } from './Button';
+import { Input } from './Input';
 import { useSearchExercises, useAllExercises, useCreateCustomExercise } from '../hooks/useExercises';
 import type { Exercise, ExerciseIcon, MuscleGroup, TrackingType, ExerciseCategory } from '@progress/shared';
 
@@ -162,22 +164,21 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
               borderBottomColor="$borderColor"
             >
               <Button
-                chromeless
+                variant="ghost"
+                size="small"
                 onPress={() => setShowCreateForm(false)}
               >
-                <Text color="$primary">Back</Text>
+                Back
               </Button>
               <Text fontWeight="700" fontSize={17}>Create Exercise</Text>
               <Button
-                chromeless
+                variant="ghost"
+                size="small"
                 onPress={handleCreateCustom}
-                disabled={!newName.trim() || createExercise.isPending}
+                disabled={!newName.trim()}
+                loading={createExercise.isPending}
               >
-                {createExercise.isPending ? (
-                  <ActivityIndicator size="small" color={theme.primary?.val} />
-                ) : (
-                  <Text color={newName.trim() ? '$primary' : '$textMuted'}>Save</Text>
-                )}
+                Save
               </Button>
             </XStack>
 
@@ -328,8 +329,8 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
           borderBottomWidth={1}
           borderBottomColor="$borderColor"
         >
-          <Button chromeless onPress={handleClose}>
-            <Text color="$primary">Cancel</Text>
+          <Button variant="ghost" size="small" onPress={handleClose}>
+            Cancel
           </Button>
           <Text fontWeight="700" fontSize={17}>Add Exercise</Text>
           <YStack width={60} />

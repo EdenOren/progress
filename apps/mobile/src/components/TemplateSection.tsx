@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, Pressable } from 'react-native';
-import { YStack, XStack, Text, Stack } from 'tamagui';
+import { YStack, XStack, Stack } from '@tamagui/stacks';
+import { Text, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTheme } from 'tamagui';
 import { useWorkoutTemplate, useHardRemoveFromTemplate, useAddExerciseToTemplate } from '../hooks/useTemplates';
 import { AddExerciseSheet } from './AddExerciseSheet';
 import type { Exercise, WorkoutTemplateWithExercise } from '@progress/shared';
