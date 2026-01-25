@@ -18,6 +18,10 @@ export type {
   ISODateTime,
   ISODate,
   FeedbackRating,
+  TrackingType,
+  ExerciseCategory,
+  MuscleGroup,
+  ExerciseIcon,
 
   // Profile
   Profile,
@@ -60,6 +64,17 @@ export type {
   GoalTarget,
   GoalInsert,
   GoalUpdate,
+
+  // Exercise
+  Exercise,
+  ExerciseInsert,
+
+  // WorkoutTemplate
+  TemplateSetConfig,
+  WorkoutTemplate,
+  WorkoutTemplateWithExercise,
+  WorkoutTemplateInsert,
+  WorkoutTemplateUpdate,
 
   // Utility
   BaseRow,

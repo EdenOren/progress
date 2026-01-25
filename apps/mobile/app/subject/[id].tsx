@@ -6,16 +6,20 @@ import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
-import { Card, EmptyState, LoadingScreen } from '../../src/components';
-import { useSubject, useEntries, useCreateEntry, useHardDeleteSubject } from '../../src/hooks';
+import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../src/components';
+import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useHardDeleteSubject, useWorkoutTemplate } from '../../src/hooks';
 
 export default function SubjectDetailScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: subject, isLoading: subjectLoading } = useSubject(id);
   const { data: entries, isLoading: entriesLoading, refetch, isRefetching } = useEntries(id);
+  const { data: template } = useWorkoutTemplate(id);
   const createEntry = useCreateEntry();
+  const createEntryWithTemplate = useCreateEntryWithTemplate();
   const hardDelete = useHardDeleteSubject();
   const theme = useTheme();
+
+  const isCreatingEntry = createEntry.isPending || createEntryWithTemplate.isPending;
 
   const handleDelete = useCallback((): void => {
     if (!subject || hardDelete.isPending) return;
@@ -38,13 +42,34 @@ export default function SubjectDetailScreen(): React.ReactElement {
   }, [subject, hardDelete, id]);
 
   const handleStartEntry = async (): Promise<void> => {
-    if (!id || createEntry.isPending) return;
+    if (!id || isCreatingEntry) return;
 
     try {
-      const entry = await createEntry.mutateAsync({
-        subject_id: id,
-        performed_at: getTodayISO(),
-      });
+      let entry;
+
+      // If template exists, create entry with template items
+      if (template && template.length > 0) {
+        const templateItems = template.map((item) => ({
+          exercise_id: item.exercise_id,
+          name: item.exercise.name,
+          tracking_type: item.exercise.tracking_type,
+          default_sets: item.default_sets,
+        }));
+
+        entry = await createEntryWithTemplate.mutateAsync({
+          input: {
+            subject_id: id,
+            performed_at: getTodayISO(),
+          },
+          templateItems,
+        });
+      } else {
+        // No template - create empty entry
+        entry = await createEntry.mutateAsync({
+          subject_id: id,
+          performed_at: getTodayISO(),
+        });
+      }
 
       router.push({
         pathname: '/entry/[id]',
@@ -155,6 +180,18 @@ export default function SubjectDetailScreen(): React.ReactElement {
             </YStack>
           )}
 
+          {/* Template Section */}
+          <YStack paddingTop={8} paddingBottom={16} borderBottomWidth={1} borderBottomColor="$borderColor">
+            <TemplateSection subjectId={id} />
+          </YStack>
+
+          {/* Sessions Header */}
+          <YStack paddingHorizontal={16} paddingTop={16} paddingBottom={8}>
+            <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
+              Sessions ({entries?.length ?? 0})
+            </Text>
+          </YStack>
+
           <FlatList
             data={entries ?? []}
             keyExtractor={(item) => item.id}
@@ -169,41 +206,38 @@ export default function SubjectDetailScreen(): React.ReactElement {
             }
             ListEmptyComponent={
               <EmptyState
-                title="No entries yet"
-                message="Start your first session to begin tracking"
-                actionLabel="Start Session"
-                onAction={handleStartEntry}
+                title="No sessions yet"
+                message="Add exercises above, then start your first session"
               />
             }
           />
 
-          {(entries?.length ?? 0) > 0 && (
-            <Stack
-              position="absolute"
-              bottom={24}
-              right={24}
-              backgroundColor="$primary"
-              borderRadius={9999}
-              paddingHorizontal={24}
-              height={52}
-              alignItems="center"
-              justifyContent="center"
-              opacity={createEntry.isPending ? 0.7 : 1}
-              pressStyle={{
-                scale: 0.94,
-                backgroundColor: '$primaryDark',
-              }}
-              onPress={handleStartEntry}
-            >
-              {createEntry.isPending ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Text color="white" fontWeight="600" fontSize={15}>
-                  + Start Session
-                </Text>
-              )}
-            </Stack>
-          )}
+          {/* Always show FAB to start session */}
+          <Stack
+            position="absolute"
+            bottom={24}
+            right={24}
+            backgroundColor="$primary"
+            borderRadius={9999}
+            paddingHorizontal={24}
+            height={52}
+            alignItems="center"
+            justifyContent="center"
+            opacity={isCreatingEntry ? 0.7 : 1}
+            pressStyle={{
+              scale: 0.94,
+              backgroundColor: '$primaryDark',
+            }}
+            onPress={handleStartEntry}
+          >
+            {isCreatingEntry ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text color="white" fontWeight="600" fontSize={15}>
+                + Start Session
+              </Text>
+            )}
+          </Stack>
         </YStack>
       </SafeAreaView>
     </>

@@ -215,6 +215,8 @@ describe('ItemSet Schema', () => {
     reps: 8,
     duration_sec: null,
     distance_m: null,
+    target_reps: null,
+    target_duration_sec: null,
     notes: null,
     created_at: '2024-01-15T10:30:00Z',
   };

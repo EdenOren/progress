@@ -5,4 +5,7 @@ export { LoadingScreen } from './LoadingScreen';
 export { EmptyState } from './EmptyState';
 export { CreateSubjectModal } from './CreateSubjectModal';
 export { ItemCard } from './ItemCard';
+export { ExerciseInputCard } from './ExerciseInputCard';
 export { AddItemModal } from './AddItemModal';
+export { AddExerciseSheet } from './AddExerciseSheet';
+export { TemplateSection } from './TemplateSection';

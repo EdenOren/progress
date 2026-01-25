@@ -13,7 +13,33 @@ export {
   useEntryWithItems,
   useLastEntry,
   useCreateEntry,
+  useCreateEntryWithTemplate,
   useUpdateEntry,
   useCompleteEntry,
   useDeleteEntry,
 } from './useEntries';
+export {
+  exerciseKeys,
+  useSearchExercises,
+  useAllExercises,
+  useExercisesByMuscleGroup,
+  useExercise,
+  useCreateCustomExercise,
+  useDeleteCustomExercise,
+} from './useExercises';
+export {
+  templateKeys,
+  useWorkoutTemplate,
+  useNextTemplatePosition,
+  useAddToTemplate,
+  useAddExerciseToTemplate,
+  useUpdateTemplateItem,
+  useRemoveFromTemplate,
+  useHardRemoveFromTemplate,
+  useReorderTemplate,
+} from './useTemplates';
+export {
+  useCreateSet,
+  useUpdateSet,
+  useDeleteSet,
+} from './useSets';

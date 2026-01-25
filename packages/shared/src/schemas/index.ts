@@ -4,6 +4,10 @@ export {
   isoDateTimeSchema,
   isoDateSchema,
   feedbackRatingSchema,
+  trackingTypeSchema,
+  exerciseCategorySchema,
+  muscleGroupSchema,
+  exerciseIconSchema,
 } from './domain';
 
 // Profile schemas
@@ -68,6 +72,24 @@ export {
   goalUpdateSchema,
   goalArraySchema,
   goalTargetSchema,
+} from './domain';
+
+// Exercise schemas
+export {
+  exerciseSchema,
+  exerciseInsertSchema,
+  exerciseArraySchema,
+} from './domain';
+
+// WorkoutTemplate schemas
+export {
+  templateSetConfigSchema,
+  workoutTemplateSchema,
+  workoutTemplateWithExerciseSchema,
+  workoutTemplateInsertSchema,
+  workoutTemplateUpdateSchema,
+  workoutTemplateArraySchema,
+  workoutTemplateWithExerciseArraySchema,
 } from './domain';
 
 // Pagination schemas

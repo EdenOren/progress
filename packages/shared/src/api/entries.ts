@@ -298,3 +298,105 @@ export async function deleteEntry(
 
   return ok(undefined);
 }
+
+/**
+ * Template item structure for creating entry with items
+ */
+interface TemplateItemForEntry {
+  exercise_id: string;
+  name: string;
+  tracking_type: 'weight_reps' | 'duration' | 'distance';
+  default_sets: Array<{
+    target_reps?: number;
+    target_duration_seconds?: number;
+  }>;
+}
+
+/**
+ * Create an entry and populate items from template
+ * This is the main function for starting a new session
+ */
+export async function createEntryWithTemplate(
+  input: EntryInsert,
+  templateItems: TemplateItemForEntry[]
+): Promise<Result<Entry>> {
+  // First create the entry
+  const entryResult = await createEntry(input);
+  if (!entryResult.success) {
+    return entryResult;
+  }
+
+  const entry = entryResult.data;
+
+  // If no template items, just return the entry
+  if (templateItems.length === 0) {
+    return ok(entry);
+  }
+
+  const supabase = getSupabase();
+
+  // Create items from template
+  const itemsToInsert = templateItems.map((template, index) => ({
+    entry_id: entry.id,
+    user_id: input.user_id,
+    name: template.name,
+    position: index,
+    exercise_id: template.exercise_id,
+    is_from_template: true,
+    tracking_type: template.tracking_type,
+  }));
+
+  const { data: items, error: itemsError } = await supabase
+    .from('items')
+    .insert(itemsToInsert)
+    .select();
+
+  if (itemsError) {
+    // Entry was created but items failed - delete entry to rollback
+    await supabase.from('entries').delete().eq('id', entry.id);
+    return err(mapSupabaseError(itemsError));
+  }
+
+  // Create sets for each item based on template default_sets
+  const setsToInsert: Array<{
+    item_id: string;
+    user_id: string;
+    set_index: number;
+    target_reps: number | null;
+    target_duration_sec: number | null;
+  }> = [];
+
+  // Type assertion for items returned from insert
+  type InsertedItem = { id: string };
+  const typedItems = items as InsertedItem[];
+
+  for (let i = 0; i < typedItems.length; i++) {
+    const item = typedItems[i];
+    const template = templateItems[i];
+
+    if (item && template) {
+      template.default_sets.forEach((setConfig, setIndex) => {
+        setsToInsert.push({
+          item_id: item.id,
+          user_id: input.user_id,
+          set_index: setIndex,
+          target_reps: setConfig.target_reps ?? null,
+          target_duration_sec: setConfig.target_duration_seconds ?? null,
+        });
+      });
+    }
+  }
+
+  if (setsToInsert.length > 0) {
+    const { error: setsError } = await supabase
+      .from('item_sets')
+      .insert(setsToInsert);
+
+    if (setsError) {
+      // Log but don't fail - entry and items were created successfully
+      console.warn('Failed to create template sets:', setsError);
+    }
+  }
+
+  return ok(entry);
+}

@@ -19,6 +19,18 @@ export type ISODate = string;
 /** Rating for item feedback */
 export type FeedbackRating = 'success' | 'hard' | 'fail';
 
+/** Exercise tracking type */
+export type TrackingType = 'weight_reps' | 'duration' | 'distance';
+
+/** Exercise category */
+export type ExerciseCategory = 'strength' | 'bodyweight' | 'cardio' | 'flexibility';
+
+/** Muscle group */
+export type MuscleGroup = 'chest' | 'back' | 'legs' | 'shoulders' | 'arms' | 'core' | 'cardio' | 'full_body';
+
+/** Available exercise icons */
+export type ExerciseIcon = 'dumbbell' | 'weight-lifter' | 'arm-flex' | 'human-handsup' | 'human' | 'run' | 'bike' | 'rowing' | 'yoga' | 'stairs-up';
+
 // ============================================================================
 // Profile
 // ============================================================================
@@ -149,6 +161,9 @@ export interface Item {
   user_id: UUID;
   name: string;
   position: number;
+  exercise_id: UUID | null;
+  is_from_template: boolean;
+  tracking_type: TrackingType;
   created_at: ISODateTime;
 }
 
@@ -158,12 +173,18 @@ export interface ItemInsert {
   user_id: UUID;
   name: string;
   position: number;
+  exercise_id?: UUID | null;
+  is_from_template?: boolean;
+  tracking_type?: TrackingType;
 }
 
 /** Item update input */
 export interface ItemUpdate {
   name?: string;
   position?: number;
+  exercise_id?: UUID | null;
+  is_from_template?: boolean;
+  tracking_type?: TrackingType;
 }
 
 /** Item with its sets and feedback */
@@ -186,6 +207,8 @@ export interface ItemSet {
   reps: number | null;
   duration_sec: number | null;
   distance_m: number | null;
+  target_reps: number | null;
+  target_duration_sec: number | null;
   notes: string | null;
   created_at: ISODateTime;
 }
@@ -199,6 +222,8 @@ export interface ItemSetInsert {
   reps?: number | null;
   duration_sec?: number | null;
   distance_m?: number | null;
+  target_reps?: number | null;
+  target_duration_sec?: number | null;
   notes?: string | null;
 }
 
@@ -209,6 +234,8 @@ export interface ItemSetUpdate {
   reps?: number | null;
   duration_sec?: number | null;
   distance_m?: number | null;
+  target_reps?: number | null;
+  target_duration_sec?: number | null;
   notes?: string | null;
 }
 
@@ -281,6 +308,76 @@ export interface GoalUpdate {
   item_name?: string;
   target?: GoalTarget;
   achieved_at?: ISODateTime | null;
+}
+
+// ============================================================================
+// Exercise Library
+// ============================================================================
+
+/** Exercise from the library */
+export interface Exercise {
+  id: UUID;
+  name: string;
+  icon: ExerciseIcon;
+  category: ExerciseCategory;
+  muscle_group: MuscleGroup;
+  tracking_type: TrackingType;
+  is_system: boolean;
+  created_by: UUID | null;
+  created_at: ISODateTime;
+}
+
+/** Exercise creation input (for custom exercises) */
+export interface ExerciseInsert {
+  name: string;
+  icon: ExerciseIcon;
+  category: ExerciseCategory;
+  muscle_group: MuscleGroup;
+  tracking_type: TrackingType;
+  created_by: UUID;
+}
+
+// ============================================================================
+// Workout Template
+// ============================================================================
+
+/** Default set configuration in a template */
+export interface TemplateSetConfig {
+  target_reps?: number;
+  target_duration_seconds?: number;
+}
+
+/** Template item linking exercise to a subject */
+export interface WorkoutTemplate {
+  id: UUID;
+  subject_id: UUID;
+  exercise_id: UUID;
+  position: number;
+  default_sets: TemplateSetConfig[];
+  is_active: boolean;
+  created_at: ISODateTime;
+  updated_at: ISODateTime;
+}
+
+/** Workout template with exercise details */
+export interface WorkoutTemplateWithExercise extends WorkoutTemplate {
+  exercise: Exercise;
+}
+
+/** Template item creation input */
+export interface WorkoutTemplateInsert {
+  subject_id: UUID;
+  exercise_id: UUID;
+  position: number;
+  default_sets?: TemplateSetConfig[];
+  is_active?: boolean;
+}
+
+/** Template item update input */
+export interface WorkoutTemplateUpdate {
+  position?: number;
+  default_sets?: TemplateSetConfig[];
+  is_active?: boolean;
 }
 
 // ============================================================================

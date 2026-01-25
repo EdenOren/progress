@@ -19,6 +19,18 @@ export const isoDateSchema = z.string().regex(
 /** Feedback rating */
 export const feedbackRatingSchema = z.enum(['success', 'hard', 'fail']);
 
+/** Tracking type for exercises */
+export const trackingTypeSchema = z.enum(['weight_reps', 'duration', 'distance']);
+
+/** Exercise category */
+export const exerciseCategorySchema = z.enum(['strength', 'bodyweight', 'cardio', 'flexibility']);
+
+/** Muscle group */
+export const muscleGroupSchema = z.enum(['chest', 'back', 'legs', 'shoulders', 'arms', 'core', 'cardio', 'full_body']);
+
+/** Exercise icon (MaterialCommunityIcons) */
+export const exerciseIconSchema = z.enum(['dumbbell', 'weight-lifter', 'arm-flex', 'human-handsup', 'human', 'run', 'bike', 'rowing', 'yoga', 'stairs-up']);
+
 // ============================================================================
 // Profile Schemas
 // ============================================================================
@@ -139,6 +151,9 @@ export const itemSchema = z.object({
   user_id: uuidSchema,
   name: z.string().min(1).max(100),
   position: z.number().int().min(0),
+  exercise_id: uuidSchema.nullable(),
+  is_from_template: z.boolean(),
+  tracking_type: trackingTypeSchema,
   created_at: isoDateTimeSchema,
 });
 
@@ -147,11 +162,17 @@ export const itemInsertSchema = z.object({
   user_id: uuidSchema,
   name: z.string().min(1).max(100),
   position: z.number().int().min(0),
+  exercise_id: uuidSchema.nullable().optional(),
+  is_from_template: z.boolean().optional().default(true),
+  tracking_type: trackingTypeSchema.optional().default('weight_reps'),
 });
 
 export const itemUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   position: z.number().int().min(0).optional(),
+  exercise_id: uuidSchema.nullable().optional(),
+  is_from_template: z.boolean().optional(),
+  tracking_type: trackingTypeSchema.optional(),
 });
 
 export const itemArraySchema = z.array(itemSchema);
@@ -169,6 +190,8 @@ export const itemSetSchema = z.object({
   reps: z.number().int().min(0).max(1000).nullable(),
   duration_sec: z.number().int().min(0).max(86400).nullable(), // max 24 hours
   distance_m: z.number().int().min(0).max(100000).nullable(), // max 100km
+  target_reps: z.number().int().min(0).max(1000).nullable(),
+  target_duration_sec: z.number().int().min(0).max(86400).nullable(),
   notes: z.string().max(500).nullable(),
   created_at: isoDateTimeSchema,
 });
@@ -181,6 +204,8 @@ export const itemSetInsertSchema = z.object({
   reps: z.number().int().min(0).max(1000).nullable().optional(),
   duration_sec: z.number().int().min(0).max(86400).nullable().optional(),
   distance_m: z.number().int().min(0).max(100000).nullable().optional(),
+  target_reps: z.number().int().min(0).max(1000).nullable().optional(),
+  target_duration_sec: z.number().int().min(0).max(86400).nullable().optional(),
   notes: z.string().max(500).nullable().optional(),
 });
 
@@ -190,6 +215,8 @@ export const itemSetUpdateSchema = z.object({
   reps: z.number().int().min(0).max(1000).nullable().optional(),
   duration_sec: z.number().int().min(0).max(86400).nullable().optional(),
   distance_m: z.number().int().min(0).max(100000).nullable().optional(),
+  target_reps: z.number().int().min(0).max(1000).nullable().optional(),
+  target_duration_sec: z.number().int().min(0).max(86400).nullable().optional(),
   notes: z.string().max(500).nullable().optional(),
 });
 
@@ -261,6 +288,74 @@ export const goalUpdateSchema = z.object({
 });
 
 export const goalArraySchema = z.array(goalSchema);
+
+// ============================================================================
+// Exercise Library Schemas
+// ============================================================================
+
+export const exerciseSchema = z.object({
+  id: uuidSchema,
+  name: z.string().min(1).max(100),
+  icon: exerciseIconSchema,
+  category: exerciseCategorySchema,
+  muscle_group: muscleGroupSchema,
+  tracking_type: trackingTypeSchema,
+  is_system: z.boolean(),
+  created_by: uuidSchema.nullable(),
+  created_at: isoDateTimeSchema,
+});
+
+export const exerciseInsertSchema = z.object({
+  name: z.string().min(1).max(100),
+  icon: exerciseIconSchema,
+  category: exerciseCategorySchema,
+  muscle_group: muscleGroupSchema,
+  tracking_type: trackingTypeSchema,
+  created_by: uuidSchema,
+});
+
+export const exerciseArraySchema = z.array(exerciseSchema);
+
+// ============================================================================
+// Workout Template Schemas
+// ============================================================================
+
+export const templateSetConfigSchema = z.object({
+  target_reps: z.number().int().min(1).max(1000).optional(),
+  target_duration_seconds: z.number().int().min(1).max(86400).optional(),
+});
+
+export const workoutTemplateSchema = z.object({
+  id: uuidSchema,
+  subject_id: uuidSchema,
+  exercise_id: uuidSchema,
+  position: z.number().int().min(0),
+  default_sets: z.array(templateSetConfigSchema),
+  is_active: z.boolean(),
+  created_at: isoDateTimeSchema,
+  updated_at: isoDateTimeSchema,
+});
+
+export const workoutTemplateWithExerciseSchema = workoutTemplateSchema.extend({
+  exercise: exerciseSchema,
+});
+
+export const workoutTemplateInsertSchema = z.object({
+  subject_id: uuidSchema,
+  exercise_id: uuidSchema,
+  position: z.number().int().min(0),
+  default_sets: z.array(templateSetConfigSchema).optional().default([{ target_reps: 10 }]),
+  is_active: z.boolean().optional().default(true),
+});
+
+export const workoutTemplateUpdateSchema = z.object({
+  position: z.number().int().min(0).optional(),
+  default_sets: z.array(templateSetConfigSchema).optional(),
+  is_active: z.boolean().optional(),
+});
+
+export const workoutTemplateArraySchema = z.array(workoutTemplateSchema);
+export const workoutTemplateWithExerciseArraySchema = z.array(workoutTemplateWithExerciseSchema);
 
 // ============================================================================
 // Composite Schemas (with relations)

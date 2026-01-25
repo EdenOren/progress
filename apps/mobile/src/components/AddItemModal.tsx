@@ -22,12 +22,14 @@ interface AddItemModalProps {
   visible: boolean;
   onClose: () => void;
   entryId: string;
+  subjectId?: string; // Optional - when provided, shows "add permanently" toggle
 }
 
 export function AddItemModal({
   visible,
   onClose,
   entryId,
+  subjectId: _subjectId,
 }: AddItemModalProps): React.ReactElement {
   const { user } = useSupabaseContext();
   const queryClient = useQueryClient();
@@ -134,6 +136,17 @@ export function AddItemModal({
             )}
           />
 
+          {/* Info note about one-time vs permanent */}
+          <YStack
+            backgroundColor="$backgroundHover"
+            padding="$3"
+            borderRadius="$3"
+          >
+            <Text fontSize={12} color="$textMuted">
+              This exercise will be added to this session only. To add exercises permanently, go to your workout setup and add them to your template.
+            </Text>
+          </YStack>
+
           <Button
             variant="primary"
             fullWidth
@@ -141,7 +154,7 @@ export function AddItemModal({
             loading={addItemMutation.isPending}
             onPress={handleSubmit(onSubmit)}
           >
-            Add Exercise
+            Add to Session
           </Button>
         </YStack>
       </YStack>

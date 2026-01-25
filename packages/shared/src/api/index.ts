@@ -33,6 +33,7 @@ export {
   getEntryWithItems,
   getLastEntryForSubject,
   createEntry,
+  createEntryWithTemplate,
   updateEntry,
   completeEntry,
   deleteEntry,
@@ -77,3 +78,24 @@ export {
   setGoal,
   deleteGoal,
 } from './goals';
+
+// Exercise API
+export {
+  searchExercises,
+  getAllExercises,
+  getExercisesByMuscleGroup,
+  getExerciseById,
+  createCustomExercise,
+  deleteCustomExercise,
+} from './exercises';
+
+// Template API
+export {
+  getWorkoutTemplate,
+  addToTemplate,
+  updateTemplateItem,
+  removeFromTemplate,
+  hardRemoveFromTemplate,
+  reorderTemplate,
+  getNextTemplatePosition,
+} from './templates';

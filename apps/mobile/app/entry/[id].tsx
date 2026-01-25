@@ -4,10 +4,9 @@ import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { formatDate, compareItemProgress } from '@progress/shared';
+import { formatDate } from '@progress/shared';
 import type { ItemWithSets } from '@progress/shared';
-import { Card, Button, LoadingScreen, EmptyState } from '../../src/components';
-import { ItemCard } from '../../src/components/ItemCard';
+import { Card, Button, LoadingScreen, EmptyState, ExerciseInputCard } from '../../src/components';
 import { AddItemModal } from '../../src/components/AddItemModal';
 import {
   useEntryWithItems,
@@ -68,11 +67,22 @@ export default function EntryScreen(): React.ReactElement {
     );
   };
 
-  const getItemComparison = (item: ItemWithSets) => {
+  // Find matching item from last session by name or exercise_id
+  const getLastSessionItem = (item: ItemWithSets): ItemWithSets | null => {
     if (!lastEntry) return null;
-    const comparisons = compareItemProgress([item], lastEntry.items);
-    return comparisons.find(
-      (c) => c.itemName.toLowerCase() === item.name.toLowerCase()
+
+    // Try to match by exercise_id first if available
+    const itemWithExercise = item as ItemWithSets & { exercise_id?: string };
+    if (itemWithExercise.exercise_id) {
+      const matchById = lastEntry.items.find(
+        (lastItem) => (lastItem as ItemWithSets & { exercise_id?: string }).exercise_id === itemWithExercise.exercise_id
+      );
+      if (matchById) return matchById;
+    }
+
+    // Fall back to matching by name (case-insensitive)
+    return lastEntry.items.find(
+      (lastItem) => lastItem.name.toLowerCase() === item.name.toLowerCase()
     ) ?? null;
   };
 
@@ -188,11 +198,11 @@ export default function EntryScreen(): React.ReactElement {
               </Card>
             ) : (
               entry.items.map((item) => (
-                <ItemCard
+                <ExerciseInputCard
                   key={item.id}
                   item={item}
-                  comparison={getItemComparison(item)}
                   entryId={entry.id}
+                  lastSessionItem={getLastSessionItem(item)}
                 />
               ))
             )}
@@ -248,6 +258,7 @@ export default function EntryScreen(): React.ReactElement {
           visible={showAddItem}
           onClose={() => setShowAddItem(false)}
           entryId={entry.id}
+          subjectId={entry.subject_id}
         />
       </SafeAreaView>
     </>

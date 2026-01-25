@@ -4,6 +4,7 @@ import {
   getEntryWithItems,
   getLastEntryForSubject,
   createEntry,
+  createEntryWithTemplate,
   updateEntry,
   completeEntry,
   deleteEntry,
@@ -204,6 +205,57 @@ export function useDeleteEntry() {
       queryClient.removeQueries({ queryKey: QUERY_KEYS.entry(entryId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries(subjectId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lastEntry(subjectId) });
+      queryClient.invalidateQueries({ queryKey: ['subjects', 'withStats'] });
+    },
+    onError: (error) => {
+      handleError(error);
+    },
+  });
+}
+
+/**
+ * Template item structure for creating entry with items
+ */
+interface TemplateItemForEntry {
+  exercise_id: string;
+  name: string;
+  tracking_type: 'weight_reps' | 'duration' | 'distance';
+  default_sets: Array<{
+    target_reps?: number;
+    target_duration_seconds?: number;
+  }>;
+}
+
+/**
+ * Hook to create a new entry with template items
+ */
+export function useCreateEntryWithTemplate() {
+  const queryClient = useQueryClient();
+  const { user } = useSupabaseContext();
+
+  return useMutation({
+    mutationFn: async ({
+      input,
+      templateItems,
+    }: {
+      input: Omit<EntryInsert, 'user_id'>;
+      templateItems: TemplateItemForEntry[];
+    }): Promise<Entry> => {
+      if (!user) throw new Error('Not authenticated');
+
+      const result = await createEntryWithTemplate(
+        { ...input, user_id: user.id },
+        templateItems
+      );
+
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries(data.subject_id) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lastEntry(data.subject_id) });
       queryClient.invalidateQueries({ queryKey: ['subjects', 'withStats'] });
     },
     onError: (error) => {

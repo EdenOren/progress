@@ -17,6 +17,10 @@ export type {
   ISODateTime,
   ISODate,
   FeedbackRating,
+  TrackingType,
+  ExerciseCategory,
+  MuscleGroup,
+  ExerciseIcon,
 
   // Profile
   Profile,
@@ -59,6 +63,17 @@ export type {
   GoalTarget,
   GoalInsert,
   GoalUpdate,
+
+  // Exercise
+  Exercise,
+  ExerciseInsert,
+
+  // WorkoutTemplate
+  TemplateSetConfig,
+  WorkoutTemplate,
+  WorkoutTemplateWithExercise,
+  WorkoutTemplateInsert,
+  WorkoutTemplateUpdate,
 
   // Utility types
   BaseRow,
@@ -128,6 +143,24 @@ export {
   goalUpdateSchema,
   goalArraySchema,
   goalTargetSchema,
+
+  // Exercise
+  trackingTypeSchema,
+  exerciseCategorySchema,
+  muscleGroupSchema,
+  exerciseIconSchema,
+  exerciseSchema,
+  exerciseInsertSchema,
+  exerciseArraySchema,
+
+  // WorkoutTemplate
+  templateSetConfigSchema,
+  workoutTemplateSchema,
+  workoutTemplateWithExerciseSchema,
+  workoutTemplateInsertSchema,
+  workoutTemplateUpdateSchema,
+  workoutTemplateArraySchema,
+  workoutTemplateWithExerciseArraySchema,
 
   // Pagination
   paginationParamsSchema,
@@ -211,6 +244,7 @@ export {
   getEntryWithItems,
   getLastEntryForSubject,
   createEntry,
+  createEntryWithTemplate,
   updateEntry,
   completeEntry,
   deleteEntry,
@@ -246,6 +280,23 @@ export {
   achieveGoal,
   setGoal,
   deleteGoal,
+
+  // Exercises
+  searchExercises,
+  getAllExercises,
+  getExercisesByMuscleGroup,
+  getExerciseById,
+  createCustomExercise,
+  deleteCustomExercise,
+
+  // Templates
+  getWorkoutTemplate,
+  addToTemplate,
+  updateTemplateItem,
+  removeFromTemplate,
+  hardRemoveFromTemplate,
+  reorderTemplate,
+  getNextTemplatePosition,
 } from './api/index';
 
 // ============================================================================
