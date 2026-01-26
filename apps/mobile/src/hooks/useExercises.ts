@@ -8,7 +8,7 @@ import {
   deleteCustomExercise,
   type ExerciseInsert,
 } from '@progress/shared';
-import { useSupabaseContext } from '../providers/SupabaseProvider';
+import { useSupabaseContext } from '../providers';
 import { handleError } from '../utils/errorHandler';
 
 /** Query key factory for exercises */
