@@ -160,6 +160,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
               paddingHorizontal={8}
               paddingVertical={4}
               borderRadius={6}
+              cursor="pointer"
               pressStyle={{ opacity: 0.6 }}
               onPress={handleDelete}
             >
@@ -224,6 +225,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
             alignItems="center"
             justifyContent="center"
             opacity={isCreatingEntry ? 0.7 : 1}
+            cursor={isCreatingEntry ? 'not-allowed' : 'pointer'}
             pressStyle={{
               scale: 0.94,
               backgroundColor: '$primaryDark',

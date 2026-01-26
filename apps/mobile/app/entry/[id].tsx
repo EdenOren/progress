@@ -238,6 +238,7 @@ export default function EntryScreen(): React.ReactElement {
             alignItems="center"
             justifyContent="center"
             opacity={completeEntry.isPending ? 0.7 : 1}
+            cursor={completeEntry.isPending ? 'not-allowed' : 'pointer'}
             pressStyle={{
               scale: 0.94,
               backgroundColor: '$primaryDark',

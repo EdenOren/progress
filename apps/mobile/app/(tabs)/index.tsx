@@ -125,12 +125,11 @@ export default function WorkoutsScreen(): React.ReactElement {
             height={52}
             alignItems="center"
             justifyContent="center"
-
+            cursor="pointer"
             pressStyle={{
               scale: 0.94,
               backgroundColor: '$primaryDark',
             }}
-
             onPress={() => setShowCreateModal(true)}
           >
             <Text color="white" fontWeight="600" fontSize={15}>

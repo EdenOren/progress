@@ -421,6 +421,7 @@ export function ExerciseInputCard({
                   <Pressable
                     onPress={() => handleCopySet(index)}
                     disabled={isSaving}
+                    style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}
                   >
                     <Stack
                       backgroundColor={isCopied ? '$primary' : 'rgba(139, 92, 246, 0.15)'}

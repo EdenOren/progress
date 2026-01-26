@@ -101,7 +101,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
   }, [onClose]);
 
   const renderExerciseItem = useCallback(({ item }: { item: Exercise }) => (
-    <Pressable onPress={() => handleSelect(item)}>
+    <Pressable onPress={() => handleSelect(item)} style={{ cursor: 'pointer' }}>
       <XStack
         paddingVertical="$3"
         paddingHorizontal="$4"
@@ -200,7 +200,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
                 <Text fontSize={13} fontWeight="600" color="$textMuted">ICON</Text>
                 <XStack flexWrap="wrap" gap="$2">
                   {AVAILABLE_ICONS.map((icon) => (
-                    <Pressable key={icon} onPress={() => setNewIcon(icon)}>
+                    <Pressable key={icon} onPress={() => setNewIcon(icon)} style={{ cursor: 'pointer' }}>
                       <YStack
                         width={48}
                         height={48}
@@ -227,7 +227,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
                 <Text fontSize={13} fontWeight="600" color="$textMuted">MUSCLE GROUP</Text>
                 <XStack flexWrap="wrap" gap="$2">
                   {MUSCLE_GROUPS.map((group) => (
-                    <Pressable key={group} onPress={() => setNewMuscleGroup(group)}>
+                    <Pressable key={group} onPress={() => setNewMuscleGroup(group)} style={{ cursor: 'pointer' }}>
                       <YStack
                         paddingHorizontal="$3"
                         paddingVertical="$2"
@@ -255,7 +255,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
                 <Text fontSize={13} fontWeight="600" color="$textMuted">CATEGORY</Text>
                 <XStack flexWrap="wrap" gap="$2">
                   {CATEGORIES.map((cat) => (
-                    <Pressable key={cat} onPress={() => setNewCategory(cat)}>
+                    <Pressable key={cat} onPress={() => setNewCategory(cat)} style={{ cursor: 'pointer' }}>
                       <YStack
                         paddingHorizontal="$3"
                         paddingVertical="$2"
@@ -283,7 +283,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
                 <Text fontSize={13} fontWeight="600" color="$textMuted">TRACKING TYPE</Text>
                 <XStack flexWrap="wrap" gap="$2">
                   {TRACKING_TYPES.map(({ value, label }) => (
-                    <Pressable key={value} onPress={() => setNewTrackingType(value)}>
+                    <Pressable key={value} onPress={() => setNewTrackingType(value)} style={{ cursor: 'pointer' }}>
                       <YStack
                         paddingHorizontal="$3"
                         paddingVertical="$2"
@@ -379,7 +379,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
           ListHeaderComponent={
             // Show "Create custom" option if no exact match
             !hasExactMatch && searchQuery.length > 0 ? (
-              <Pressable onPress={handleShowCreateForm}>
+              <Pressable onPress={handleShowCreateForm} style={{ cursor: 'pointer' }}>
                 <XStack
                   paddingVertical="$3"
                   paddingHorizontal="$4"

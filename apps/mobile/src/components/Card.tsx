@@ -21,6 +21,7 @@ export function Card({ children, pressable, onPress, onLongPress, padding }: Car
       borderColor={theme.borderColor?.val ?? '#27272A'}
       onPress={pressable && onPress ? onPress : undefined}
       onLongPress={pressable && onLongPress ? onLongPress : undefined}
+      cursor={pressable ? 'pointer' : undefined}
       pressStyle={pressable ? {
         backgroundColor: theme.surfaceHover?.val ?? '#27272A',
         scale: 0.98,
