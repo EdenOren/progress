@@ -36,7 +36,8 @@ jobs:
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-        run: npx expo export --platform web
+          EXPO_BASE_URL: /progress
+        run: npx expo export --platform web --clear
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
