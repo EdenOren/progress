@@ -39,10 +39,22 @@ export function SupabaseProvider({ children }: SupabaseProviderProps): React.Rea
 
     const initialize = async (): Promise<void> => {
       try {
+        // Check if env vars exist first
+        const supabaseUrl = process.env['EXPO_PUBLIC_SUPABASE_URL'];
+        const supabaseKey = process.env['EXPO_PUBLIC_SUPABASE_ANON_KEY'];
+
+        if (!supabaseUrl || !supabaseKey) {
+          throw new Error(
+            `Missing environment variables:\n` +
+            `EXPO_PUBLIC_SUPABASE_URL: ${supabaseUrl ? 'set' : 'MISSING'}\n` +
+            `EXPO_PUBLIC_SUPABASE_ANON_KEY: ${supabaseKey ? 'set' : 'MISSING'}`
+          );
+        }
+
         // Initialize Supabase client
         const env: Env = validateEnv({
-          SUPABASE_URL: process.env['EXPO_PUBLIC_SUPABASE_URL'],
-          SUPABASE_ANON_KEY: process.env['EXPO_PUBLIC_SUPABASE_ANON_KEY'],
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_ANON_KEY: supabaseKey,
         });
 
         initSupabase(env);
@@ -50,8 +62,13 @@ export function SupabaseProvider({ children }: SupabaseProviderProps): React.Rea
 
         const supabase = getSupabase();
 
-        // Get initial session
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        // Get initial session with timeout
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Connection timeout - could not reach Supabase')), 10000);
+        });
+
+        const { data: { session: initialSession } } = await Promise.race([sessionPromise, timeoutPromise]);
         setSession(initialSession);
         setIsLoading(false);
 
