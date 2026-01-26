@@ -11,7 +11,7 @@ import {
 import { useSupabaseContext } from '../providers';
 import { handleError } from '../utils/errorHandler';
 
-/** Query key factory for exercises */
+/** Query key factory for exercises - used by React Query for caching */
 export const exerciseKeys = {
   all: ['exercises'] as const,
   list: (userId: string) => [...exerciseKeys.all, 'list', userId] as const,
