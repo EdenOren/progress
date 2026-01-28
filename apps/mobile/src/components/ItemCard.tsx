@@ -189,7 +189,7 @@ export function ItemCard({ item, comparison, entryId, lastSessionItem }: ItemCar
               <Pressable
                 onPress={() => copyFromLastMutation.mutate()}
                 disabled={copyFromLastMutation.isPending}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', userSelect: 'none' } as never}
               >
                 <Stack
                   backgroundColor="rgba(139, 92, 246, 0.15)"

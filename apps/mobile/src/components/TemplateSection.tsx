@@ -82,7 +82,7 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
         <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
           Exercises ({template?.length ?? 0})
         </Text>
-        <Pressable onPress={() => setShowAddSheet(true)} style={{ cursor: 'pointer' }}>
+        <Pressable onPress={() => setShowAddSheet(true)} style={{ cursor: 'pointer', userSelect: 'none' } as never}>
           <XStack alignItems="center" gap="$1">
             <MaterialCommunityIcons
               name="plus"
@@ -152,7 +152,7 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
               <Pressable
                 onPress={() => handleRemoveExercise(item)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', userSelect: 'none' } as never}
               >
                 <Stack
                   width={32}
@@ -187,7 +187,7 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
           <Text color="$textMuted" textAlign="center">
             No exercises added yet
           </Text>
-          <Pressable onPress={() => setShowAddSheet(true)} style={{ cursor: 'pointer' }}>
+          <Pressable onPress={() => setShowAddSheet(true)} style={{ cursor: 'pointer', userSelect: 'none' } as never}>
             <Text color="$primary" fontWeight="600">
               Add your first exercise
             </Text>

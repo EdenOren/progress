@@ -86,6 +86,7 @@ export function Button({
         scale: 0.96,
       }}
       cursor={isDisabled ? 'not-allowed' : 'pointer'}
+      userSelect="none"
     >
       {loading ? (
         <ActivityIndicator size="small" color={v.text} />
@@ -94,6 +95,7 @@ export function Button({
           color={v.text}
           fontSize={s.fontSize}
           fontWeight="600"
+          userSelect="none"
         >
           {children}
         </Text>

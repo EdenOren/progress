@@ -163,7 +163,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
           ) : (
             <Pressable
               onPress={handleDelete}
-              style={{ padding: 8, cursor: 'pointer' }}
+              style={{ padding: 8, cursor: 'pointer', userSelect: 'none' } as never}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <MaterialCommunityIcons

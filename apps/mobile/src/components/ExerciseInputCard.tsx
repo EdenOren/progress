@@ -450,7 +450,7 @@ export function ExerciseInputCard({
                   <Pressable
                     onPress={() => handleCopySet(index)}
                     disabled={isSaving}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', userSelect: 'none' } as never}
                   >
                     <Stack
                       backgroundColor={isCopied ? '$primary' : 'rgba(139, 92, 246, 0.15)'}
@@ -483,7 +483,7 @@ export function ExerciseInputCard({
                 <Pressable
                   onPress={() => serverSet && handleDeleteSet(serverSet.id, index)}
                   disabled={isSaving || deleteSetMutation.isPending}
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', userSelect: 'none' } as never}
                 >
                   <Stack
                     width={32}
@@ -533,6 +533,8 @@ export function ExerciseInputCard({
                   item.feedback?.rating === rating ? getFeedbackColor(rating) : undefined
                 }
                 onPress={() => feedbackMutation.mutate(rating)}
+                loading={feedbackMutation.isPending && feedbackMutation.variables === rating}
+                disabled={feedbackMutation.isPending}
               >
                 {rating.charAt(0).toUpperCase() + rating.slice(1)}
               </Button>

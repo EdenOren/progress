@@ -26,6 +26,7 @@ export function Card({ children, pressable, onPress, onLongPress, padding }: Car
         backgroundColor: theme.surfaceHover?.val ?? '#27272A',
         scale: 0.98,
       } : undefined}
+      userSelect={pressable ? 'none' : undefined}
     >
       {children}
     </Stack>
