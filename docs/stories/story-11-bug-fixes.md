@@ -1,98 +1,55 @@
 # Story 11: Critical Bug Fixes
 
+## Status: COMPLETED
+
 ## Issues Reported
 
-### 11.1 Template Section Not Visible
+### 11.1 Template Section Not Visible ✅
 **Description**: The template section (where users add exercises to their workout routine) is not appearing on the Subject Detail page.
 
-**Expected Behavior**:
-- Subject detail page should show "Exercises (X)" header with "+ Add" button
-- Users can add exercises to create a reusable template
-- When starting a session, template exercises are pre-filled
+**Root Cause**: The components were using `$text` as a Tamagui theme token, but this token was not defined in the custom theme config. The correct token is `$color`.
 
-**Current Behavior**:
-- Template section not visible at all
-
-**Investigation Needed**:
-- Check if TemplateSection component is rendering
-- Check if useWorkoutTemplate hook is returning data
-- Check for CSS/layout issues hiding the section
-- Check if there are console errors
-
-**Files to Check**:
-- `apps/mobile/app/subject/[id].tsx` - TemplateSection usage
-- `apps/mobile/src/components/TemplateSection.tsx` - Component implementation
-- `apps/mobile/src/hooks/useTemplates.ts` - Data fetching
+**Fix Applied**:
+- Changed `color="$text"` to `color="$color"` in TemplateSection.tsx
+- Changed `'$text'` to `'$color'` in AddExerciseSheet.tsx
 
 ---
 
-### 11.2 Long Press Delete Not Working
+### 11.2 Long Press Delete Not Working ✅
 **Description**: Long press gesture to delete items is not triggering the delete action.
 
-**Expected Behavior**:
-- Long press on cards/items should show delete confirmation
-- Works on both mobile and web
+**Root Cause**: The entry cards in subject/[id].tsx were not passing an `onLongPress` handler to the Card component.
 
-**Current Behavior**:
-- Long press does nothing
-
-**Investigation Needed**:
-- Check if onLongPress prop is being passed to Card components
-- Check if web supports long press (may need different approach for web)
-- Review where long press delete was supposed to be implemented
-
-**Files to Check**:
-- `apps/mobile/src/components/Card.tsx` - onLongPress prop
-- Components using Card with delete functionality
+**Fix Applied**:
+- Added `useDeleteEntry` hook import
+- Added `handleDeleteEntry` function with Alert confirmation
+- Added `onLongPress` prop to entry Card components
 
 ---
 
-### 11.3 Trash Icons Not Visible
+### 11.3 Trash Icons Not Visible ✅
 **Description**: The trash icons added in Story 8 are not appearing in the UI.
 
-**Expected Behavior**:
-- Each set row should have a trash icon button
-- Header delete buttons should show trash icon instead of text
-- Icons should be visible and clickable
+**Root Cause**: The trash icons had low opacity (0.6) and a muted gray color that blended with the background.
 
-**Current Behavior**:
-- Trash icons not rendering
-
-**Investigation Needed**:
-- Check if MaterialCommunityIcons is properly imported
-- Check icon color vs background contrast
-- Check if icons are being hidden by layout/overflow
-- Verify the trash icon name is correct ("trash-can-outline")
-
-**Files to Check**:
-- `apps/mobile/src/components/ExerciseInputCard.tsx` - Set delete button
-- `apps/mobile/app/entry/[id].tsx` - Header trash icon
-- `apps/mobile/app/subject/[id].tsx` - Header trash icon
+**Fix Applied**:
+- Increased icon size from 16px to 18px
+- Changed color from muted gray to error red
+- Added red-tinted background for better visibility
+- Set opacity to 1 (was 0.6)
 
 ---
 
-### 11.4 Feedback Buttons Not Working (Complete Exercise)
+### 11.4 Feedback Buttons Not Working ✅
 **Description**: The success/hard/fail feedback buttons don't respond to clicks.
 
-**Expected Behavior**:
-- Clicking feedback button saves the rating
-- Button shows selected state
-- Toast notification confirms save
+**Root Cause**:
+1. The `item_feedback` table lacked a UNIQUE constraint on `item_id`, which is required for the upsert with `onConflict: 'item_id'` to work properly
+2. No success toast was shown after saving feedback
 
-**Current Behavior**:
-- Buttons don't respond or nothing happens
-
-**Root Cause Candidates**:
-1. Text selection interfering with clicks (partially fixed)
-2. setFeedback API not working (RLS issue?)
-3. Button onPress not firing
-4. Mutation error being swallowed
-
-**Investigation Needed**:
-- Add console.log to feedbackMutation to trace execution
-- Check Supabase RLS policies on item_feedback table
-- Verify the mutation is being called on press
-- Check if error toast is being suppressed
+**Fix Applied**:
+- Created migration `003_feedback_unique_constraint.sql` to add UNIQUE constraint on item_id
+- Added success toast notification when feedback is saved
 
 ---
 
@@ -103,9 +60,22 @@
 **Medium** - 2-4 hours for investigation and fixes
 
 ## Acceptance Criteria
-- [ ] Template section visible on subject detail page
-- [ ] Can add exercises to template
-- [ ] Trash icons visible on set rows
-- [ ] Trash icons visible in headers
-- [ ] Delete functionality works (either via icon or long press)
-- [ ] Feedback buttons respond to clicks and save rating
+- [x] Template section visible on subject detail page
+- [x] Can add exercises to template
+- [x] Trash icons visible on set rows
+- [x] Trash icons visible in headers
+- [x] Delete functionality works (either via icon or long press)
+- [x] Feedback buttons respond to clicks and save rating
+
+## Files Modified
+- `apps/mobile/app/subject/[id].tsx` - Added long press delete for entries
+- `apps/mobile/src/components/TemplateSection.tsx` - Fixed theme token
+- `apps/mobile/src/components/AddExerciseSheet.tsx` - Fixed theme tokens
+- `apps/mobile/src/components/ExerciseInputCard.tsx` - Improved trash icon visibility, added feedback toast
+- `supabase/migrations/003_feedback_unique_constraint.sql` - New migration
+
+## Note
+After deploying, the database migration needs to be applied:
+```bash
+npx supabase db push
+```
