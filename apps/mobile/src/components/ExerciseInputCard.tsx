@@ -195,8 +195,9 @@ export function ExerciseInputCard({
       if (!result.success) throw result.error;
       return result.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, rating) => {
       queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
+      showSuccessToast(`Marked as ${rating}`);
     },
     onError: (error) => handleError(error),
   });
@@ -491,14 +492,15 @@ export function ExerciseInputCard({
                     borderRadius="$2"
                     alignItems="center"
                     justifyContent="center"
-                    opacity={isSaving || deleteSetMutation.isPending ? 0.3 : 0.6}
-                    hoverStyle={{ opacity: 1, backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
-                    pressStyle={{ opacity: 1, backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
+                    backgroundColor="rgba(239, 68, 68, 0.1)"
+                    opacity={isSaving || deleteSetMutation.isPending ? 0.3 : 1}
+                    hoverStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.2)' }}
+                    pressStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.25)' }}
                   >
                     <MaterialCommunityIcons
                       name="trash-can-outline"
-                      size={16}
-                      color={theme.textMuted?.val ?? '#71717A'}
+                      size={18}
+                      color={theme.error?.val ?? '#EF4444'}
                     />
                   </Stack>
                 </Pressable>

@@ -126,7 +126,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
           />
         </YStack>
         <YStack flex={1}>
-          <Text fontWeight="600" color="$text">
+          <Text fontWeight="600" color="$color">
             {item.name}
           </Text>
           <Text fontSize={12} color="$textMuted">
@@ -239,7 +239,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
                         <Text
                           fontSize={13}
                           fontWeight={newMuscleGroup === group ? '600' : '400'}
-                          color={newMuscleGroup === group ? '$purple10' : '$text'}
+                          color={newMuscleGroup === group ? '$purple10' : '$color'}
                           textTransform="capitalize"
                         >
                           {group.replace('_', ' ')}
@@ -267,7 +267,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
                         <Text
                           fontSize={13}
                           fontWeight={newCategory === cat ? '600' : '400'}
-                          color={newCategory === cat ? '$purple10' : '$text'}
+                          color={newCategory === cat ? '$purple10' : '$color'}
                           textTransform="capitalize"
                         >
                           {cat}
@@ -295,7 +295,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
                         <Text
                           fontSize={13}
                           fontWeight={newTrackingType === value ? '600' : '400'}
-                          color={newTrackingType === value ? '$purple10' : '$text'}
+                          color={newTrackingType === value ? '$purple10' : '$color'}
                         >
                           {label}
                         </Text>
@@ -402,7 +402,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
                     />
                   </YStack>
                   <YStack flex={1}>
-                    <Text fontWeight="600" color="$text">
+                    <Text fontWeight="600" color="$color">
                       Create "{searchQuery}"
                     </Text>
                     <Text fontSize={12} color="$textMuted">

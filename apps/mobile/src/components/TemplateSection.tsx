@@ -140,7 +140,7 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
 
               {/* Exercise info */}
               <YStack flex={1}>
-                <Text fontSize={15} fontWeight="600" color="$text">
+                <Text fontSize={15} fontWeight="600" color="$color">
                   {item.exercise.name}
                 </Text>
                 <Text fontSize={12} color="$textMuted">

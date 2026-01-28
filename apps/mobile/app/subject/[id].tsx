@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
 import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../src/components';
-import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useHardDeleteSubject, useWorkoutTemplate } from '../../src/hooks';
+import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useHardDeleteSubject, useWorkoutTemplate, useDeleteEntry } from '../../src/hooks';
 import { showSuccessToast } from '../../src/utils';
 
 export default function SubjectDetailScreen(): React.ReactElement {
@@ -19,6 +19,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
   const createEntry = useCreateEntry();
   const createEntryWithTemplate = useCreateEntryWithTemplate();
   const hardDelete = useHardDeleteSubject();
+  const deleteEntry = useDeleteEntry();
   const theme = useTheme();
 
   const isCreatingEntry = createEntry.isPending || createEntryWithTemplate.isPending;
@@ -92,9 +93,32 @@ export default function SubjectDetailScreen(): React.ReactElement {
     });
   };
 
+  const handleDeleteEntry = useCallback((entry: Entry): void => {
+    if (deleteEntry.isPending) return;
+    Alert.alert(
+      'Delete Session?',
+      `Are you sure you want to delete the session from ${formatDate(entry.performed_at)}? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteEntry.mutate(
+              { entryId: entry.id, subjectId: id },
+              {
+                onSuccess: () => showSuccessToast('Session deleted'),
+              }
+            );
+          },
+        },
+      ]
+    );
+  }, [deleteEntry, id]);
+
   const renderEntry = ({ item }: { item: Entry }): React.ReactElement => (
     <Stack marginHorizontal={16} marginBottom={12}>
-      <Card pressable onPress={() => handleEntryPress(item)}>
+      <Card pressable onPress={() => handleEntryPress(item)} onLongPress={() => handleDeleteEntry(item)}>
         <XStack justifyContent="space-between" alignItems="center">
           <YStack gap={4}>
             <Text fontSize={16} fontWeight="600" color="$color">
