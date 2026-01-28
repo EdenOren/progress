@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, Alert, ActivityIndicator, Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate } from '@progress/shared';
@@ -118,9 +119,17 @@ export default function EntryScreen(): React.ReactElement {
           headerRight: () => deleteEntry.isPending ? (
             <ActivityIndicator size="small" color={theme.error?.val} />
           ) : (
-            <Button variant="ghost" size="small" onPress={handleDelete}>
-              Delete
-            </Button>
+            <Pressable
+              onPress={handleDelete}
+              style={{ padding: 8, cursor: 'pointer' }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialCommunityIcons
+                name="trash-can-outline"
+                size={22}
+                color={theme.error?.val ?? '#EF4444'}
+              />
+            </Pressable>
           ),
         }}
       />

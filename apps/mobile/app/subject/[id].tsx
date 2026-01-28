@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
-import { FlatList, RefreshControl, Alert, ActivityIndicator } from 'react-native';
+import { FlatList, RefreshControl, Alert, ActivityIndicator, Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
@@ -160,18 +161,17 @@ export default function SubjectDetailScreen(): React.ReactElement {
           headerRight: () => hardDelete.isPending ? (
             <ActivityIndicator size="small" color={theme.error?.val} />
           ) : (
-            <Stack
-              paddingHorizontal={8}
-              paddingVertical={4}
-              borderRadius={6}
-              cursor="pointer"
-              pressStyle={{ opacity: 0.6 }}
+            <Pressable
               onPress={handleDelete}
+              style={{ padding: 8, cursor: 'pointer' }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Text color="$error" fontSize={15} fontWeight="500">
-                Delete
-              </Text>
-            </Stack>
+              <MaterialCommunityIcons
+                name="trash-can-outline"
+                size={22}
+                color={theme.error?.val ?? '#EF4444'}
+              />
+            </Pressable>
           ),
         }}
       />

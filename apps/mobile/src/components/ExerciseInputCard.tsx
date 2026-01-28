@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { TextInput, Pressable, ActivityIndicator, Alert } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,13 +7,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createSet,
   updateSet,
+  deleteSet,
   setFeedback,
   formatDuration,
   type ItemWithSets,
   type FeedbackRating,
 } from '@progress/shared';
 import { useSupabaseContext } from '../providers';
-import { handleError } from '../utils';
+import { handleError, showSuccessToast } from '../utils';
 import { Card } from './Card';
 import { Button } from './Button';
 
@@ -151,6 +152,36 @@ export function ExerciseInputCard({
     },
     onError: (error) => handleError(error),
   });
+
+  // Delete set mutation
+  const deleteSetMutation = useMutation({
+    mutationFn: async (setId: string) => {
+      if (!user) throw new Error('Not authenticated');
+      const result = await deleteSet(user.id, setId);
+      if (!result.success) throw result.error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
+      showSuccessToast('Set deleted');
+    },
+    onError: (error) => handleError(error),
+  });
+
+  // Handle delete set with confirmation
+  const handleDeleteSet = useCallback((setId: string, setIndex: number) => {
+    Alert.alert(
+      'Delete Set?',
+      `Remove Set ${setIndex + 1} from this exercise?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteSetMutation.mutate(setId),
+        },
+      ]
+    );
+  }, [deleteSetMutation]);
 
   // Feedback mutation
   const feedbackMutation = useMutation({
@@ -447,6 +478,30 @@ export function ExerciseInputCard({
                 {!hasLastSetData && isSaving && (
                   <ActivityIndicator size="small" color={theme.primary?.val} />
                 )}
+
+                {/* Delete button */}
+                <Pressable
+                  onPress={() => serverSet && handleDeleteSet(serverSet.id, index)}
+                  disabled={isSaving || deleteSetMutation.isPending}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <Stack
+                    width={32}
+                    height={32}
+                    borderRadius="$2"
+                    alignItems="center"
+                    justifyContent="center"
+                    opacity={isSaving || deleteSetMutation.isPending ? 0.3 : 0.6}
+                    hoverStyle={{ opacity: 1, backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+                    pressStyle={{ opacity: 1, backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
+                  >
+                    <MaterialCommunityIcons
+                      name="trash-can-outline"
+                      size={16}
+                      color={theme.textMuted?.val ?? '#71717A'}
+                    />
+                  </Stack>
+                </Pressable>
               </XStack>
             );
           })}
