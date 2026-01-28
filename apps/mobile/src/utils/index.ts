@@ -13,3 +13,8 @@ export {
   showWarningToast,
   hideToast,
 } from './toast';
+
+export {
+  showAlert,
+  confirmAction,
+} from './alert';

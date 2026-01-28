@@ -2,7 +2,7 @@ import React from 'react';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Alert } from 'react-native';
+import { showAlert } from '../../src/utils';
 import { router } from 'expo-router';
 import { Card, Button } from '../../src/components';
 import { useAuth } from '../../src/hooks';
@@ -14,7 +14,7 @@ export default function ProfileScreen(): React.ReactElement {
   const theme = useTheme();
 
   const handleSignOut = (): void => {
-    Alert.alert(
+    showAlert(
       'Sign Out',
       'Are you sure you want to sign out?',
       [

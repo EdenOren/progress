@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { FlatList, RefreshControl, Alert, ActivityIndicator, Pressable } from 'react-native';
+import { FlatList, RefreshControl, ActivityIndicator, Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,7 +9,7 @@ import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
 import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../src/components';
 import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useHardDeleteSubject, useWorkoutTemplate, useDeleteEntry } from '../../src/hooks';
-import { showSuccessToast } from '../../src/utils';
+import { showSuccessToast, showAlert } from '../../src/utils';
 
 export default function SubjectDetailScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,7 +26,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
   const handleDelete = useCallback((): void => {
     if (!subject || hardDelete.isPending) return;
-    Alert.alert(
+    showAlert(
       'Delete Workout?',
       `This will permanently delete "${subject.name}" and all its sessions, exercises, and sets. This cannot be undone.`,
       [
@@ -95,7 +95,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
   const handleDeleteEntry = useCallback((entry: Entry): void => {
     if (deleteEntry.isPending) return;
-    Alert.alert(
+    showAlert(
       'Delete Session?',
       `Are you sure you want to delete the session from ${formatDate(entry.performed_at)}? This cannot be undone.`,
       [

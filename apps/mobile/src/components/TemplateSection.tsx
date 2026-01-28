@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useWorkoutTemplate, useHardRemoveFromTemplate, useAddExerciseToTemplate } from '../hooks/useTemplates';
+import { showAlert } from '../utils';
 import { AddExerciseSheet } from './AddExerciseSheet';
 import type { Exercise, WorkoutTemplateWithExercise } from '@progress/shared';
 
@@ -27,7 +28,7 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
   }, [addExercise]);
 
   const handleRemoveExercise = useCallback((item: WorkoutTemplateWithExercise) => {
-    Alert.alert(
+    showAlert(
       'Remove Exercise?',
       `Remove "${item.exercise.name}" from this workout template?`,
       [

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { TextInput, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,7 +14,7 @@ import {
   type FeedbackRating,
 } from '@progress/shared';
 import { useSupabaseContext } from '../providers';
-import { handleError, showSuccessToast } from '../utils';
+import { handleError, showSuccessToast, showAlert } from '../utils';
 import { Card } from './Card';
 import { Button } from './Button';
 
@@ -169,7 +169,7 @@ export function ExerciseInputCard({
 
   // Handle delete set with confirmation
   const handleDeleteSet = useCallback((setId: string, setIndex: number) => {
-    Alert.alert(
+    showAlert(
       'Delete Set?',
       `Remove Set ${setIndex + 1} from this exercise?`,
       [

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { FlatList, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import { FlatList, RefreshControl, ActivityIndicator } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { router } from 'expo-router';
@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatRelativeDate } from '@progress/shared';
 import { Card, EmptyState } from '../../src/components';
 import { useSubjectsWithStats, useHardDeleteSubject } from '../../src/hooks';
+import { showAlert } from '../../src/utils';
 import { CreateSubjectModal } from '../../src/components/CreateSubjectModal';
 import type { SubjectWithStats } from '@progress/shared';
 
@@ -25,7 +26,7 @@ export default function WorkoutsScreen(): React.ReactElement {
 
   const handleSubjectLongPress = useCallback((subject: SubjectWithStats): void => {
     if (hardDelete.isPending) return;
-    Alert.alert(
+    showAlert(
       'Delete Workout?',
       `This will permanently delete "${subject.name}" and all its sessions, exercises, and sets. This cannot be undone.`,
       [

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, Alert, ActivityIndicator, Pressable } from 'react-native';
+import { ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -15,7 +15,7 @@ import {
   useCompleteEntry,
   useDeleteEntry,
 } from '../../src/hooks';
-import { showSuccessToast } from '../../src/utils';
+import { showSuccessToast, showAlert } from '../../src/utils';
 
 export default function EntryScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,7 +32,7 @@ export default function EntryScreen(): React.ReactElement {
   const handleComplete = (): void => {
     if (!id || completeEntry.isPending) return;
 
-    Alert.alert(
+    showAlert(
       'Complete Session',
       'Mark this session as completed?',
       [
@@ -52,7 +52,7 @@ export default function EntryScreen(): React.ReactElement {
   const handleDelete = (): void => {
     if (!entry || deleteEntry.isPending) return;
 
-    Alert.alert(
+    showAlert(
       'Delete Entry',
       'Are you sure you want to delete this entry? This cannot be undone.',
       [
