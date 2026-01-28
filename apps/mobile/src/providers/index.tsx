@@ -1,8 +1,8 @@
 import React from 'react';
 import { TamaguiProvider, Theme } from '@tamagui/core';
-import { useColorScheme } from 'react-native';
 import { SupabaseProvider } from './supabase';
 import { QueryProvider } from './query';
+import { useAppColorScheme } from '../hooks/useAppColorScheme';
 import config from '../../tamagui.config';
 
 interface AppProvidersProps {
@@ -10,11 +10,11 @@ interface AppProvidersProps {
 }
 
 export function AppProviders({ children }: AppProvidersProps): React.ReactElement {
-  const colorScheme = useColorScheme();
+  const colorScheme = useAppColorScheme();
 
   return (
     <TamaguiProvider config={config}>
-      <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
+      <Theme name={colorScheme}>
         <QueryProvider>
           <SupabaseProvider>
             {children}

@@ -1,13 +1,13 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { AppProviders } from '../src/providers';
+import { useAppColorScheme } from '../src/hooks/useAppColorScheme';
 
 export default function RootLayout(): React.ReactElement {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme !== 'light';
+  const colorScheme = useAppColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
     <>
