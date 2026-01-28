@@ -14,7 +14,6 @@ import { handleError } from '../utils';
  * Hook to create a new set
  */
 export function useCreateSet() {
-  const queryClient = useQueryClient();
   const { user } = useSupabaseContext();
 
   return useMutation({

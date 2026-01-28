@@ -7,7 +7,7 @@ import {
   entryWithItemsSchema,
 } from '../schemas/domain';
 import { type Result, ok, err } from '../types/result';
-import { mapSupabaseError, ValidationError } from '../errors/index';
+import { mapSupabaseError, ValidationError, NotFoundError } from '../errors/index';
 
 // Type for raw Supabase query result with nested relations
 type RawItemRow = Database['public']['Tables']['items']['Row'];
@@ -256,6 +256,10 @@ export async function updateEntry(
     .single();
 
   if (error) {
+    // Handle "no rows returned" - entry may have been deleted
+    if (error.code === 'PGRST116') {
+      return err(new NotFoundError('Session'));
+    }
     return err(mapSupabaseError(error));
   }
 

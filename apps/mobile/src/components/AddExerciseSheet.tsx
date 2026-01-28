@@ -359,7 +359,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
                 flex: 1,
                 paddingVertical: 12,
                 fontSize: 16,
-                color: theme.text?.val ?? '#fff',
+                color: theme['text']?.val ?? '#fff',
               }}
               autoFocus
               autoCapitalize="none"

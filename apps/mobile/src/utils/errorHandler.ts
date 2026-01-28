@@ -1,4 +1,3 @@
-import { Alert } from 'react-native';
 import {
   AppError,
   AuthError,
@@ -7,25 +6,52 @@ import {
   NotFoundError,
   DuplicateError,
 } from '@progress/shared';
+import { showErrorToast } from './toast';
 
 export interface ErrorHandlerOptions {
-  showAlert?: boolean;
+  /** Show toast notification (default: true) */
+  showToast?: boolean;
+  /** Custom title for the toast */
+  title?: string;
 }
 
 const defaultOptions: ErrorHandlerOptions = {
-  showAlert: true,
+  showToast: true,
 };
+
+/**
+ * Check if error is a Supabase PGRST error
+ */
+function isPgrstError(error: unknown): error is { code: string; message: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as { code: unknown }).code === 'string' &&
+    (error as { code: string }).code.startsWith('PGRST')
+  );
+}
 
 /**
  * Get a user-friendly message for an error
  */
 export function getErrorMessage(error: unknown): string {
+  // Handle Supabase PGRST errors
+  if (isPgrstError(error)) {
+    if (error.code === 'PGRST116') {
+      // "Cannot coerce the result to a single JSON object" - 0 rows returned
+      return 'This item may have been deleted. Please refresh.';
+    }
+    // Other PGRST errors
+    return 'Database error. Please try again.';
+  }
+
   if (error instanceof NetworkError) {
     return 'Unable to connect. Please check your internet connection.';
   }
 
   if (error instanceof AuthError) {
-    return error.message || 'Authentication failed. Please log in again.';
+    return error.message || 'Session expired. Please sign in again.';
   }
 
   if (error instanceof ValidationError) {
@@ -39,12 +65,12 @@ export function getErrorMessage(error: unknown): string {
   }
 
   if (error instanceof NotFoundError) {
-    return `${error.resource} not found.`;
+    return `${error.resource} not found. It may have been deleted.`;
   }
 
   if (error instanceof DuplicateError) {
     return error.field
-      ? `A record with this ${error.field} already exists.`
+      ? `A ${error.field} with this value already exists.`
       : 'This record already exists.';
   }
 
@@ -53,6 +79,14 @@ export function getErrorMessage(error: unknown): string {
   }
 
   if (error instanceof Error) {
+    // Check for common error patterns
+    const msg = error.message.toLowerCase();
+    if (msg.includes('network') || msg.includes('fetch failed')) {
+      return 'Unable to connect. Please check your internet connection.';
+    }
+    if (msg.includes('timeout')) {
+      return 'Request timed out. Please try again.';
+    }
     return error.message;
   }
 
@@ -69,10 +103,14 @@ export function handleError(
   const opts = { ...defaultOptions, ...options };
   const message = getErrorMessage(error);
 
+  // Log error for debugging (in development)
+  if (__DEV__) {
+    console.error('[Error]', error);
+  }
 
-  // Show alert to user
-  if (opts.showAlert) {
-    Alert.alert('Error', message);
+  // Show toast notification
+  if (opts.showToast) {
+    showErrorToast(message, opts.title);
   }
 }
 
@@ -80,7 +118,7 @@ export function handleError(
  * Handle an error and return a message (for inline display)
  */
 export function handleErrorSilent(error: unknown): string {
-  handleError(error, { showAlert: false });
+  handleError(error, { showToast: false });
   return getErrorMessage(error);
 }
 

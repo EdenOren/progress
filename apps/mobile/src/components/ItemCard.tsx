@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Pressable } from 'react-native';
-import { YStack, XStack, Stack } from '@tamagui/stacks';
-import { Text, useTheme } from '@tamagui/core';
+import { YStack, XStack } from '@tamagui/stacks';
+import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -119,7 +119,9 @@ export function ItemCard({ item, comparison, entryId, lastSessionItem }: ItemCar
     mutationFn: async () => {
       if (!user || !lastSessionItem) throw new Error('No data to copy');
 
-      const setsToCreate: Omit<ItemSetInsert, 'item_id' | 'user_id'>[] = lastSessionItem.sets.map((lastSet, index) => ({
+      const setsToCreate: ItemSetInsert[] = lastSessionItem.sets.map((lastSet, index) => ({
+        item_id: item.id,
+        user_id: user.id,
         set_index: item.sets.length + index,
         weight_kg: lastSet.weight_kg,
         reps: lastSet.reps,
@@ -127,7 +129,7 @@ export function ItemCard({ item, comparison, entryId, lastSessionItem }: ItemCar
         distance_m: lastSet.distance_m,
       }));
 
-      const result = await createSets(item.id, user.id, setsToCreate);
+      const result = await createSets(setsToCreate);
       if (!result.success) throw result.error;
       return result.data;
     },

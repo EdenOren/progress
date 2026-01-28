@@ -8,6 +8,7 @@ import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
 import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../src/components';
 import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useHardDeleteSubject, useWorkoutTemplate } from '../../src/hooks';
+import { showSuccessToast } from '../../src/utils';
 
 export default function SubjectDetailScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,7 +34,10 @@ export default function SubjectDetailScreen(): React.ReactElement {
           style: 'destructive',
           onPress: () => {
             hardDelete.mutate(id, {
-              onSuccess: () => router.back(),
+              onSuccess: () => {
+                showSuccessToast('Workout deleted');
+                router.back();
+              },
             });
           },
         },

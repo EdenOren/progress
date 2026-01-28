@@ -14,6 +14,7 @@ import {
   useCompleteEntry,
   useDeleteEntry,
 } from '../../src/hooks';
+import { showSuccessToast } from '../../src/utils';
 
 export default function EntryScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,7 +39,9 @@ export default function EntryScreen(): React.ReactElement {
         {
           text: 'Complete',
           onPress: () => {
-            completeEntry.mutate(id);
+            completeEntry.mutate(id, {
+              onSuccess: () => showSuccessToast('Session completed!'),
+            });
           },
         },
       ]
@@ -59,7 +62,12 @@ export default function EntryScreen(): React.ReactElement {
           onPress: () => {
             deleteEntry.mutate(
               { entryId: entry.id, subjectId: entry.subject_id },
-              { onSuccess: () => router.back() }
+              {
+                onSuccess: () => {
+                  showSuccessToast('Session deleted');
+                  router.back();
+                },
+              }
             );
           },
         },

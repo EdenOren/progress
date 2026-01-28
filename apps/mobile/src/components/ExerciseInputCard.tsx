@@ -1,17 +1,15 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { TextInput, Pressable, ActivityIndicator } from 'react-native';
-import { YStack, XStack, Stack } from '@tamagui/stacks';
-import { Text, useTheme } from '@tamagui/core';
+import { YStack, XStack } from '@tamagui/stacks';
+import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createSet,
   updateSet,
   setFeedback,
-  formatWeight,
   formatDuration,
   type ItemWithSets,
-  type ItemSet,
   type FeedbackRating,
 } from '@progress/shared';
 import { useSupabaseContext } from '../providers';
@@ -421,7 +419,7 @@ export function ExerciseInputCard({
                   <Pressable
                     onPress={() => handleCopySet(index)}
                     disabled={isSaving}
-                    style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}
+                    style={{ cursor: 'pointer' }}
                   >
                     <Stack
                       backgroundColor={isCopied ? '$primary' : 'rgba(139, 92, 246, 0.15)'}

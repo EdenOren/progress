@@ -23,7 +23,7 @@ import {
   itemWithSetsSchema,
 } from '../schemas/domain';
 import { type Result, ok, err } from '../types/result';
-import { mapSupabaseError, ValidationError } from '../errors/index';
+import { mapSupabaseError, ValidationError, NotFoundError } from '../errors/index';
 import type { Database } from '../supabase/client';
 
 // Type for raw Supabase query result with nested relations
@@ -89,6 +89,10 @@ export async function getItemWithSets(
     .single();
 
   if (error) {
+    // Handle "no rows returned" - item may have been deleted
+    if (error.code === 'PGRST116') {
+      return err(new NotFoundError('Exercise'));
+    }
     return err(mapSupabaseError(error));
   }
 
@@ -159,6 +163,10 @@ export async function updateItem(
     .single();
 
   if (error) {
+    // Handle "no rows returned" - item may have been deleted
+    if (error.code === 'PGRST116') {
+      return err(new NotFoundError('Exercise'));
+    }
     return err(mapSupabaseError(error));
   }
 
@@ -302,6 +310,10 @@ export async function updateSet(
     .single();
 
   if (error) {
+    // Handle "no rows returned" - set may have been deleted
+    if (error.code === 'PGRST116') {
+      return err(new NotFoundError('Set'));
+    }
     return err(mapSupabaseError(error));
   }
 
@@ -448,6 +460,10 @@ export async function updateFeedback(
     .single();
 
   if (error) {
+    // Handle "no rows returned" - feedback may have been deleted
+    if (error.code === 'PGRST116') {
+      return err(new NotFoundError('Feedback'));
+    }
     return err(mapSupabaseError(error));
   }
 
