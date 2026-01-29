@@ -11,7 +11,7 @@ import type { Exercise, ExerciseIcon, MuscleGroup, TrackingType, ExerciseCategor
 interface AddExerciseSheetProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (exercise: Exercise) => void;
+  onSelectMultiple: (exercises: Exercise[]) => void;
   excludeIds?: string[];
 }
 
@@ -32,10 +32,11 @@ const TRACKING_TYPES: { value: TrackingType; label: string }[] = [
   { value: 'distance', label: 'Distance' },
 ];
 
-export function AddExerciseSheet({ open, onClose, onSelect, excludeIds = [] }: AddExerciseSheetProps): React.ReactElement {
+export function AddExerciseSheet({ open, onClose, onSelectMultiple, excludeIds = [] }: AddExerciseSheetProps): React.ReactElement {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
 
   // Create form state
   const [newName, setNewName] = useState('');
@@ -48,8 +49,11 @@ export function AddExerciseSheet({ open, onClose, onSelect, excludeIds = [] }: A
   const { data: allExercises } = useAllExercises();
   const createExercise = useCreateCustomExercise();
 
+  // Get IDs of selected exercises
+  const selectedIds = useMemo(() => new Set(selectedExercises.map(e => e.id)), [selectedExercises]);
+
   // Show search results if query, otherwise show all exercises
-  // Filter out already selected exercises
+  // Filter out already added exercises (excludeIds) but NOT currently selected ones
   const exercises = useMemo(() => {
     const excludeSet = new Set(excludeIds);
     const baseList = searchQuery.length > 0 ? (searchResults ?? []) : (allExercises ?? []);
@@ -62,12 +66,24 @@ export function AddExerciseSheet({ open, onClose, onSelect, excludeIds = [] }: A
     return exercises.some(e => e.name.toLowerCase() === searchQuery.toLowerCase());
   }, [exercises, searchQuery]);
 
-  const handleSelect = useCallback((exercise: Exercise) => {
-    onSelect(exercise);
+  const toggleSelect = useCallback((exercise: Exercise) => {
+    setSelectedExercises(prev => {
+      const isSelected = prev.some(e => e.id === exercise.id);
+      if (isSelected) {
+        return prev.filter(e => e.id !== exercise.id);
+      }
+      return [...prev, exercise];
+    });
+  }, []);
+
+  const handleConfirm = useCallback(() => {
+    if (selectedExercises.length === 0) return;
+    onSelectMultiple(selectedExercises);
     onClose();
     setSearchQuery('');
+    setSelectedExercises([]);
     setShowCreateForm(false);
-  }, [onSelect, onClose]);
+  }, [selectedExercises, onSelectMultiple, onClose]);
 
   const handleCreateCustom = useCallback(async () => {
     if (!newName.trim()) return;
@@ -80,10 +96,17 @@ export function AddExerciseSheet({ open, onClose, onSelect, excludeIds = [] }: A
       tracking_type: newTrackingType,
     }, {
       onSuccess: (exercise) => {
-        handleSelect(exercise);
+        // Add newly created exercise to selection
+        setSelectedExercises(prev => [...prev, exercise]);
+        setShowCreateForm(false);
+        setNewName('');
+        setNewIcon('dumbbell');
+        setNewMuscleGroup('chest');
+        setNewCategory('strength');
+        setNewTrackingType('weight_reps');
       },
     });
-  }, [newName, newIcon, newMuscleGroup, newCategory, newTrackingType, createExercise, handleSelect]);
+  }, [newName, newIcon, newMuscleGroup, newCategory, newTrackingType, createExercise]);
 
   const handleShowCreateForm = useCallback(() => {
     setNewName(searchQuery);
@@ -94,6 +117,7 @@ export function AddExerciseSheet({ open, onClose, onSelect, excludeIds = [] }: A
     onClose();
     setSearchQuery('');
     setShowCreateForm(false);
+    setSelectedExercises([]);
     setNewName('');
     setNewIcon('dumbbell');
     setNewMuscleGroup('chest');
@@ -102,71 +126,95 @@ export function AddExerciseSheet({ open, onClose, onSelect, excludeIds = [] }: A
   }, [onClose]);
 
   const openYouTubeSearch = useCallback((exerciseName: string) => {
-    const searchQuery = encodeURIComponent(`${exerciseName} exercise tutorial`);
-    const url = `https://www.youtube.com/results?search_query=${searchQuery}`;
+    const query = encodeURIComponent(`${exerciseName} exercise tutorial`);
+    const url = `https://www.youtube.com/results?search_query=${query}`;
     Linking.openURL(url);
   }, []);
 
-  const renderExerciseItem = useCallback(({ item }: { item: Exercise }) => (
-    <XStack
-      paddingVertical="$3"
-      paddingHorizontal="$4"
-      alignItems="center"
-      gap="$3"
-      backgroundColor="$background"
-    >
-      <Pressable
-        onPress={() => handleSelect(item)}
-        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none' } as never}
+  const renderExerciseItem = useCallback(({ item }: { item: Exercise }) => {
+    const isSelected = selectedIds.has(item.id);
+
+    return (
+      <XStack
+        paddingVertical="$3"
+        paddingHorizontal="$4"
+        alignItems="center"
+        gap="$3"
+        backgroundColor={isSelected ? '$purple5' : '$background'}
       >
-        <YStack
-          width={40}
-          height={40}
-          borderRadius={20}
-          backgroundColor="$purple5"
-          alignItems="center"
-          justifyContent="center"
+        <Pressable
+          onPress={() => toggleSelect(item)}
+          style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none' } as never}
         >
-          <MaterialCommunityIcons
-            name={item.icon as keyof typeof MaterialCommunityIcons.glyphMap}
-            size={22}
-            color={theme.purple10?.val ?? '#8B5CF6'}
-          />
-        </YStack>
-        <YStack flex={1}>
-          <Text fontWeight="600" color="$color">
-            {item.name}
-          </Text>
-          <Text fontSize={12} color="$textMuted">
-            {item.muscle_group} · {item.category}
-          </Text>
-        </YStack>
-        {!item.is_system && (
-          <Text fontSize={11} color="$textMuted">Custom</Text>
-        )}
-      </Pressable>
-      <Pressable
-        onPress={() => openYouTubeSearch(item.name)}
-        style={{ padding: 4, cursor: 'pointer', userSelect: 'none' } as never}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <Stack
-          width={32}
-          height={32}
-          borderRadius={16}
-          backgroundColor="$blue5"
-          alignItems="center"
-          justifyContent="center"
+          {/* Checkbox */}
+          <Stack
+            width={24}
+            height={24}
+            borderRadius={12}
+            borderWidth={2}
+            borderColor={isSelected ? '$primary' : '$textMuted'}
+            backgroundColor={isSelected ? '$primary' : 'transparent'}
+            alignItems="center"
+            justifyContent="center"
+          >
+            {isSelected && (
+              <MaterialCommunityIcons
+                name="check"
+                size={16}
+                color="#fff"
+              />
+            )}
+          </Stack>
+
+          <YStack
+            width={40}
+            height={40}
+            borderRadius={20}
+            backgroundColor="$purple5"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <MaterialCommunityIcons
+              name={item.icon as keyof typeof MaterialCommunityIcons.glyphMap}
+              size={22}
+              color={theme.purple10?.val ?? '#8B5CF6'}
+            />
+          </YStack>
+          <YStack flex={1}>
+            <Text fontWeight="600" color="$color">
+              {item.name}
+            </Text>
+            <Text fontSize={12} color="$textMuted">
+              {item.muscle_group} · {item.category}
+            </Text>
+          </YStack>
+          {!item.is_system && (
+            <Text fontSize={11} color="$textMuted">Custom</Text>
+          )}
+        </Pressable>
+        <Pressable
+          onPress={() => openYouTubeSearch(item.name)}
+          style={{ padding: 4, cursor: 'pointer', userSelect: 'none' } as never}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <MaterialCommunityIcons
-            name="play-circle-outline"
-            size={18}
-            color={theme.blue10?.val ?? '#3B82F6'}
-          />
-        </Stack>
-      </Pressable>
-    </XStack>
-  ), [handleSelect, theme, openYouTubeSearch]);
+          <Stack
+            width={32}
+            height={32}
+            borderRadius={16}
+            backgroundColor="$blue5"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <MaterialCommunityIcons
+              name="play-circle-outline"
+              size={18}
+              color={theme.blue10?.val ?? '#3B82F6'}
+            />
+          </Stack>
+        </Pressable>
+      </XStack>
+    );
+  }, [toggleSelect, selectedIds, theme, openYouTubeSearch]);
 
   // Create form view
   if (showCreateForm) {
@@ -360,9 +408,49 @@ export function AddExerciseSheet({ open, onClose, onSelect, excludeIds = [] }: A
           <Button variant="ghost" size="small" onPress={handleClose}>
             Cancel
           </Button>
-          <Text fontWeight="700" fontSize={17}>Add Exercise</Text>
-          <YStack width={60} />
+          <Text fontWeight="700" fontSize={17}>Add Exercises</Text>
+          <Button
+            variant="primary"
+            size="small"
+            onPress={handleConfirm}
+            disabled={selectedExercises.length === 0}
+          >
+            Add ({selectedExercises.length})
+          </Button>
         </XStack>
+
+        {/* Selected exercises preview */}
+        {selectedExercises.length > 0 && (
+          <XStack
+            paddingHorizontal="$4"
+            paddingVertical="$2"
+            backgroundColor="$purple5"
+            gap="$2"
+            flexWrap="wrap"
+          >
+            {selectedExercises.map(exercise => (
+              <Pressable
+                key={exercise.id}
+                onPress={() => toggleSelect(exercise)}
+                style={{ cursor: 'pointer', userSelect: 'none' } as never}
+              >
+                <XStack
+                  backgroundColor="$primary"
+                  paddingHorizontal="$2"
+                  paddingVertical="$1"
+                  borderRadius="$2"
+                  alignItems="center"
+                  gap="$1"
+                >
+                  <Text fontSize={12} color="white" fontWeight="600">
+                    {exercise.name}
+                  </Text>
+                  <MaterialCommunityIcons name="close" size={14} color="#fff" />
+                </XStack>
+              </Pressable>
+            ))}
+          </XStack>
+        )}
 
         {/* Search Input */}
         <YStack padding="$4" borderBottomWidth={1} borderBottomColor="$borderColor">
@@ -387,7 +475,7 @@ export function AddExerciseSheet({ open, onClose, onSelect, excludeIds = [] }: A
                 flex: 1,
                 paddingVertical: 12,
                 fontSize: 16,
-                color: theme['text']?.val ?? '#fff',
+                color: theme.color?.val ?? '#fff',
               }}
               autoFocus
               autoCapitalize="none"

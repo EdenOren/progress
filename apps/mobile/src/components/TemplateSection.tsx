@@ -26,10 +26,13 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
     [template]
   );
 
-  const handleAddExercise = useCallback((exercise: Exercise) => {
-    addExercise.mutate({
-      exerciseId: exercise.id,
-      defaultSets: [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }], // Default 3x10
+  const handleAddExercises = useCallback((exercises: Exercise[]) => {
+    // Add each exercise to the template
+    exercises.forEach(exercise => {
+      addExercise.mutate({
+        exerciseId: exercise.id,
+        defaultSets: [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }], // Default 3x10
+      });
     });
   }, [addExercise]);
 
@@ -197,7 +200,7 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
       <AddExerciseSheet
         open={showAddSheet}
         onClose={() => setShowAddSheet(false)}
-        onSelect={handleAddExercise}
+        onSelectMultiple={handleAddExercises}
         excludeIds={templateExerciseIds}
       />
     </YStack>
