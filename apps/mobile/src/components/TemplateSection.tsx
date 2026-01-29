@@ -71,7 +71,7 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
         justifyContent="space-between"
         alignItems="center"
       >
-        <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
+        <Text fontSize={13} fontWeight="600" color="$textMuted">
           Exercises ({template?.length ?? 0})
         </Text>
         <Pressable onPress={() => setShowAddSheet(true)} style={{ cursor: 'pointer', userSelect: 'none' } as never}>

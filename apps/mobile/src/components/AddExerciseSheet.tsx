@@ -153,14 +153,14 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
           width={32}
           height={32}
           borderRadius={16}
-          backgroundColor="rgba(255, 0, 0, 0.1)"
+          backgroundColor="$purple5"
           alignItems="center"
           justifyContent="center"
         >
           <MaterialCommunityIcons
-            name="youtube"
+            name="play-circle-outline"
             size={18}
-            color="#FF0000"
+            color={theme.purple10?.val ?? '#8B5CF6'}
           />
         </Stack>
       </Pressable>
@@ -213,7 +213,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
             <YStack padding="$4" gap="$4">
               {/* Name */}
               <YStack gap="$2">
-                <Text fontSize={13} fontWeight="600" color="$textMuted">NAME</Text>
+                <Text fontSize={13} fontWeight="600" color="$textMuted">Name</Text>
                 <Input
                   value={newName}
                   onChangeText={setNewName}
@@ -224,7 +224,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
 
               {/* Icon Picker */}
               <YStack gap="$2">
-                <Text fontSize={13} fontWeight="600" color="$textMuted">ICON</Text>
+                <Text fontSize={13} fontWeight="600" color="$textMuted">Icon</Text>
                 <XStack flexWrap="wrap" gap="$2">
                   {AVAILABLE_ICONS.map((icon) => (
                     <Pressable key={icon} onPress={() => setNewIcon(icon)} style={{ cursor: 'pointer', userSelect: 'none' } as never}>
@@ -251,7 +251,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
 
               {/* Muscle Group */}
               <YStack gap="$2">
-                <Text fontSize={13} fontWeight="600" color="$textMuted">MUSCLE GROUP</Text>
+                <Text fontSize={13} fontWeight="600" color="$textMuted">Muscle Group</Text>
                 <XStack flexWrap="wrap" gap="$2">
                   {MUSCLE_GROUPS.map((group) => (
                     <Pressable key={group} onPress={() => setNewMuscleGroup(group)} style={{ cursor: 'pointer', userSelect: 'none' } as never}>
@@ -279,7 +279,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
 
               {/* Category */}
               <YStack gap="$2">
-                <Text fontSize={13} fontWeight="600" color="$textMuted">CATEGORY</Text>
+                <Text fontSize={13} fontWeight="600" color="$textMuted">Category</Text>
                 <XStack flexWrap="wrap" gap="$2">
                   {CATEGORIES.map((cat) => (
                     <Pressable key={cat} onPress={() => setNewCategory(cat)} style={{ cursor: 'pointer', userSelect: 'none' } as never}>
@@ -307,7 +307,7 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
 
               {/* Tracking Type */}
               <YStack gap="$2">
-                <Text fontSize={13} fontWeight="600" color="$textMuted">TRACKING TYPE</Text>
+                <Text fontSize={13} fontWeight="600" color="$textMuted">Tracking Type</Text>
                 <XStack flexWrap="wrap" gap="$2">
                   {TRACKING_TYPES.map(({ value, label }) => (
                     <Pressable key={value} onPress={() => setNewTrackingType(value)} style={{ cursor: 'pointer', userSelect: 'none' } as never}>

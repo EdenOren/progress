@@ -215,7 +215,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
           {/* Sessions Header */}
           <YStack paddingHorizontal={16} paddingTop={16} paddingBottom={8}>
-            <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
+            <Text fontSize={13} fontWeight="600" color="$textMuted">
               Sessions ({entries?.length ?? 0})
             </Text>
           </YStack>
