@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Modal, FlatList, TextInput as RNTextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { Modal, FlatList, TextInput as RNTextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
-import { Text, useTheme } from '@tamagui/core';
+import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Button } from './Button';
 import { Input } from './Input';
@@ -100,16 +100,23 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
     setNewTrackingType('weight_reps');
   }, [onClose]);
 
+  const openYouTubeSearch = useCallback((exerciseName: string) => {
+    const searchQuery = encodeURIComponent(`${exerciseName} exercise tutorial`);
+    const url = `https://www.youtube.com/results?search_query=${searchQuery}`;
+    Linking.openURL(url);
+  }, []);
+
   const renderExerciseItem = useCallback(({ item }: { item: Exercise }) => (
-    <Pressable onPress={() => handleSelect(item)} style={{ cursor: 'pointer', userSelect: 'none' } as never}>
-      <XStack
-        paddingVertical="$3"
-        paddingHorizontal="$4"
-        alignItems="center"
-        gap="$3"
-        backgroundColor="$background"
-        hoverStyle={{ backgroundColor: '$backgroundHover' }}
-        pressStyle={{ backgroundColor: '$backgroundPress' }}
+    <XStack
+      paddingVertical="$3"
+      paddingHorizontal="$4"
+      alignItems="center"
+      gap="$3"
+      backgroundColor="$background"
+    >
+      <Pressable
+        onPress={() => handleSelect(item)}
+        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none' } as never}
       >
         <YStack
           width={40}
@@ -136,9 +143,29 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
         {!item.is_system && (
           <Text fontSize={11} color="$textMuted">Custom</Text>
         )}
-      </XStack>
-    </Pressable>
-  ), [handleSelect, theme]);
+      </Pressable>
+      <Pressable
+        onPress={() => openYouTubeSearch(item.name)}
+        style={{ padding: 4, cursor: 'pointer', userSelect: 'none' } as never}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Stack
+          width={32}
+          height={32}
+          borderRadius={16}
+          backgroundColor="rgba(255, 0, 0, 0.1)"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <MaterialCommunityIcons
+            name="youtube"
+            size={18}
+            color="#FF0000"
+          />
+        </Stack>
+      </Pressable>
+    </XStack>
+  ), [handleSelect, theme, openYouTubeSearch]);
 
   // Create form view
   if (showCreateForm) {
