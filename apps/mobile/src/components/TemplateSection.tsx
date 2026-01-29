@@ -29,7 +29,7 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
 
   const handleRemoveExercise = useCallback((item: WorkoutTemplateWithExercise) => {
     removeFromTemplate.mutate(item.id, {
-      onSuccess: () => showSuccessToast('Exercise removed'),
+      onSuccess: () => showSuccessToast('Exercise removed successfully'),
     });
   }, [removeFromTemplate]);
 

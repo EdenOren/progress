@@ -28,7 +28,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
     if (!subject || hardDelete.isPending) return;
     hardDelete.mutate(id, {
       onSuccess: () => {
-        showSuccessToast('Workout deleted');
+        showSuccessToast('Workout deleted successfully');
         router.back();
       },
     });
@@ -85,7 +85,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
     deleteEntry.mutate(
       { entryId: entry.id, subjectId: id },
       {
-        onSuccess: () => showSuccessToast('Session deleted'),
+        onSuccess: () => showSuccessToast('Session deleted successfully'),
       }
     );
   }, [deleteEntry, id]);

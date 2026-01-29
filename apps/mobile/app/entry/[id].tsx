@@ -42,7 +42,7 @@ export default function EntryScreen(): React.ReactElement {
       { entryId: entry.id, subjectId: entry.subject_id },
       {
         onSuccess: () => {
-          showSuccessToast('Session deleted');
+          showSuccessToast('Session deleted successfully');
           router.back();
         },
       }

@@ -162,7 +162,7 @@ export function ExerciseInputCard({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
-      showSuccessToast('Set deleted');
+      showSuccessToast('Set deleted successfully');
     },
     onError: (error) => handleError(error),
   });

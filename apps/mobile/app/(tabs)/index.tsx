@@ -28,7 +28,7 @@ export default function WorkoutsScreen(): React.ReactElement {
   const handleDeleteSubject = useCallback((subject: SubjectWithStats): void => {
     if (hardDelete.isPending) return;
     hardDelete.mutate(subject.id, {
-      onSuccess: () => showSuccessToast('Workout deleted'),
+      onSuccess: () => showSuccessToast('Workout deleted successfully'),
     });
   }, [hardDelete]);
 
