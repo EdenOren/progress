@@ -323,7 +323,7 @@ export function ExerciseInputCard({
         {/* Last session reference */}
         {lastRef && (
           <XStack
-            backgroundColor="rgba(139, 92, 246, 0.08)"
+            backgroundColor="$blue5"
             paddingHorizontal="$3"
             paddingVertical="$2"
             borderRadius="$2"
@@ -332,9 +332,9 @@ export function ExerciseInputCard({
             <MaterialCommunityIcons
               name="history"
               size={14}
-              color={theme.textMuted?.val ?? '#666'}
+              color={theme.blue10?.val ?? '#3B82F6'}
             />
-            <Text fontSize={13} color="$textMuted" marginLeft="$2">
+            <Text fontSize={13} color="$secondary" marginLeft="$2">
               Last: {lastRef}
             </Text>
           </XStack>
@@ -352,7 +352,7 @@ export function ExerciseInputCard({
             return (
               <XStack
                 key={localSet.id}
-                backgroundColor={isCopied ? 'rgba(139, 92, 246, 0.15)' : '$backgroundHover'}
+                backgroundColor={isCopied ? '$blue5' : '$backgroundHover'}
                 padding="$2"
                 borderRadius="$2"
                 alignItems="center"
@@ -443,7 +443,7 @@ export function ExerciseInputCard({
                     style={{ cursor: 'pointer', userSelect: 'none' } as never}
                   >
                     <Stack
-                      backgroundColor={isCopied ? '$primary' : 'rgba(139, 92, 246, 0.15)'}
+                      backgroundColor={isCopied ? '$secondary' : '$blue5'}
                       width={32}
                       height={32}
                       borderRadius="$2"
@@ -452,12 +452,12 @@ export function ExerciseInputCard({
                       opacity={isSaving ? 0.5 : 1}
                     >
                       {isSaving ? (
-                        <ActivityIndicator size="small" color={theme.primary?.val} />
+                        <ActivityIndicator size="small" color={theme.secondary?.val} />
                       ) : (
                         <MaterialCommunityIcons
                           name="content-copy"
                           size={16}
-                          color={isCopied ? '#fff' : (theme.purple10?.val ?? '#8B5CF6')}
+                          color={isCopied ? '#fff' : (theme.blue10?.val ?? '#3B82F6')}
                         />
                       )}
                     </Stack>

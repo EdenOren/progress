@@ -153,14 +153,14 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
           width={32}
           height={32}
           borderRadius={16}
-          backgroundColor="$purple5"
+          backgroundColor="$blue5"
           alignItems="center"
           justifyContent="center"
         >
           <MaterialCommunityIcons
             name="play-circle-outline"
             size={18}
-            color={theme.purple10?.val ?? '#8B5CF6'}
+            color={theme.blue10?.val ?? '#3B82F6'}
           />
         </Stack>
       </Pressable>

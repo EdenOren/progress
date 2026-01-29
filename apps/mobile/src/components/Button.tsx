@@ -47,9 +47,9 @@ export function Button({
     },
     secondary: {
       bg: 'transparent',
-      text: theme.primary?.val ?? '#8B5CF6',
-      border: theme.primary?.val ?? '#8B5CF6',
-      pressedBg: 'rgba(139, 92, 246, 0.1)',
+      text: theme.secondary?.val ?? '#3B82F6',
+      border: theme.secondary?.val ?? '#3B82F6',
+      pressedBg: 'rgba(59, 130, 246, 0.1)',
     },
     ghost: {
       bg: 'transparent',

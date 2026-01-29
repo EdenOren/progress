@@ -2,10 +2,26 @@ import { config } from '@tamagui/config/v3';
 import { createTamagui } from '@tamagui/core';
 
 const colors = {
-  // Primary - Violet
+  // Primary - Purple (motivation, premium)
   primary: '#8B5CF6',
   primaryLight: '#A78BFA',
   primaryDark: '#7C3AED',
+  purple5: 'rgba(139, 92, 246, 0.15)',
+  purple10: '#8B5CF6',
+
+  // Secondary - Blue (trust, calm)
+  secondary: '#3B82F6',
+  secondaryLight: '#60A5FA',
+  secondaryDark: '#2563EB',
+  blue5: 'rgba(59, 130, 246, 0.15)',
+  blue10: '#3B82F6',
+
+  // Accent - Emerald (success, growth, health)
+  accent: '#10B981',
+  accentLight: '#34D399',
+  accentDark: '#059669',
+  emerald5: 'rgba(16, 185, 129, 0.15)',
+  emerald10: '#10B981',
 
   // Semantic
   success: '#10B981',
@@ -44,10 +60,25 @@ const lightTheme = {
   borderColorFocus: colors.primary,
   borderColorPress: colors.zinc400,
   placeholderColor: colors.zinc400,
-  // Semantic
+  // Primary - Purple
   primary: colors.primary,
   primaryLight: colors.primaryLight,
   primaryDark: colors.primaryDark,
+  purple5: colors.purple5,
+  purple10: colors.purple10,
+  // Secondary - Blue
+  secondary: colors.secondary,
+  secondaryLight: colors.secondaryLight,
+  secondaryDark: colors.secondaryDark,
+  blue5: colors.blue5,
+  blue10: colors.blue10,
+  // Accent - Emerald
+  accent: colors.accent,
+  accentLight: colors.accentLight,
+  accentDark: colors.accentDark,
+  emerald5: colors.emerald5,
+  emerald10: colors.emerald10,
+  // Semantic
   success: colors.success,
   warning: colors.warning,
   error: colors.error,
@@ -75,10 +106,25 @@ const darkTheme = {
   borderColorFocus: colors.primary,
   borderColorPress: colors.zinc500,
   placeholderColor: colors.zinc500,
-  // Semantic
+  // Primary - Purple
   primary: colors.primary,
   primaryLight: colors.primaryLight,
   primaryDark: colors.primaryDark,
+  purple5: colors.purple5,
+  purple10: colors.purple10,
+  // Secondary - Blue
+  secondary: colors.secondary,
+  secondaryLight: colors.secondaryLight,
+  secondaryDark: colors.secondaryDark,
+  blue5: colors.blue5,
+  blue10: colors.blue10,
+  // Accent - Emerald
+  accent: colors.accent,
+  accentLight: colors.accentLight,
+  accentDark: colors.accentDark,
+  emerald5: colors.emerald5,
+  emerald10: colors.emerald10,
+  // Semantic
   success: colors.success,
   warning: colors.warning,
   error: colors.error,

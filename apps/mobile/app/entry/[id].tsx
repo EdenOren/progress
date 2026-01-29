@@ -148,8 +148,8 @@ export default function EntryScreen(): React.ReactElement {
           {/* Last time comparison hint */}
           {lastEntry && (
             <Stack marginBottom={16}>
-              <Card>
-                <Text fontSize={13} color="$textSecondary">
+              <Card backgroundColor="$blue5">
+                <Text fontSize={13} color="$secondary">
                   Comparing with your session from {formatDate(lastEntry.performed_at)}
                 </Text>
               </Card>

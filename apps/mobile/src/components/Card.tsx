@@ -7,14 +7,15 @@ interface CardProps {
   onPress?: () => void;
   onLongPress?: () => void;
   padding?: number;
+  backgroundColor?: string;
 }
 
-export function Card({ children, pressable, onPress, onLongPress, padding }: CardProps): React.ReactElement {
+export function Card({ children, pressable, onPress, onLongPress, padding, backgroundColor }: CardProps): React.ReactElement {
   const theme = useTheme();
 
   return (
     <Stack
-      backgroundColor={theme.surface?.val ?? '#18181B'}
+      backgroundColor={backgroundColor ?? theme.surface?.val ?? '#18181B'}
       borderRadius={12}
       padding={padding ?? 16}
       borderWidth={1}
