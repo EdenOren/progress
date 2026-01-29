@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatRelativeDate } from '@progress/shared';
 import { Card, EmptyState } from '../../src/components';
 import { useSubjectsWithStats, useHardDeleteSubject } from '../../src/hooks';
-import { showAlert } from '../../src/utils';
 import { CreateSubjectModal } from '../../src/components/CreateSubjectModal';
 import type { SubjectWithStats } from '@progress/shared';
 
@@ -26,18 +25,7 @@ export default function WorkoutsScreen(): React.ReactElement {
 
   const handleSubjectLongPress = useCallback((subject: SubjectWithStats): void => {
     if (hardDelete.isPending) return;
-    showAlert(
-      'Delete Workout?',
-      `This will permanently delete "${subject.name}" and all its sessions, exercises, and sets. This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => hardDelete.mutate(subject.id),
-        },
-      ]
-    );
+    hardDelete.mutate(subject.id);
   }, [hardDelete]);
 
   const renderSubject = ({ item }: { item: SubjectWithStats }): React.ReactElement => (

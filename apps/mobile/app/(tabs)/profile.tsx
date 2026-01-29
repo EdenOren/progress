@@ -2,7 +2,6 @@ import React from 'react';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { showAlert } from '../../src/utils';
 import { router } from 'expo-router';
 import { Card, Button } from '../../src/components';
 import { useAuth } from '../../src/hooks';
@@ -13,24 +12,11 @@ export default function ProfileScreen(): React.ReactElement {
   const { signOut } = useAuth();
   const theme = useTheme();
 
-  const handleSignOut = (): void => {
-    showAlert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            const result = await signOut();
-            if (result.success) {
-              router.replace('/(auth)/login');
-            }
-          },
-        },
-      ]
-    );
+  const handleSignOut = async (): Promise<void> => {
+    const result = await signOut();
+    if (result.success) {
+      router.replace('/(auth)/login');
+    }
   };
 
   return (

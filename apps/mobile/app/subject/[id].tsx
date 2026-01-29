@@ -9,7 +9,7 @@ import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
 import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../src/components';
 import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useHardDeleteSubject, useWorkoutTemplate, useDeleteEntry } from '../../src/hooks';
-import { showSuccessToast, showAlert } from '../../src/utils';
+import { showSuccessToast } from '../../src/utils';
 
 export default function SubjectDetailScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,25 +26,12 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
   const handleDelete = useCallback((): void => {
     if (!subject || hardDelete.isPending) return;
-    showAlert(
-      'Delete Workout?',
-      `This will permanently delete "${subject.name}" and all its sessions, exercises, and sets. This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            hardDelete.mutate(id, {
-              onSuccess: () => {
-                showSuccessToast('Workout deleted');
-                router.back();
-              },
-            });
-          },
-        },
-      ]
-    );
+    hardDelete.mutate(id, {
+      onSuccess: () => {
+        showSuccessToast('Workout deleted');
+        router.back();
+      },
+    });
   }, [subject, hardDelete, id]);
 
   const handleStartEntry = async (): Promise<void> => {
@@ -95,24 +82,11 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
   const handleDeleteEntry = useCallback((entry: Entry): void => {
     if (deleteEntry.isPending) return;
-    showAlert(
-      'Delete Session?',
-      `Are you sure you want to delete the session from ${formatDate(entry.performed_at)}? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            deleteEntry.mutate(
-              { entryId: entry.id, subjectId: id },
-              {
-                onSuccess: () => showSuccessToast('Session deleted'),
-              }
-            );
-          },
-        },
-      ]
+    deleteEntry.mutate(
+      { entryId: entry.id, subjectId: id },
+      {
+        onSuccess: () => showSuccessToast('Session deleted'),
+      }
     );
   }, [deleteEntry, id]);
 

@@ -14,7 +14,7 @@ import {
   type FeedbackRating,
 } from '@progress/shared';
 import { useSupabaseContext } from '../providers';
-import { handleError, showSuccessToast, showAlert } from '../utils';
+import { handleError, showSuccessToast } from '../utils';
 import { Card } from './Card';
 import { Button } from './Button';
 
@@ -167,20 +167,9 @@ export function ExerciseInputCard({
     onError: (error) => handleError(error),
   });
 
-  // Handle delete set with confirmation
-  const handleDeleteSet = useCallback((setId: string, setIndex: number) => {
-    showAlert(
-      'Delete Set?',
-      `Remove Set ${setIndex + 1} from this exercise?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteSetMutation.mutate(setId),
-        },
-      ]
-    );
+  // Handle delete set - no confirmation needed
+  const handleDeleteSet = useCallback((setId: string) => {
+    deleteSetMutation.mutate(setId);
   }, [deleteSetMutation]);
 
   // Feedback mutation
@@ -482,7 +471,7 @@ export function ExerciseInputCard({
 
                 {/* Delete button */}
                 <Pressable
-                  onPress={() => serverSet && handleDeleteSet(serverSet.id, index)}
+                  onPress={() => serverSet && handleDeleteSet(serverSet.id)}
                   disabled={isSaving || deleteSetMutation.isPending}
                   style={{ cursor: 'pointer', userSelect: 'none' } as never}
                 >

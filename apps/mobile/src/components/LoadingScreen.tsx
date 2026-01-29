@@ -1,7 +1,8 @@
 import React from 'react';
-import { ActivityIndicator, Platform } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet } from 'react-native';
 import { YStack } from '@tamagui/stacks';
-import { useTheme } from '@tamagui/core';
+import { Text, useTheme } from '@tamagui/core';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export function LoadingScreen(): React.ReactElement {
   const theme = useTheme();
@@ -10,16 +11,45 @@ export function LoadingScreen(): React.ReactElement {
     <YStack
       flex={1}
       width="100%"
-      // Use minHeight for web to ensure vertical centering works
-      {...(Platform.OS === 'web' ? { minHeight: '100vh' as unknown as number } : { height: '100%' })}
       justifyContent="center"
       alignItems="center"
       backgroundColor="$background"
+      style={Platform.OS === 'web' ? styles.webContainer : undefined}
     >
-      <ActivityIndicator
-        size="large"
-        color={theme.primary?.val ?? '#8B5CF6'}
-      />
+      <YStack alignItems="center" gap="$4">
+        <YStack
+          width={80}
+          height={80}
+          borderRadius={20}
+          backgroundColor="$primary"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <MaterialCommunityIcons
+            name="chart-line"
+            size={40}
+            color="#FFFFFF"
+          />
+        </YStack>
+        <Text fontSize={24} fontWeight="700" color="$color">
+          Progress
+        </Text>
+        <ActivityIndicator
+          size="small"
+          color={theme.primary?.val ?? '#8B5CF6'}
+        />
+      </YStack>
     </YStack>
   );
 }
+
+const styles = StyleSheet.create({
+  webContainer: {
+    minHeight: '100vh',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  } as any,
+});

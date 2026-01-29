@@ -15,7 +15,7 @@ import {
   useCompleteEntry,
   useDeleteEntry,
 } from '../../src/hooks';
-import { showSuccessToast, showAlert } from '../../src/utils';
+import { showSuccessToast } from '../../src/utils';
 
 export default function EntryScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,48 +31,21 @@ export default function EntryScreen(): React.ReactElement {
 
   const handleComplete = (): void => {
     if (!id || completeEntry.isPending) return;
-
-    showAlert(
-      'Complete Session',
-      'Mark this session as completed?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Complete',
-          onPress: () => {
-            completeEntry.mutate(id, {
-              onSuccess: () => showSuccessToast('Session completed!'),
-            });
-          },
-        },
-      ]
-    );
+    completeEntry.mutate(id, {
+      onSuccess: () => showSuccessToast('Session completed!'),
+    });
   };
 
   const handleDelete = (): void => {
     if (!entry || deleteEntry.isPending) return;
-
-    showAlert(
-      'Delete Entry',
-      'Are you sure you want to delete this entry? This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            deleteEntry.mutate(
-              { entryId: entry.id, subjectId: entry.subject_id },
-              {
-                onSuccess: () => {
-                  showSuccessToast('Session deleted');
-                  router.back();
-                },
-              }
-            );
-          },
+    deleteEntry.mutate(
+      { entryId: entry.id, subjectId: entry.subject_id },
+      {
+        onSuccess: () => {
+          showSuccessToast('Session deleted');
+          router.back();
         },
-      ]
+      }
     );
   };
 
