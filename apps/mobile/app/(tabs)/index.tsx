@@ -1,12 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import { FlatList, RefreshControl, ActivityIndicator, Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatRelativeDate } from '@progress/shared';
 import { Card, EmptyState } from '../../src/components';
 import { useSubjectsWithStats, useHardDeleteSubject } from '../../src/hooks';
+import { showSuccessToast } from '../../src/utils';
 import { CreateSubjectModal } from '../../src/components/CreateSubjectModal';
 import type { SubjectWithStats } from '@progress/shared';
 
@@ -23,14 +25,16 @@ export default function WorkoutsScreen(): React.ReactElement {
     });
   };
 
-  const handleSubjectLongPress = useCallback((subject: SubjectWithStats): void => {
+  const handleDeleteSubject = useCallback((subject: SubjectWithStats): void => {
     if (hardDelete.isPending) return;
-    hardDelete.mutate(subject.id);
+    hardDelete.mutate(subject.id, {
+      onSuccess: () => showSuccessToast('Workout deleted'),
+    });
   }, [hardDelete]);
 
   const renderSubject = ({ item }: { item: SubjectWithStats }): React.ReactElement => (
     <Stack marginHorizontal={16} marginBottom={12}>
-      <Card pressable onPress={() => handleSubjectPress(item)} onLongPress={() => handleSubjectLongPress(item)}>
+      <Card pressable onPress={() => handleSubjectPress(item)}>
         <XStack gap={16}>
           <Stack
             width={3}
@@ -39,9 +43,34 @@ export default function WorkoutsScreen(): React.ReactElement {
             alignSelf="stretch"
           />
           <YStack flex={1} gap={8}>
-            <Text fontSize={18} fontWeight="600" color="$color">
-              {item.name}
-            </Text>
+            <XStack justifyContent="space-between" alignItems="flex-start">
+              <Text fontSize={18} fontWeight="600" color="$color" flex={1}>
+                {item.name}
+              </Text>
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleDeleteSubject(item);
+                }}
+                style={{ padding: 4, cursor: 'pointer', userSelect: 'none' } as never}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Stack
+                  width={28}
+                  height={28}
+                  borderRadius={14}
+                  backgroundColor="rgba(239, 68, 68, 0.1)"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <MaterialCommunityIcons
+                    name="trash-can-outline"
+                    size={16}
+                    color={theme.error?.val ?? '#EF4444'}
+                  />
+                </Stack>
+              </Pressable>
+            </XStack>
             {item.description && (
               <Text fontSize={14} color="$textSecondary" numberOfLines={2}>
                 {item.description}

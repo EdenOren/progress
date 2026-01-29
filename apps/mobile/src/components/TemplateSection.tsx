@@ -4,6 +4,7 @@ import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useWorkoutTemplate, useHardRemoveFromTemplate, useAddExerciseToTemplate } from '../hooks/useTemplates';
+import { showSuccessToast } from '../utils';
 import { AddExerciseSheet } from './AddExerciseSheet';
 import type { Exercise, WorkoutTemplateWithExercise } from '@progress/shared';
 
@@ -27,7 +28,9 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
   }, [addExercise]);
 
   const handleRemoveExercise = useCallback((item: WorkoutTemplateWithExercise) => {
-    removeFromTemplate.mutate(item.id);
+    removeFromTemplate.mutate(item.id, {
+      onSuccess: () => showSuccessToast('Exercise removed'),
+    });
   }, [removeFromTemplate]);
 
   const formatDefaultSets = (item: WorkoutTemplateWithExercise): string => {
@@ -147,14 +150,14 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
                   width={32}
                   height={32}
                   borderRadius={16}
+                  backgroundColor="rgba(239, 68, 68, 0.1)"
                   alignItems="center"
                   justifyContent="center"
-                  pressStyle={{ backgroundColor: '$backgroundPress' }}
                 >
                   <MaterialCommunityIcons
-                    name="close"
-                    size={18}
-                    color={theme.textMuted?.val ?? '#666'}
+                    name="trash-can-outline"
+                    size={16}
+                    color={theme.error?.val ?? '#EF4444'}
                   />
                 </Stack>
               </Pressable>

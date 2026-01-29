@@ -92,9 +92,9 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
   const renderEntry = ({ item }: { item: Entry }): React.ReactElement => (
     <Stack marginHorizontal={16} marginBottom={12}>
-      <Card pressable onPress={() => handleEntryPress(item)} onLongPress={() => handleDeleteEntry(item)}>
+      <Card pressable onPress={() => handleEntryPress(item)}>
         <XStack justifyContent="space-between" alignItems="center">
-          <YStack gap={4}>
+          <YStack gap={4} flex={1}>
             <Text fontSize={16} fontWeight="600" color="$color">
               {formatDate(item.performed_at)}
             </Text>
@@ -102,29 +102,54 @@ export default function SubjectDetailScreen(): React.ReactElement {
               {formatRelativeDate(item.performed_at)}
             </Text>
           </YStack>
-          {item.is_completed ? (
-            <Stack
-              backgroundColor="rgba(16, 185, 129, 0.15)"
-              paddingHorizontal={10}
-              paddingVertical={4}
-              borderRadius={9999}
+          <XStack alignItems="center" gap={8}>
+            {item.is_completed ? (
+              <Stack
+                backgroundColor="rgba(16, 185, 129, 0.15)"
+                paddingHorizontal={10}
+                paddingVertical={4}
+                borderRadius={9999}
+              >
+                <Text fontSize={12} fontWeight="600" color="$success">
+                  Completed
+                </Text>
+              </Stack>
+            ) : (
+              <Stack
+                backgroundColor="rgba(245, 158, 11, 0.15)"
+                paddingHorizontal={10}
+                paddingVertical={4}
+                borderRadius={9999}
+              >
+                <Text fontSize={12} fontWeight="600" color="$warning">
+                  In Progress
+                </Text>
+              </Stack>
+            )}
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                handleDeleteEntry(item);
+              }}
+              style={{ padding: 4, cursor: 'pointer', userSelect: 'none' } as never}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Text fontSize={12} fontWeight="600" color="$success">
-                Completed
-              </Text>
-            </Stack>
-          ) : (
-            <Stack
-              backgroundColor="rgba(245, 158, 11, 0.15)"
-              paddingHorizontal={10}
-              paddingVertical={4}
-              borderRadius={9999}
-            >
-              <Text fontSize={12} fontWeight="600" color="$warning">
-                In Progress
-              </Text>
-            </Stack>
-          )}
+              <Stack
+                width={28}
+                height={28}
+                borderRadius={14}
+                backgroundColor="rgba(239, 68, 68, 0.1)"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <MaterialCommunityIcons
+                  name="trash-can-outline"
+                  size={16}
+                  color={theme.error?.val ?? '#EF4444'}
+                />
+              </Stack>
+            </Pressable>
+          </XStack>
         </XStack>
         {item.notes && (
           <Text fontSize={14} color="$textSecondary" marginTop={8} numberOfLines={2} fontStyle="italic">
