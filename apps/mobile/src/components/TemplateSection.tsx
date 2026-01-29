@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
@@ -19,6 +19,12 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
   const { data: template, isLoading } = useWorkoutTemplate(subjectId);
   const removeFromTemplate = useHardRemoveFromTemplate(subjectId);
   const addExercise = useAddExerciseToTemplate(subjectId);
+
+  // Get IDs of exercises already in the template
+  const templateExerciseIds = useMemo(() =>
+    template?.map(item => item.exercise_id) ?? [],
+    [template]
+  );
 
   const handleAddExercise = useCallback((exercise: Exercise) => {
     addExercise.mutate({
@@ -192,6 +198,7 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
         open={showAddSheet}
         onClose={() => setShowAddSheet(false)}
         onSelect={handleAddExercise}
+        excludeIds={templateExerciseIds}
       />
     </YStack>
   );

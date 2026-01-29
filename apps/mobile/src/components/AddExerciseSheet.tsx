@@ -12,6 +12,7 @@ interface AddExerciseSheetProps {
   open: boolean;
   onClose: () => void;
   onSelect: (exercise: Exercise) => void;
+  excludeIds?: string[];
 }
 
 const AVAILABLE_ICONS: ExerciseIcon[] = [
@@ -31,7 +32,7 @@ const TRACKING_TYPES: { value: TrackingType; label: string }[] = [
   { value: 'distance', label: 'Distance' },
 ];
 
-export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetProps): React.ReactElement {
+export function AddExerciseSheet({ open, onClose, onSelect, excludeIds = [] }: AddExerciseSheetProps): React.ReactElement {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -48,12 +49,12 @@ export function AddExerciseSheet({ open, onClose, onSelect }: AddExerciseSheetPr
   const createExercise = useCreateCustomExercise();
 
   // Show search results if query, otherwise show all exercises
+  // Filter out already selected exercises
   const exercises = useMemo(() => {
-    if (searchQuery.length > 0) {
-      return searchResults ?? [];
-    }
-    return allExercises ?? [];
-  }, [searchQuery, searchResults, allExercises]);
+    const excludeSet = new Set(excludeIds);
+    const baseList = searchQuery.length > 0 ? (searchResults ?? []) : (allExercises ?? []);
+    return baseList.filter(e => !excludeSet.has(e.id));
+  }, [searchQuery, searchResults, allExercises, excludeIds]);
 
   // Check if exact match exists
   const hasExactMatch = useMemo(() => {
