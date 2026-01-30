@@ -133,6 +133,7 @@ export function useCreateEntry() {
       // Invalidate entries for this subject
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries(data.subject_id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lastEntry(data.subject_id) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.recent });
       // Also invalidate subjects stats
       queryClient.invalidateQueries({ queryKey: ['subjects', 'withStats'] });
     },
@@ -195,6 +196,7 @@ export function useCompleteEntry() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entry(data.id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries(data.subject_id) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.recent });
     },
     onError: (error) => {
       handleError(error);
@@ -228,6 +230,7 @@ export function useDeleteEntry() {
       queryClient.removeQueries({ queryKey: QUERY_KEYS.entry(entryId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries(subjectId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lastEntry(subjectId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.recent });
       queryClient.invalidateQueries({ queryKey: ['subjects', 'withStats'] });
     },
     onError: (error) => {
@@ -279,6 +282,7 @@ export function useCreateEntryWithTemplate() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries(data.subject_id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lastEntry(data.subject_id) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.recent });
       queryClient.invalidateQueries({ queryKey: ['subjects', 'withStats'] });
     },
     onError: (error) => {

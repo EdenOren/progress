@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { ScrollView, RefreshControl, ActivityIndicator, Pressable } from 'react-native';
+import { ScrollView, RefreshControl, ActivityIndicator, Pressable, Modal } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import {
   useRecentEntries,
   useWorkoutTemplate,
   useCreateEntryWithTemplate,
+  useDeleteEntry,
 } from '../../src/hooks';
 import { showSuccessToast } from '../../src/utils';
 import { CreateSubjectModal } from '../../src/components/CreateSubjectModal';
@@ -151,17 +152,23 @@ interface SessionCardProps {
   entry: Entry;
   subjectName: string;
   onPress: () => void;
+  onDelete?: () => void;
 }
 
-function SessionCard({ entry, subjectName, onPress }: SessionCardProps): React.ReactElement {
+function SessionCard({ entry, subjectName, onPress, onDelete }: SessionCardProps): React.ReactElement {
+  const theme = useTheme();
+
   return (
-    <Pressable onPress={onPress} style={{ cursor: 'pointer', userSelect: 'none' } as never}>
-      <XStack
-        backgroundColor="$backgroundHover"
-        padding="$3"
-        borderRadius="$3"
-        alignItems="center"
-        gap="$3"
+    <XStack
+      backgroundColor="$backgroundHover"
+      padding="$3"
+      borderRadius="$3"
+      alignItems="center"
+      gap="$3"
+    >
+      <Pressable
+        onPress={onPress}
+        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none' } as never}
       >
         <Stack
           width={40}
@@ -200,8 +207,31 @@ function SessionCard({ entry, subjectName, onPress }: SessionCardProps): React.R
           size={20}
           color="#666"
         />
-      </XStack>
-    </Pressable>
+      </Pressable>
+
+      {onDelete && (
+        <Pressable
+          onPress={onDelete}
+          style={{ cursor: 'pointer', userSelect: 'none' } as never}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Stack
+            width={32}
+            height={32}
+            borderRadius={16}
+            backgroundColor="rgba(239, 68, 68, 0.1)"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <MaterialCommunityIcons
+              name="trash-can-outline"
+              size={16}
+              color={theme.error?.val ?? '#EF4444'}
+            />
+          </Stack>
+        </Pressable>
+      )}
+    </XStack>
   );
 }
 
@@ -210,6 +240,7 @@ export default function WorkoutsScreen(): React.ReactElement {
   const { data: subjects, isLoading: subjectsLoading, refetch, isRefetching } = useSubjectsWithStats();
   const { data: recentEntries, isLoading: entriesLoading } = useRecentEntries(5);
   const hardDelete = useHardDeleteSubject();
+  const deleteEntry = useDeleteEntry();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRecentSessions, setShowRecentSessions] = useState(false);
 
@@ -241,6 +272,16 @@ export default function WorkoutsScreen(): React.ReactElement {
     });
   }, []);
 
+  const handleDeleteSession = useCallback((entry: Entry): void => {
+    if (deleteEntry.isPending) return;
+    deleteEntry.mutate(
+      { entryId: entry.id, subjectId: entry.subject_id },
+      {
+        onSuccess: () => showSuccessToast('Session deleted'),
+      }
+    );
+  }, [deleteEntry]);
+
   const isLoading = subjectsLoading || entriesLoading;
 
   if (isLoading) {
@@ -256,27 +297,46 @@ export default function WorkoutsScreen(): React.ReactElement {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-      >
-        {!hasWorkouts ? (
-          <EmptyState
-            title="No workouts yet"
-            message="Create your first workout routine to get started"
-            actionLabel="Create Workout"
-            onAction={() => setShowCreateModal(true)}
-          />
-        ) : (
-          <YStack padding="$4" gap="$6">
-            {/* Your Workouts Section */}
-            <YStack gap="$3">
-              <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
-                Your Workouts
-              </Text>
+      <YStack flex={1}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: hasRecentSessions ? 70 : 20 }}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+        >
+          {!hasWorkouts ? (
+            <EmptyState
+              title="No workouts yet"
+              message="Create your first workout routine to get started"
+              actionLabel="Create Workout"
+              onAction={() => setShowCreateModal(true)}
+            />
+          ) : (
+            <YStack padding="$4" gap="$3">
+              {/* Header with title and add button */}
+              <XStack alignItems="center" justifyContent="space-between">
+                <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
+                  Your Workouts
+                </Text>
+                <Pressable
+                  onPress={() => setShowCreateModal(true)}
+                  style={{ cursor: 'pointer', userSelect: 'none' } as never}
+                >
+                  <XStack alignItems="center" gap="$1">
+                    <MaterialCommunityIcons
+                      name="plus"
+                      size={18}
+                      color={theme.primary?.val ?? '#8B5CF6'}
+                    />
+                    <Text fontSize={14} fontWeight="600" color="$primary">
+                      New
+                    </Text>
+                  </XStack>
+                </Pressable>
+              </XStack>
+
+              {/* Workout cards */}
               <YStack gap="$3">
                 {subjects?.map(subject => (
                   <WorkoutCard
@@ -288,79 +348,116 @@ export default function WorkoutsScreen(): React.ReactElement {
                 ))}
               </YStack>
             </YStack>
+          )}
+        </ScrollView>
 
-            {/* Recent Sessions Section (collapsed by default) */}
-            {hasRecentSessions && (
-              <YStack gap="$3">
-                <Pressable
-                  onPress={() => setShowRecentSessions(!showRecentSessions)}
-                  style={{ cursor: 'pointer', userSelect: 'none' } as never}
+        {/* Sticky Recent Sessions Bar */}
+        {hasRecentSessions && (
+          <Pressable
+            onPress={() => setShowRecentSessions(true)}
+            style={{ cursor: 'pointer', userSelect: 'none' } as never}
+          >
+            <XStack
+              backgroundColor="$backgroundHover"
+              paddingHorizontal="$4"
+              paddingVertical="$3"
+              borderTopWidth={1}
+              borderTopColor="$borderColor"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <XStack alignItems="center" gap="$3">
+                <Stack
+                  width={32}
+                  height={32}
+                  borderRadius={16}
+                  backgroundColor="$blue5"
+                  alignItems="center"
+                  justifyContent="center"
                 >
-                  <XStack alignItems="center" justifyContent="space-between">
-                    <XStack alignItems="center" gap="$2">
-                      <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
-                        Recent Sessions
-                      </Text>
-                      <Stack
-                        backgroundColor="$backgroundHover"
-                        paddingHorizontal="$2"
-                        paddingVertical="$1"
-                        borderRadius="$2"
-                      >
-                        <Text fontSize={11} color="$textMuted">
-                          {recentEntries?.length}
-                        </Text>
-                      </Stack>
-                    </XStack>
-                    <MaterialCommunityIcons
-                      name={showRecentSessions ? 'chevron-up' : 'chevron-down'}
-                      size={20}
-                      color={theme.textMuted?.val ?? '#666'}
-                    />
-                  </XStack>
-                </Pressable>
-                {showRecentSessions && (
-                  <YStack gap="$2">
-                    {recentEntries?.map(entry => (
-                      <SessionCard
-                        key={entry.id}
-                        entry={entry}
-                        subjectName={subjectMap.get(entry.subject_id) ?? 'Workout'}
-                        onPress={() => handleViewSession(entry)}
-                      />
-                    ))}
-                  </YStack>
-                )}
-              </YStack>
-            )}
-          </YStack>
+                  <MaterialCommunityIcons
+                    name="history"
+                    size={18}
+                    color="#3B82F6"
+                  />
+                </Stack>
+                <Text fontSize={14} fontWeight="600" color="$color">
+                  Recent Sessions
+                </Text>
+                <Stack
+                  backgroundColor="$blue5"
+                  paddingHorizontal="$2"
+                  paddingVertical="$1"
+                  borderRadius="$2"
+                >
+                  <Text fontSize={12} fontWeight="600" color="$secondary">
+                    {recentEntries?.length}
+                  </Text>
+                </Stack>
+              </XStack>
+              <MaterialCommunityIcons
+                name="chevron-up"
+                size={20}
+                color={theme.textMuted?.val ?? '#666'}
+              />
+            </XStack>
+          </Pressable>
         )}
-      </ScrollView>
+      </YStack>
 
-      {/* FAB for new workout */}
-      {hasWorkouts && (
-        <Stack
-          position="absolute"
-          bottom={24}
-          right={24}
-          backgroundColor="$primary"
-          borderRadius={9999}
-          paddingHorizontal={24}
-          height={52}
-          alignItems="center"
-          justifyContent="center"
-          cursor="pointer"
-          pressStyle={{
-            scale: 0.94,
-            backgroundColor: '$primaryDark',
-          }}
-          onPress={() => setShowCreateModal(true)}
-        >
-          <Text color="white" fontWeight="600" fontSize={15}>
-            + New Workout
-          </Text>
-        </Stack>
-      )}
+      {/* Recent Sessions Modal */}
+      <Modal
+        visible={showRecentSessions}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowRecentSessions(false)}
+      >
+        <YStack flex={1} backgroundColor="$background">
+          {/* Header */}
+          <XStack
+            paddingHorizontal="$4"
+            paddingVertical="$3"
+            alignItems="center"
+            justifyContent="space-between"
+            borderBottomWidth={1}
+            borderBottomColor="$borderColor"
+          >
+            <Stack width={60} />
+            <Text fontWeight="700" fontSize={17}>
+              Recent Sessions
+            </Text>
+            <Pressable
+              onPress={() => setShowRecentSessions(false)}
+              style={{ cursor: 'pointer', userSelect: 'none', width: 60, alignItems: 'flex-end' } as never}
+            >
+              <Text fontSize={16} fontWeight="600" color="$primary">
+                Done
+              </Text>
+            </Pressable>
+          </XStack>
+
+          {/* Sessions List */}
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ padding: 16 }}
+          >
+            <YStack gap="$2">
+              {recentEntries?.map(entry => (
+                <SessionCard
+                  key={entry.id}
+                  entry={entry}
+                  subjectName={subjectMap.get(entry.subject_id) ?? 'Workout'}
+                  onPress={() => {
+                    setShowRecentSessions(false);
+                    handleViewSession(entry);
+                  }}
+                  onDelete={() => handleDeleteSession(entry)}
+                />
+              ))}
+            </YStack>
+          </ScrollView>
+        </YStack>
+      </Modal>
 
       <CreateSubjectModal
         visible={showCreateModal}
