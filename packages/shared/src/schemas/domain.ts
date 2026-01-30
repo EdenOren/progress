@@ -121,6 +121,9 @@ export const entrySchema = z.object({
   performed_at: isoDateSchema,
   notes: z.string().max(1000).nullable(),
   is_completed: z.boolean(),
+  duration_seconds: z.number().int().min(0).nullable(),
+  started_at: isoDateTimeSchema.nullable(),
+  completed_at: isoDateTimeSchema.nullable(),
   created_at: isoDateTimeSchema,
   updated_at: isoDateTimeSchema,
 });
@@ -131,12 +134,18 @@ export const entryInsertSchema = z.object({
   performed_at: isoDateSchema,
   notes: z.string().max(1000).nullable().optional(),
   is_completed: z.boolean().optional().default(false),
+  duration_seconds: z.number().int().min(0).nullable().optional(),
+  started_at: isoDateTimeSchema.nullable().optional(),
+  completed_at: isoDateTimeSchema.nullable().optional(),
 });
 
 export const entryUpdateSchema = z.object({
   performed_at: isoDateSchema.optional(),
   notes: z.string().max(1000).nullable().optional(),
   is_completed: z.boolean().optional(),
+  duration_seconds: z.number().int().min(0).nullable().optional(),
+  started_at: isoDateTimeSchema.nullable().optional(),
+  completed_at: isoDateTimeSchema.nullable().optional(),
 });
 
 export const entryArraySchema = z.array(entrySchema);
@@ -154,6 +163,7 @@ export const itemSchema = z.object({
   exercise_id: uuidSchema.nullable(),
   is_from_template: z.boolean(),
   tracking_type: trackingTypeSchema,
+  note: z.string().max(1000).nullable(),
   created_at: isoDateTimeSchema,
 });
 
@@ -165,6 +175,7 @@ export const itemInsertSchema = z.object({
   exercise_id: uuidSchema.nullable().optional(),
   is_from_template: z.boolean().optional().default(true),
   tracking_type: trackingTypeSchema.optional().default('weight_reps'),
+  note: z.string().max(1000).nullable().optional(),
 });
 
 export const itemUpdateSchema = z.object({
@@ -173,6 +184,7 @@ export const itemUpdateSchema = z.object({
   exercise_id: uuidSchema.nullable().optional(),
   is_from_template: z.boolean().optional(),
   tracking_type: trackingTypeSchema.optional(),
+  note: z.string().max(1000).nullable().optional(),
 });
 
 export const itemArraySchema = z.array(itemSchema);

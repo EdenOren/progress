@@ -125,6 +125,9 @@ export interface Entry {
   performed_at: ISODate;
   notes: string | null;
   is_completed: boolean;
+  duration_seconds: number | null;
+  started_at: ISODateTime | null;
+  completed_at: ISODateTime | null;
   created_at: ISODateTime;
   updated_at: ISODateTime;
 }
@@ -136,6 +139,9 @@ export interface EntryInsert {
   performed_at: ISODate;
   notes?: string | null;
   is_completed?: boolean;
+  duration_seconds?: number | null;
+  started_at?: ISODateTime | null;
+  completed_at?: ISODateTime | null;
 }
 
 /** Entry update input */
@@ -143,6 +149,9 @@ export interface EntryUpdate {
   performed_at?: ISODate;
   notes?: string | null;
   is_completed?: boolean;
+  duration_seconds?: number | null;
+  started_at?: ISODateTime | null;
+  completed_at?: ISODateTime | null;
 }
 
 /** Entry with all related items */
@@ -164,6 +173,7 @@ export interface Item {
   exercise_id: UUID | null;
   is_from_template: boolean;
   tracking_type: TrackingType;
+  note: string | null;
   created_at: ISODateTime;
 }
 
@@ -176,6 +186,7 @@ export interface ItemInsert {
   exercise_id?: UUID | null;
   is_from_template?: boolean;
   tracking_type?: TrackingType;
+  note?: string | null;
 }
 
 /** Item update input */
@@ -185,6 +196,7 @@ export interface ItemUpdate {
   exercise_id?: UUID | null;
   is_from_template?: boolean;
   tracking_type?: TrackingType;
+  note?: string | null;
 }
 
 /** Item with its sets and feedback */
