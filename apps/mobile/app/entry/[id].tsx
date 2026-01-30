@@ -32,7 +32,10 @@ export default function EntryScreen(): React.ReactElement {
   const handleComplete = (): void => {
     if (!id || completeEntry.isPending) return;
     completeEntry.mutate(id, {
-      onSuccess: () => showSuccessToast('Session completed!'),
+      onSuccess: () => {
+        showSuccessToast('Session completed!');
+        router.replace('/');
+      },
     });
   };
 

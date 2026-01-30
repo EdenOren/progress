@@ -12,6 +12,7 @@ export {
   useEntries,
   useEntryWithItems,
   useLastEntry,
+  useRecentEntries,
   useCreateEntry,
   useCreateEntryWithTemplate,
   useUpdateEntry,

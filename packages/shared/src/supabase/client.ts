@@ -95,6 +95,9 @@ export interface Database {
           performed_at: string;
           notes: string | null;
           is_completed: boolean;
+          duration_seconds: number | null;
+          started_at: string | null;
+          completed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -105,6 +108,9 @@ export interface Database {
           performed_at: string;
           notes?: string | null;
           is_completed?: boolean;
+          duration_seconds?: number | null;
+          started_at?: string | null;
+          completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -112,6 +118,9 @@ export interface Database {
           performed_at?: string;
           notes?: string | null;
           is_completed?: boolean;
+          duration_seconds?: number | null;
+          started_at?: string | null;
+          completed_at?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -123,6 +132,10 @@ export interface Database {
           user_id: string;
           name: string;
           position: number;
+          exercise_id: string | null;
+          is_from_template: boolean;
+          tracking_type: 'weight_reps' | 'duration' | 'distance';
+          note: string | null;
           created_at: string;
         };
         Insert: {
@@ -131,11 +144,19 @@ export interface Database {
           user_id: string;
           name: string;
           position: number;
+          exercise_id?: string | null;
+          is_from_template?: boolean;
+          tracking_type?: 'weight_reps' | 'duration' | 'distance';
+          note?: string | null;
           created_at?: string;
         };
         Update: {
           name?: string;
           position?: number;
+          exercise_id?: string | null;
+          is_from_template?: boolean;
+          tracking_type?: 'weight_reps' | 'duration' | 'distance';
+          note?: string | null;
         };
         Relationships: [];
       };
@@ -149,6 +170,8 @@ export interface Database {
           reps: number | null;
           duration_sec: number | null;
           distance_m: number | null;
+          target_reps: number | null;
+          target_duration_sec: number | null;
           notes: string | null;
           created_at: string;
         };
@@ -161,6 +184,8 @@ export interface Database {
           reps?: number | null;
           duration_sec?: number | null;
           distance_m?: number | null;
+          target_reps?: number | null;
+          target_duration_sec?: number | null;
           notes?: string | null;
           created_at?: string;
         };
@@ -170,6 +195,8 @@ export interface Database {
           reps?: number | null;
           duration_sec?: number | null;
           distance_m?: number | null;
+          target_reps?: number | null;
+          target_duration_sec?: number | null;
           notes?: string | null;
         };
         Relationships: [];

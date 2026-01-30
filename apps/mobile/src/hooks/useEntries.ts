@@ -3,6 +3,7 @@ import {
   getEntriesBySubject,
   getEntryWithItems,
   getLastEntryForSubject,
+  getRecentEntries,
   createEntry,
   createEntryWithTemplate,
   updateEntry,
@@ -20,6 +21,7 @@ const QUERY_KEYS = {
   entries: (subjectId: string) => ['entries', subjectId] as const,
   entry: (entryId: string) => ['entries', 'detail', entryId] as const,
   lastEntry: (subjectId: string) => ['entries', 'last', subjectId] as const,
+  recent: ['entries', 'recent'] as const,
 };
 
 /**
@@ -61,6 +63,27 @@ export function useEntryWithItems(entryId: string) {
       return result.data;
     },
     enabled: !!user && !!entryId,
+  });
+}
+
+/**
+ * Hook to fetch recent entries across all subjects
+ */
+export function useRecentEntries(limit: number = 5) {
+  const { user } = useSupabaseContext();
+
+  return useQuery({
+    queryKey: [...QUERY_KEYS.recent, limit],
+    queryFn: async (): Promise<Entry[]> => {
+      if (!user) throw new Error('Not authenticated');
+
+      const result = await getRecentEntries(user.id, limit);
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
+    },
+    enabled: !!user,
   });
 }
 
