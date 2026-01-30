@@ -83,14 +83,14 @@ export function ExerciseInputCard({
       const durations = lastSessionItem.sets
         .filter((s) => s.duration_sec !== null)
         .map((s) => formatDuration(s.duration_sec!));
-      return durations.length > 0 ? durations.join(' \u00B7 ') : null;
+      return durations.length > 0 ? durations.join(' · ') : null;
     }
 
     const setStrings = lastSessionItem.sets
       .filter((s) => s.weight_kg !== null || s.reps !== null)
       .map((s) => {
         if (s.weight_kg !== null && s.reps !== null) {
-          return `${s.weight_kg}kg\u00D7${s.reps}`;
+          return `${s.weight_kg}kg×${s.reps}`;
         } else if (s.weight_kg !== null) {
           return `${s.weight_kg}kg`;
         } else if (s.reps !== null) {
@@ -100,7 +100,7 @@ export function ExerciseInputCard({
       })
       .filter(Boolean);
 
-    return setStrings.length > 0 ? setStrings.join(' \u00B7 ') : null;
+    return setStrings.length > 0 ? setStrings.join(' · ') : null;
   }, [lastSessionItem, trackingType]);
 
   const lastRef = formatLastSessionRef();
@@ -365,16 +365,18 @@ export function ExerciseInputCard({
 
                 {/* Inputs based on tracking type */}
                 {trackingType === 'weight_reps' ? (
-                  <>
+                  <XStack flex={1} alignItems="center" gap="$2" minWidth={0}>
                     <TextInput
                       style={{
                         flex: 1,
+                        minWidth: 50,
+                        maxWidth: 80,
                         height: 36,
                         backgroundColor: theme.background?.val ?? '#09090B',
                         borderRadius: 6,
                         borderWidth: 1,
                         borderColor: theme.borderColor?.val ?? '#27272A',
-                        paddingHorizontal: 10,
+                        paddingHorizontal: 8,
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
@@ -386,16 +388,18 @@ export function ExerciseInputCard({
                       onChangeText={(v) => handleInputChange(index, 'weight', v)}
                       onBlur={() => handleBlur(index)}
                     />
-                    <Text color="$textMuted">\u00D7</Text>
+                    <Text color="$textMuted" fontSize={16}>×</Text>
                     <TextInput
                       style={{
                         flex: 1,
+                        minWidth: 50,
+                        maxWidth: 80,
                         height: 36,
                         backgroundColor: theme.background?.val ?? '#09090B',
                         borderRadius: 6,
                         borderWidth: 1,
                         borderColor: theme.borderColor?.val ?? '#27272A',
-                        paddingHorizontal: 10,
+                        paddingHorizontal: 8,
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
@@ -407,19 +411,21 @@ export function ExerciseInputCard({
                       onChangeText={(v) => handleInputChange(index, 'reps', v)}
                       onBlur={() => handleBlur(index)}
                     />
-                  </>
+                  </XStack>
                 ) : (
                   // Duration input
-                  <XStack flex={1} alignItems="center" gap="$2">
+                  <XStack flex={1} alignItems="center" gap="$2" minWidth={0}>
                     <TextInput
                       style={{
                         flex: 1,
+                        minWidth: 60,
+                        maxWidth: 100,
                         height: 36,
                         backgroundColor: theme.background?.val ?? '#09090B',
                         borderRadius: 6,
                         borderWidth: 1,
                         borderColor: theme.borderColor?.val ?? '#27272A',
-                        paddingHorizontal: 10,
+                        paddingHorizontal: 8,
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
