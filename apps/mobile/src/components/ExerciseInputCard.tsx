@@ -14,6 +14,7 @@ import {
   type FeedbackRating,
 } from '@progress/shared';
 import { useSupabaseContext } from '../providers';
+import { useUpdateItem } from '../hooks';
 import { handleError, showSuccessToast } from '../utils';
 import { Card } from './Card';
 import { Button } from './Button';
@@ -58,6 +59,12 @@ export function ExerciseInputCard({
   const [savingSets, setSavingSets] = useState<Set<string>>(new Set());
   const [copiedSetIndex, setCopiedSetIndex] = useState<number | null>(null);
 
+  // Note state
+  const [localNote, setLocalNote] = useState(item.note ?? '');
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const localNoteRef = useRef(localNote);
+  localNoteRef.current = localNote;
+
   // Refs to track the latest values for blur handlers
   const localSetsRef = useRef(localSets);
   localSetsRef.current = localSets;
@@ -74,6 +81,14 @@ export function ExerciseInputCard({
       }))
     );
   }, [item.sets]);
+
+  // Sync note state when item.note changes from server
+  useEffect(() => {
+    setLocalNote(item.note ?? '');
+  }, [item.note]);
+
+  // Update item mutation (for notes)
+  const updateItemMutation = useUpdateItem(entryId);
 
   // Format last session's sets as reference text
   const formatLastSessionRef = useCallback((): string | null => {
@@ -299,6 +314,24 @@ export function ExerciseInputCard({
     }
   };
 
+  // Handle note blur - auto-save
+  const handleNoteBlur = async (): Promise<void> => {
+    const currentNote = localNoteRef.current;
+    const serverNote = item.note ?? '';
+
+    // Check if note actually changed
+    if (currentNote === serverNote) {
+      return;
+    }
+
+    // Save the note (empty string becomes null)
+    const noteValue = currentNote.trim() || null;
+    updateItemMutation.mutate({
+      itemId: item.id,
+      updates: { note: noteValue },
+    });
+  };
+
   const getFeedbackColor = (rating: FeedbackRating): string => {
     switch (rating) {
       case 'success':
@@ -315,10 +348,64 @@ export function ExerciseInputCard({
       <YStack gap="$3">
         {/* Header */}
         <XStack justifyContent="space-between" alignItems="center">
-          <Text fontSize="$4" fontWeight="600" color="$color">
-            {item.name}
-          </Text>
+          <YStack flex={1}>
+            <Text fontSize="$4" fontWeight="600" color="$color">
+              {item.name}
+            </Text>
+            {/* Display existing note (when not editing) */}
+            {item.note && !showNoteInput && (
+              <Text fontSize={13} color="$secondary" marginTop="$1" fontStyle="italic">
+                "{item.note}"
+              </Text>
+            )}
+          </YStack>
+          {/* Note icon button */}
+          <Pressable
+            onPress={() => setShowNoteInput(!showNoteInput)}
+            style={{ cursor: 'pointer', userSelect: 'none' } as never}
+          >
+            <Stack
+              width={32}
+              height={32}
+              borderRadius="$2"
+              alignItems="center"
+              justifyContent="center"
+              backgroundColor={item.note || showNoteInput ? '$blue5' : '$backgroundHover'}
+            >
+              {updateItemMutation.isPending ? (
+                <ActivityIndicator size="small" color={theme.blue10?.val ?? '#3B82F6'} />
+              ) : (
+                <MaterialCommunityIcons
+                  name={item.note ? 'note-text' : 'note-plus-outline'}
+                  size={18}
+                  color={item.note || showNoteInput ? (theme.blue10?.val ?? '#3B82F6') : (theme.textMuted?.val ?? '#71717A')}
+                />
+              )}
+            </Stack>
+          </Pressable>
         </XStack>
+
+        {/* Note input (when editing) */}
+        {showNoteInput && (
+          <TextInput
+            style={{
+              height: 40,
+              backgroundColor: theme.background?.val ?? '#09090B',
+              borderRadius: 6,
+              borderWidth: 1,
+              borderColor: theme.borderColor?.val ?? '#27272A',
+              paddingHorizontal: 12,
+              fontSize: 14,
+              color: theme.color?.val ?? '#FAFAFA',
+            }}
+            placeholder="Add a note..."
+            placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
+            value={localNote}
+            onChangeText={setLocalNote}
+            onBlur={handleNoteBlur}
+            autoFocus={!item.note}
+          />
+        )}
 
         {/* Last session reference */}
         {lastRef && (
