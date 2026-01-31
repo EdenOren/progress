@@ -119,7 +119,7 @@ function WorkoutCard({ subject, onEdit, onDelete }: WorkoutCardProps): React.Rea
       gap="$3"
     >
       {/* Workout info */}
-      <YStack flex={1} gap="$0.5">
+      <YStack flex={1} gap="$0.5" style={{ userSelect: 'none' } as never}>
         <Text fontSize={16} fontWeight="600" color="$color">
           {subject.name}
         </Text>

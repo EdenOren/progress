@@ -19,7 +19,8 @@ import { showSuccessToast } from '../../src/utils';
 
 export default function EntryScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: entry, isLoading, isError } = useEntryWithItems(id);
+  const entryId = Array.isArray(id) ? id[0] : id;
+  const { data: entry, isLoading, isFetching, isError } = useEntryWithItems(entryId ?? '');
   const { data: lastEntry } = useLastEntry(
     entry?.subject_id ?? '',
     entry?.performed_at
@@ -30,8 +31,8 @@ export default function EntryScreen(): React.ReactElement {
   const theme = useTheme();
 
   const handleComplete = (): void => {
-    if (!id || completeEntry.isPending) return;
-    completeEntry.mutate(id, {
+    if (!entryId || completeEntry.isPending) return;
+    completeEntry.mutate(entryId, {
       onSuccess: () => {
         showSuccessToast('Session completed!');
         router.replace('/');
@@ -71,7 +72,8 @@ export default function EntryScreen(): React.ReactElement {
     ) ?? null;
   };
 
-  if (isLoading) {
+  // Show loading if id not ready, query is loading, or fetching for the first time
+  if (!entryId || isLoading || (isFetching && !entry)) {
     return <LoadingScreen />;
   }
 
