@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { FlatList, RefreshControl, ActivityIndicator, Pressable, TextInput } from 'react-native';
+import React, { useCallback } from 'react';
+import { FlatList, RefreshControl, ActivityIndicator, Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
 import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../src/components';
-import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useHardDeleteSubject, useWorkoutTemplate, useDeleteEntry } from '../../src/hooks';
+import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useWorkoutTemplate, useDeleteEntry } from '../../src/hooks';
 import { showSuccessToast } from '../../src/utils';
 
 export default function SubjectDetailScreen(): React.ReactElement {
@@ -18,53 +18,30 @@ export default function SubjectDetailScreen(): React.ReactElement {
   const { data: template } = useWorkoutTemplate(id);
   const createEntry = useCreateEntry();
   const createEntryWithTemplate = useCreateEntryWithTemplate();
-  const hardDelete = useHardDeleteSubject();
   const deleteEntry = useDeleteEntry();
   const theme = useTheme();
-  const [confirmText, setConfirmText] = useState('');
 
   const isCreatingEntry = createEntry.isPending || createEntryWithTemplate.isPending;
-  const canDelete = subject && confirmText.toLowerCase() === subject.name.toLowerCase();
-
-  const handleDelete = useCallback((): void => {
-    if (!subject || !canDelete || hardDelete.isPending) return;
-    hardDelete.mutate(id, {
-      onSuccess: () => {
-        showSuccessToast('Workout deleted successfully');
-        router.back();
-      },
-    });
-  }, [subject, canDelete, hardDelete, id]);
+  const hasExercises = (template?.length ?? 0) > 0;
 
   const handleStartEntry = async (): Promise<void> => {
-    if (!id || isCreatingEntry) return;
+    if (!id || isCreatingEntry || !hasExercises) return;
 
     try {
-      let entry;
+      const templateItems = template!.map((item) => ({
+        exercise_id: item.exercise_id,
+        name: item.exercise.name,
+        tracking_type: item.exercise.tracking_type,
+        default_sets: item.default_sets,
+      }));
 
-      // If template exists, create entry with template items
-      if (template && template.length > 0) {
-        const templateItems = template.map((item) => ({
-          exercise_id: item.exercise_id,
-          name: item.exercise.name,
-          tracking_type: item.exercise.tracking_type,
-          default_sets: item.default_sets,
-        }));
-
-        entry = await createEntryWithTemplate.mutateAsync({
-          input: {
-            subject_id: id,
-            performed_at: getTodayISO(),
-          },
-          templateItems,
-        });
-      } else {
-        // No template - create empty entry
-        entry = await createEntry.mutateAsync({
+      const entry = await createEntryWithTemplate.mutateAsync({
+        input: {
           subject_id: id,
           performed_at: getTodayISO(),
-        });
-      }
+        },
+        templateItems,
+      });
 
       router.push({
         pathname: '/entry/[id]',
@@ -225,121 +202,37 @@ export default function SubjectDetailScreen(): React.ReactElement {
                 message="Add exercises above, then start your first session"
               />
             }
-            ListFooterComponent={
-              <YStack paddingHorizontal={16} paddingTop={32} paddingBottom={24}>
-                {/* Danger Zone */}
-                <YStack
-                  borderWidth={1}
-                  borderColor="$error"
-                  borderRadius="$3"
-                  padding="$4"
-                  gap="$3"
-                  backgroundColor="rgba(239, 68, 68, 0.05)"
-                >
-                  <XStack alignItems="center" gap="$2">
-                    <MaterialCommunityIcons
-                      name="alert-circle-outline"
-                      size={20}
-                      color={theme.error?.val ?? '#EF4444'}
-                    />
-                    <Text fontSize={16} fontWeight="600" color="$error">
-                      Danger Zone
-                    </Text>
-                  </XStack>
-
-                  <Text fontSize={13} color="$textSecondary">
-                    This will permanently delete this workout, all {entries?.length ?? 0} sessions, and all exercise data. This action cannot be undone.
-                  </Text>
-
-                  <YStack gap="$2">
-                    <Text fontSize={13} color="$textMuted">
-                      Type "{subject.name}" to confirm:
-                    </Text>
-                    <TextInput
-                      style={{
-                        height: 44,
-                        backgroundColor: theme.background?.val ?? '#09090B',
-                        borderRadius: 8,
-                        borderWidth: 1,
-                        borderColor: canDelete ? (theme.error?.val ?? '#EF4444') : (theme.borderColor?.val ?? '#27272A'),
-                        paddingHorizontal: 12,
-                        fontSize: 14,
-                        color: theme.color?.val ?? '#FAFAFA',
-                      }}
-                      placeholder={subject.name}
-                      placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
-                      value={confirmText}
-                      onChangeText={setConfirmText}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                  </YStack>
-
-                  <Pressable
-                    onPress={handleDelete}
-                    disabled={!canDelete || hardDelete.isPending}
-                    style={{ cursor: canDelete ? 'pointer' : 'not-allowed', userSelect: 'none' } as never}
-                  >
-                    <Stack
-                      backgroundColor={canDelete ? '$error' : '$backgroundHover'}
-                      paddingVertical={12}
-                      borderRadius="$2"
-                      alignItems="center"
-                      justifyContent="center"
-                      opacity={hardDelete.isPending ? 0.7 : 1}
-                    >
-                      {hardDelete.isPending ? (
-                        <ActivityIndicator size="small" color="white" />
-                      ) : (
-                        <XStack alignItems="center" gap="$2">
-                          <MaterialCommunityIcons
-                            name="trash-can-outline"
-                            size={18}
-                            color={canDelete ? 'white' : (theme.textMuted?.val ?? '#71717A')}
-                          />
-                          <Text
-                            fontSize={14}
-                            fontWeight="600"
-                            color={canDelete ? 'white' : '$textMuted'}
-                          >
-                            Delete Workout
-                          </Text>
-                        </XStack>
-                      )}
-                    </Stack>
-                  </Pressable>
-                </YStack>
-              </YStack>
-            }
           />
 
-          {/* Always show FAB to start session */}
-          <Stack
-            position="absolute"
-            bottom={24}
-            right={24}
-            backgroundColor="$primary"
-            borderRadius={9999}
-            paddingHorizontal={24}
-            height={52}
-            alignItems="center"
-            justifyContent="center"
-            opacity={isCreatingEntry ? 0.7 : 1}
-            cursor={isCreatingEntry ? 'not-allowed' : 'pointer'}
-            pressStyle={{
-              scale: 0.94,
-              backgroundColor: '$primaryDark',
-            }}
-            onPress={handleStartEntry}
-          >
-            {isCreatingEntry ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text color="white" fontWeight="600" fontSize={15}>
-                + Start Session
-              </Text>
-            )}
-          </Stack>
+          {/* FAB to start session - only enabled when exercises exist */}
+          {hasExercises && (
+            <Stack
+              position="absolute"
+              bottom={24}
+              right={24}
+              backgroundColor="$primary"
+              borderRadius={9999}
+              paddingHorizontal={24}
+              height={52}
+              alignItems="center"
+              justifyContent="center"
+              opacity={isCreatingEntry ? 0.7 : 1}
+              cursor={isCreatingEntry ? 'not-allowed' : 'pointer'}
+              pressStyle={{
+                scale: 0.94,
+                backgroundColor: '$primaryDark',
+              }}
+              onPress={handleStartEntry}
+            >
+              {isCreatingEntry ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text color="white" fontWeight="600" fontSize={15}>
+                  + Start Session
+                </Text>
+              )}
+            </Stack>
+          )}
         </YStack>
       </SafeAreaView>
     </>
