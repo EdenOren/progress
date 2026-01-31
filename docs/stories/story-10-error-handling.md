@@ -1,5 +1,7 @@
 # Story 10: Robust Error Handling with Toast Notifications
 
+## Status: COMPLETED
+
 ## Problem Statement
 
 1. **Silent Failures**: When completing/updating a set, users see a cryptic error (`PGRST116: Cannot coerce the result to a single JSON object`) instead of a helpful message
@@ -28,11 +30,11 @@ The error `PGRST116` occurs when a Supabase query with `.single()` returns 0 row
 **So that** my flow isn't interrupted by modal dialogs
 
 **Acceptance Criteria:**
-- [ ] Errors show as toast at bottom of screen
-- [ ] Toast auto-dismisses after 4 seconds
-- [ ] Toast can be swiped away
-- [ ] Toast has appropriate color (red for errors, green for success)
-- [ ] Multiple toasts stack or replace each other
+- [x] Errors show as toast at bottom of screen
+- [x] Toast auto-dismisses after 4 seconds
+- [x] Toast can be swiped away
+- [x] Toast has appropriate color (red for errors, green for success)
+- [x] Multiple toasts stack or replace each other
 
 ### 10.2 User-Friendly Error Messages
 **As a** user encountering an error
@@ -78,10 +80,10 @@ The error `PGRST116` occurs when a Supabase query with `.single()` returns 0 row
 **So that** I have confidence my data was saved
 
 **Acceptance Criteria:**
-- [ ] "Session completed!" toast when marking entry done
-- [ ] "Workout deleted" toast after deletion
-- [ ] Subtle checkmark animation on set save (not toast - too noisy)
-- [ ] Success toasts are green, shorter duration (2 seconds)
+- [x] "Session completed!" toast when marking entry done
+- [x] "Workout deleted" toast after deletion
+- [x] Subtle checkmark animation on set save (not toast - too noisy)
+- [x] Success toasts are green, shorter duration (2 seconds)
 
 ## Technical Implementation
 
