@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { FlatList, RefreshControl, ActivityIndicator, Pressable } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { FlatList, RefreshControl, ActivityIndicator, Pressable, TextInput } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -21,18 +21,20 @@ export default function SubjectDetailScreen(): React.ReactElement {
   const hardDelete = useHardDeleteSubject();
   const deleteEntry = useDeleteEntry();
   const theme = useTheme();
+  const [confirmText, setConfirmText] = useState('');
 
   const isCreatingEntry = createEntry.isPending || createEntryWithTemplate.isPending;
+  const canDelete = subject && confirmText.toLowerCase() === subject.name.toLowerCase();
 
   const handleDelete = useCallback((): void => {
-    if (!subject || hardDelete.isPending) return;
+    if (!subject || !canDelete || hardDelete.isPending) return;
     hardDelete.mutate(id, {
       onSuccess: () => {
         showSuccessToast('Workout deleted successfully');
         router.back();
       },
     });
-  }, [subject, hardDelete, id]);
+  }, [subject, canDelete, hardDelete, id]);
 
   const handleStartEntry = async (): Promise<void> => {
     if (!id || isCreatingEntry) return;
@@ -181,21 +183,6 @@ export default function SubjectDetailScreen(): React.ReactElement {
         options={{
           title: subject.name,
           headerBackTitle: 'Back',
-          headerRight: () => hardDelete.isPending ? (
-            <ActivityIndicator size="small" color={theme.error?.val} />
-          ) : (
-            <Pressable
-              onPress={handleDelete}
-              style={{ padding: 8, cursor: 'pointer', userSelect: 'none' } as never}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <MaterialCommunityIcons
-                name="trash-can-outline"
-                size={22}
-                color={theme.error?.val ?? '#EF4444'}
-              />
-            </Pressable>
-          ),
         }}
       />
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
@@ -227,7 +214,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
             contentContainerStyle={{
               flexGrow: 1,
               paddingTop: 8,
-              paddingBottom: 100,
+              paddingBottom: 120,
             }}
             refreshControl={
               <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
@@ -237,6 +224,92 @@ export default function SubjectDetailScreen(): React.ReactElement {
                 title="No sessions yet"
                 message="Add exercises above, then start your first session"
               />
+            }
+            ListFooterComponent={
+              <YStack paddingHorizontal={16} paddingTop={32} paddingBottom={24}>
+                {/* Danger Zone */}
+                <YStack
+                  borderWidth={1}
+                  borderColor="$error"
+                  borderRadius="$3"
+                  padding="$4"
+                  gap="$3"
+                  backgroundColor="rgba(239, 68, 68, 0.05)"
+                >
+                  <XStack alignItems="center" gap="$2">
+                    <MaterialCommunityIcons
+                      name="alert-circle-outline"
+                      size={20}
+                      color={theme.error?.val ?? '#EF4444'}
+                    />
+                    <Text fontSize={16} fontWeight="600" color="$error">
+                      Danger Zone
+                    </Text>
+                  </XStack>
+
+                  <Text fontSize={13} color="$textSecondary">
+                    This will permanently delete this workout, all {entries?.length ?? 0} sessions, and all exercise data. This action cannot be undone.
+                  </Text>
+
+                  <YStack gap="$2">
+                    <Text fontSize={13} color="$textMuted">
+                      Type "{subject.name}" to confirm:
+                    </Text>
+                    <TextInput
+                      style={{
+                        height: 44,
+                        backgroundColor: theme.background?.val ?? '#09090B',
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: canDelete ? (theme.error?.val ?? '#EF4444') : (theme.borderColor?.val ?? '#27272A'),
+                        paddingHorizontal: 12,
+                        fontSize: 14,
+                        color: theme.color?.val ?? '#FAFAFA',
+                      }}
+                      placeholder={subject.name}
+                      placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
+                      value={confirmText}
+                      onChangeText={setConfirmText}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                  </YStack>
+
+                  <Pressable
+                    onPress={handleDelete}
+                    disabled={!canDelete || hardDelete.isPending}
+                    style={{ cursor: canDelete ? 'pointer' : 'not-allowed', userSelect: 'none' } as never}
+                  >
+                    <Stack
+                      backgroundColor={canDelete ? '$error' : '$backgroundHover'}
+                      paddingVertical={12}
+                      borderRadius="$2"
+                      alignItems="center"
+                      justifyContent="center"
+                      opacity={hardDelete.isPending ? 0.7 : 1}
+                    >
+                      {hardDelete.isPending ? (
+                        <ActivityIndicator size="small" color="white" />
+                      ) : (
+                        <XStack alignItems="center" gap="$2">
+                          <MaterialCommunityIcons
+                            name="trash-can-outline"
+                            size={18}
+                            color={canDelete ? 'white' : (theme.textMuted?.val ?? '#71717A')}
+                          />
+                          <Text
+                            fontSize={14}
+                            fontWeight="600"
+                            color={canDelete ? 'white' : '$textMuted'}
+                          >
+                            Delete Workout
+                          </Text>
+                        </XStack>
+                      )}
+                    </Stack>
+                  </Pressable>
+                </YStack>
+              </YStack>
             }
           />
 
