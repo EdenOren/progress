@@ -22,10 +22,10 @@ export default function EntryScreen(): React.ReactElement {
   const entryId = Array.isArray(params.id) ? params.id[0] : params.id;
   const { data: entry, isLoading, isPending, isError, status, fetchStatus } = useEntryWithItems(entryId ?? '');
 
-  // Debug logging
-  if (__DEV__) {
-    console.log('[EntryScreen]', { entryId, status, fetchStatus, isLoading, isPending, isError, hasEntry: !!entry });
-  }
+  // Debug logging - always show for now
+  console.log('[EntryScreen] params:', JSON.stringify(params));
+  console.log('[EntryScreen] entryId:', entryId);
+  console.log('[EntryScreen] query state:', { status, fetchStatus, isLoading, isPending, isError, hasEntry: !!entry });
   const { data: lastEntry } = useLastEntry(
     entry?.subject_id ?? '',
     entry?.performed_at

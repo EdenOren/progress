@@ -100,19 +100,15 @@ function WorkoutCard({ subject, onEdit, onDelete }: WorkoutCardProps): React.Rea
         templateItems,
       });
 
-      if (__DEV__) {
-        console.log('[WorkoutCard] Created entry:', entry.id);
-      }
+      console.log('[WorkoutCard] Created entry - FULL OBJECT:', JSON.stringify(entry, null, 2));
+      console.log('[WorkoutCard] Entry ID to navigate:', entry.id);
 
       router.push({
         pathname: '/entry/[id]',
         params: { id: entry.id },
       });
     } catch (error) {
-      // Error handled by mutation's onError
-      if (__DEV__) {
-        console.error('[WorkoutCard] Failed to create entry:', error);
-      }
+      console.error('[WorkoutCard] Failed to create entry:', error);
     }
   }, [template, createEntry, subject.id]);
 
