@@ -44,5 +44,5 @@ export {
   useUpdateSet,
   useDeleteSet,
 } from './useSets';
-export { useUpdateItem } from './useItems';
+export { useUpdateItem, useDeleteItem } from './useItems';
 export { useAppColorScheme } from './useAppColorScheme';

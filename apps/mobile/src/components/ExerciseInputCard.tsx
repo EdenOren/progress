@@ -14,8 +14,8 @@ import {
   type FeedbackRating,
 } from '@progress/shared';
 import { useSupabaseContext } from '../providers';
-import { useUpdateItem } from '../hooks';
-import { handleError, showSuccessToast } from '../utils';
+import { useUpdateItem, useDeleteItem } from '../hooks';
+import { handleError, showSuccessToast, showAlert } from '../utils';
 import { Card } from './Card';
 import { Button } from './Button';
 
@@ -89,6 +89,9 @@ export function ExerciseInputCard({
 
   // Update item mutation (for notes)
   const updateItemMutation = useUpdateItem(entryId);
+
+  // Delete item mutation (for removing exercise from entry)
+  const deleteItemMutation = useDeleteItem(entryId);
 
   // Format last session's sets as reference text
   const formatLastSessionRef = useCallback((): string | null => {
@@ -332,6 +335,26 @@ export function ExerciseInputCard({
     });
   };
 
+  // Handle delete exercise
+  const handleDeleteExercise = (): void => {
+    showAlert({
+      title: 'Delete Exercise',
+      message: `Remove "${item.name}" and all its sets from this session?`,
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteItemMutation.mutate(item.id, {
+              onSuccess: () => showSuccessToast('Exercise removed'),
+            });
+          },
+        },
+      ],
+    });
+  };
+
   const getFeedbackColor = (rating: FeedbackRating): string => {
     switch (rating) {
       case 'success':
@@ -359,30 +382,61 @@ export function ExerciseInputCard({
               </Text>
             )}
           </YStack>
-          {/* Note icon button */}
-          <Pressable
-            onPress={() => setShowNoteInput(!showNoteInput)}
-            style={{ cursor: 'pointer', userSelect: 'none' } as never}
-          >
-            <Stack
-              width={32}
-              height={32}
-              borderRadius="$2"
-              alignItems="center"
-              justifyContent="center"
-              backgroundColor={item.note || showNoteInput ? '$blue5' : '$backgroundHover'}
+          <XStack gap="$2">
+            {/* Note icon button */}
+            <Pressable
+              onPress={() => setShowNoteInput(!showNoteInput)}
+              style={{ cursor: 'pointer', userSelect: 'none' } as never}
             >
-              {updateItemMutation.isPending ? (
-                <ActivityIndicator size="small" color={theme.blue10?.val ?? '#3B82F6'} />
-              ) : (
-                <MaterialCommunityIcons
-                  name={item.note ? 'note-text' : 'note-plus-outline'}
-                  size={18}
-                  color={item.note || showNoteInput ? (theme.blue10?.val ?? '#3B82F6') : (theme.textMuted?.val ?? '#71717A')}
-                />
-              )}
-            </Stack>
-          </Pressable>
+              <Stack
+                width={32}
+                height={32}
+                borderRadius="$2"
+                alignItems="center"
+                justifyContent="center"
+                backgroundColor={item.note || showNoteInput ? '$blue5' : '$backgroundHover'}
+              >
+                {updateItemMutation.isPending ? (
+                  <ActivityIndicator size="small" color={theme.blue10?.val ?? '#3B82F6'} />
+                ) : (
+                  <MaterialCommunityIcons
+                    name={item.note ? 'note-text' : 'note-plus-outline'}
+                    size={18}
+                    color={item.note || showNoteInput ? (theme.blue10?.val ?? '#3B82F6') : (theme.textMuted?.val ?? '#71717A')}
+                  />
+                )}
+              </Stack>
+            </Pressable>
+
+            {/* Delete exercise button */}
+            <Pressable
+              onPress={handleDeleteExercise}
+              disabled={deleteItemMutation.isPending}
+              style={{ cursor: 'pointer', userSelect: 'none' } as never}
+            >
+              <Stack
+                width={32}
+                height={32}
+                borderRadius="$2"
+                alignItems="center"
+                justifyContent="center"
+                backgroundColor="$backgroundHover"
+                opacity={deleteItemMutation.isPending ? 0.5 : 1}
+                hoverStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+                pressStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
+              >
+                {deleteItemMutation.isPending ? (
+                  <ActivityIndicator size="small" color={theme.error?.val ?? '#EF4444'} />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="close"
+                    size={18}
+                    color={theme.textMuted?.val ?? '#71717A'}
+                  />
+                )}
+              </Stack>
+            </Pressable>
+          </XStack>
         </XStack>
 
         {/* Note input (when editing) */}
