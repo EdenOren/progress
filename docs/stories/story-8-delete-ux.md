@@ -26,18 +26,7 @@ Users unfamiliar with mobile conventions (long press, swipe gestures) cannot dis
 - [ ] Deleting a set re-numbers remaining sets (Set 1, Set 2, etc.)
 - [ ] Works offline with optimistic update
 
-### 8.2 Swipe-to-Delete for Sets
-**As a** mobile-savvy user
-**I want to** swipe left on a set to delete it
-**So that** I can quickly remove sets without extra taps
-
-**Acceptance Criteria:**
-- [ ] Swipe left reveals red delete action
-- [ ] Full swipe deletes immediately
-- [ ] Partial swipe shows delete button, tap to confirm
-- [ ] Works alongside trash icon (both options available)
-
-### 8.3 Improved Subject Delete UX
+### 8.2 Improved Subject Delete UX
 **As a** user managing my workouts
 **I want to** see a clear delete option on the subject screen
 **So that** I don't have to hunt for the delete action
@@ -48,7 +37,7 @@ Users unfamiliar with mobile conventions (long press, swipe gestures) cannot dis
 - [ ] Explains: "This will permanently delete all sessions and data"
 - [ ] Requires typing workout name to confirm (prevents accidents)
 
-### 8.4 Improved Entry Delete UX
+### 8.3 Improved Entry Delete UX
 **As a** user reviewing my sessions
 **I want to** easily delete an entry if I logged by mistake
 **So that** my history stays clean
@@ -58,7 +47,7 @@ Users unfamiliar with mobile conventions (long press, swipe gestures) cannot dis
 - [ ] OR bottom "Delete Entry" button in muted style
 - [ ] Confirmation shows date: "Delete session from Jan 15?"
 
-### 8.5 Delete Exercise from Entry
+### 8.4 Delete Exercise from Entry
 **As a** user logging a workout
 **I want to** remove an exercise I added to this session
 **So that** I can correct mistakes
@@ -80,16 +69,11 @@ Users unfamiliar with mobile conventions (long press, swipe gestures) cannot dis
 3. `entry/[id].tsx` - Improve header delete button
 4. `subject/[id].tsx` - Add danger zone section
 
-### New Components
-- `SwipeableRow.tsx` - Reusable swipe-to-delete wrapper
-- `DangerZone.tsx` - Section for destructive actions with warnings
-
 ## Design Notes
 
 - Trash icons should be `$textMuted` color, not red (reduces visual noise)
 - Only turn red on hover/press
 - Confirmations should be clear about what's being deleted
-- Follow iOS/Android platform conventions for swipe gestures
 
 ## Priority
 **High** - This is a usability blocker for non-technical users
