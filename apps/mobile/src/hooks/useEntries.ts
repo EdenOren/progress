@@ -56,13 +56,23 @@ export function useEntryWithItems(entryId: string) {
     queryFn: async (): Promise<EntryWithItems> => {
       if (!user) throw new Error('Not authenticated');
 
+      if (__DEV__) {
+        console.log('[useEntryWithItems] Fetching entry:', entryId, 'for user:', user.id);
+      }
+
       const result = await getEntryWithItems(user.id, entryId);
+
+      if (__DEV__) {
+        console.log('[useEntryWithItems] Result:', result.success ? 'success' : 'error', result);
+      }
+
       if (!result.success) {
         throw result.error;
       }
       return result.data;
     },
     enabled: !!user && !!entryId,
+    staleTime: 0, // Always fetch fresh data
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(500 * (attemptIndex + 1), 2000),
   });
