@@ -18,9 +18,14 @@ import {
 import { showSuccessToast } from '../../src/utils';
 
 export default function EntryScreen(): React.ReactElement {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const entryId = Array.isArray(id) ? id[0] : id;
-  const { data: entry, isLoading, isPending, isError } = useEntryWithItems(entryId ?? '');
+  const params = useLocalSearchParams<{ id: string }>();
+  const entryId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const { data: entry, isLoading, isPending, isError, status, fetchStatus } = useEntryWithItems(entryId ?? '');
+
+  // Debug logging
+  if (__DEV__) {
+    console.log('[EntryScreen]', { entryId, status, fetchStatus, isLoading, isPending, isError, hasEntry: !!entry });
+  }
   const { data: lastEntry } = useLastEntry(
     entry?.subject_id ?? '',
     entry?.performed_at
@@ -72,12 +77,26 @@ export default function EntryScreen(): React.ReactElement {
     ) ?? null;
   };
 
-  // Show loading if id not ready or query is pending (no data yet)
-  if (!entryId || isLoading || isPending) {
+  // Show loading while we don't have data yet
+  // isPending = no cached data, isLoading = isPending + isFetching
+  // Also show loading if entryId isn't ready yet
+  if (!entryId || isPending || status === 'pending') {
     return <LoadingScreen />;
   }
 
-  if (isError || !entry) {
+  // Only show error if we actually tried to fetch and failed
+  if (isError) {
+    return (
+      <EmptyState
+        title="Error"
+        message="Failed to load session. Please try again."
+        actionLabel="Go Back"
+        onAction={() => router.back()}
+      />
+    );
+  }
+
+  if (!entry) {
     return (
       <EmptyState
         title="Not Found"

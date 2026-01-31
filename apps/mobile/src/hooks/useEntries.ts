@@ -63,6 +63,8 @@ export function useEntryWithItems(entryId: string) {
       return result.data;
     },
     enabled: !!user && !!entryId,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(500 * (attemptIndex + 1), 2000),
   });
 }
 
