@@ -20,7 +20,7 @@ import { showSuccessToast } from '../../src/utils';
 export default function EntryScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
   const entryId = Array.isArray(id) ? id[0] : id;
-  const { data: entry, isLoading, isFetching, isError } = useEntryWithItems(entryId ?? '');
+  const { data: entry, isLoading, isPending, isError } = useEntryWithItems(entryId ?? '');
   const { data: lastEntry } = useLastEntry(
     entry?.subject_id ?? '',
     entry?.performed_at
@@ -72,8 +72,8 @@ export default function EntryScreen(): React.ReactElement {
     ) ?? null;
   };
 
-  // Show loading if id not ready, query is loading, or fetching for the first time
-  if (!entryId || isLoading || (isFetching && !entry)) {
+  // Show loading if id not ready or query is pending (no data yet)
+  if (!entryId || isLoading || isPending) {
     return <LoadingScreen />;
   }
 
