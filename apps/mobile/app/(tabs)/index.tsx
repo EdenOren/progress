@@ -90,24 +90,30 @@ function WorkoutCard({ subject, onEdit, onDelete }: WorkoutCardProps): React.Rea
       default_sets: t.default_sets,
     }));
 
-    createEntry.mutate(
-      {
+    try {
+      const entry = await createEntry.mutateAsync({
         input: {
           subject_id: subject.id,
           performed_at: today,
           started_at: now.toISOString(),
         },
         templateItems,
-      },
-      {
-        onSuccess: (entry) => {
-          router.push({
-            pathname: '/entry/[id]',
-            params: { id: entry.id },
-          });
-        },
+      });
+
+      if (__DEV__) {
+        console.log('[WorkoutCard] Created entry:', entry.id);
       }
-    );
+
+      router.push({
+        pathname: '/entry/[id]',
+        params: { id: entry.id },
+      });
+    } catch (error) {
+      // Error handled by mutation's onError
+      if (__DEV__) {
+        console.error('[WorkoutCard] Failed to create entry:', error);
+      }
+    }
   }, [template, createEntry, subject.id]);
 
   return (
