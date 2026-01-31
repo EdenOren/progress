@@ -2,10 +2,15 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useModule } from '../../src/providers';
 
 export default function TabsLayout(): React.ReactElement {
   const colorScheme = useColorScheme();
   const isDark = colorScheme !== 'light';
+  const { currentModule } = useModule();
+
+  const homeTitle = currentModule === 'sleep' ? 'Sleep' : 'Workouts';
+  const homeIcon = currentModule === 'sleep' ? 'sleep' : 'dumbbell';
 
   return (
     <Tabs
@@ -34,11 +39,11 @@ export default function TabsLayout(): React.ReactElement {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Workouts',
-          tabBarLabel: 'Workouts',
-          tabBarIcon: ({ color, focused }) => (
+          title: homeTitle,
+          tabBarLabel: homeTitle,
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
-              name={focused ? 'dumbbell' : 'dumbbell'}
+              name={homeIcon}
               size={24}
               color={color}
             />
@@ -46,13 +51,13 @@ export default function TabsLayout(): React.ReactElement {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="menu"
         options={{
-          title: 'Profile',
-          tabBarLabel: 'Profile',
+          title: 'Menu',
+          tabBarLabel: 'Menu',
           tabBarIcon: ({ color, focused }) => (
             <MaterialCommunityIcons
-              name={focused ? 'account-circle' : 'account-circle-outline'}
+              name={focused ? 'menu' : 'menu'}
               size={24}
               color={color}
             />

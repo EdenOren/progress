@@ -15,9 +15,47 @@ import {
   useCreateEntryWithTemplate,
   useDeleteEntry,
 } from '../../src/hooks';
+import { useModule } from '../../src/providers';
 import { showSuccessToast } from '../../src/utils';
 import { CreateSubjectModal } from '../../src/components/CreateSubjectModal';
 import type { SubjectWithStats, Entry } from '@progress/shared';
+
+// Sleep Module Empty State
+function SleepModule(): React.ReactElement {
+  const theme = useTheme();
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
+      <YStack flex={1} justifyContent="center" alignItems="center" padding={32} gap={24}>
+        <Stack
+          width={120}
+          height={120}
+          borderRadius={60}
+          backgroundColor="$blue5"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <MaterialCommunityIcons
+            name="sleep"
+            size={64}
+            color={theme.secondary?.val ?? '#3B82F6'}
+          />
+        </Stack>
+        <YStack alignItems="center" gap={8}>
+          <Text fontSize={24} fontWeight="700" color="$color">
+            Track Your Sleep
+          </Text>
+          <Text fontSize={15} color="$textMuted" textAlign="center" lineHeight={22}>
+            Log your sleep duration and quality to build better habits and improve your rest.
+          </Text>
+        </YStack>
+        <Button variant="primary" disabled>
+          Coming Soon
+        </Button>
+      </YStack>
+    </SafeAreaView>
+  );
+}
 
 function formatDuration(seconds: number | null): string {
   if (!seconds) return '';
@@ -235,7 +273,7 @@ function SessionCard({ entry, subjectName, onPress, onDelete }: SessionCardProps
   );
 }
 
-export default function WorkoutsScreen(): React.ReactElement {
+function WorkoutModule(): React.ReactElement {
   const theme = useTheme();
   const { data: subjects, isLoading: subjectsLoading, refetch, isRefetching } = useSubjectsWithStats();
   const { data: recentEntries, isLoading: entriesLoading } = useRecentEntries(5);
@@ -465,4 +503,15 @@ export default function WorkoutsScreen(): React.ReactElement {
       />
     </SafeAreaView>
   );
+}
+
+// Main export - switches between modules
+export default function HomeScreen(): React.ReactElement {
+  const { currentModule } = useModule();
+
+  if (currentModule === 'sleep') {
+    return <SleepModule />;
+  }
+
+  return <WorkoutModule />;
 }

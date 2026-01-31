@@ -337,10 +337,10 @@ export function ExerciseInputCard({
 
   // Handle delete exercise
   const handleDeleteExercise = (): void => {
-    showAlert({
-      title: 'Delete Exercise',
-      message: `Remove "${item.name}" and all its sets from this session?`,
-      buttons: [
+    showAlert(
+      'Delete Exercise',
+      `Remove "${item.name}" and all its sets from this session?`,
+      [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
@@ -351,8 +351,8 @@ export function ExerciseInputCard({
             });
           },
         },
-      ],
-    });
+      ]
+    );
   };
 
   const getFeedbackColor = (rating: FeedbackRating): string => {
