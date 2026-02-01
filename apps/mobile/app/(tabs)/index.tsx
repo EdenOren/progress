@@ -97,13 +97,13 @@ function WorkoutCard({
       style={{ cursor: 'pointer', userSelect: 'none' } as never}
     >
       <XStack
-        backgroundColor={isSelected ? '$blue5' : '$backgroundHover'}
+        backgroundColor={isSelected ? 'rgba(239, 68, 68, 0.1)' : '$backgroundHover'}
         borderRadius="$3"
         padding="$3"
         alignItems="center"
         gap="$3"
         borderWidth={isSelected ? 2 : 0}
-        borderColor="$secondary"
+        borderColor="$error"
       >
         {/* Selection checkbox or workout icon */}
         {isSelectionMode ? (
@@ -111,7 +111,7 @@ function WorkoutCard({
             width={32}
             height={32}
             borderRadius={16}
-            backgroundColor={isSelected ? '$secondary' : 'transparent'}
+            backgroundColor={isSelected ? '$error' : 'transparent'}
             borderWidth={isSelected ? 0 : 2}
             borderColor="$textMuted"
             alignItems="center"
@@ -456,7 +456,7 @@ function WorkoutModule(): React.ReactElement {
         {/* Selection mode header */}
         {isSelectionMode && (
           <XStack
-            backgroundColor="$secondary"
+            backgroundColor="$error"
             paddingHorizontal="$4"
             paddingVertical="$3"
             alignItems="center"
