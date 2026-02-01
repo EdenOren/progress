@@ -7,7 +7,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createSet,
   updateSet,
-  deleteSet,
   setFeedback,
   formatDuration,
   type ItemWithSets,
@@ -23,6 +22,7 @@ interface ExerciseInputCardProps {
   item: ItemWithSets;
   entryId: string;
   lastSessionItem?: ItemWithSets | null;
+  isSessionInProgress?: boolean;
 }
 
 interface LocalSetState {
@@ -37,6 +37,7 @@ export function ExerciseInputCard({
   item,
   entryId,
   lastSessionItem,
+  isSessionInProgress = false,
 }: ExerciseInputCardProps): React.ReactElement {
   const { user } = useSupabaseContext();
   const queryClient = useQueryClient();
@@ -170,25 +171,6 @@ export function ExerciseInputCard({
     },
     onError: (error) => handleError(error),
   });
-
-  // Delete set mutation
-  const deleteSetMutation = useMutation({
-    mutationFn: async (setId: string) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await deleteSet(user.id, setId);
-      if (!result.success) throw result.error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
-      showSuccessToast('Set deleted successfully');
-    },
-    onError: (error) => handleError(error),
-  });
-
-  // Handle delete set - no confirmation needed
-  const handleDeleteSet = useCallback((setId: string) => {
-    deleteSetMutation.mutate(setId);
-  }, [deleteSetMutation]);
 
   // Feedback mutation
   const feedbackMutation = useMutation({
@@ -360,7 +342,7 @@ export function ExerciseInputCard({
       case 'success':
         return '$success';
       case 'hard':
-        return '$warning';
+        return '$primary';
       case 'fail':
         return '$error';
     }
@@ -408,34 +390,36 @@ export function ExerciseInputCard({
               </Stack>
             </Pressable>
 
-            {/* Delete exercise button */}
-            <Pressable
-              onPress={handleDeleteExercise}
-              disabled={deleteItemMutation.isPending}
-              style={{ cursor: 'pointer', userSelect: 'none' } as never}
-            >
-              <Stack
-                width={32}
-                height={32}
-                borderRadius="$2"
-                alignItems="center"
-                justifyContent="center"
-                backgroundColor="$backgroundHover"
-                opacity={deleteItemMutation.isPending ? 0.5 : 1}
-                hoverStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
-                pressStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
+            {/* Delete exercise button - hidden during in-progress session */}
+            {!isSessionInProgress && (
+              <Pressable
+                onPress={handleDeleteExercise}
+                disabled={deleteItemMutation.isPending}
+                style={{ cursor: 'pointer', userSelect: 'none' } as never}
               >
-                {deleteItemMutation.isPending ? (
-                  <ActivityIndicator size="small" color={theme.error?.val ?? '#EF4444'} />
-                ) : (
-                  <MaterialCommunityIcons
-                    name="close"
-                    size={18}
-                    color={theme.textMuted?.val ?? '#71717A'}
-                  />
-                )}
-              </Stack>
-            </Pressable>
+                <Stack
+                  width={32}
+                  height={32}
+                  borderRadius="$2"
+                  alignItems="center"
+                  justifyContent="center"
+                  backgroundColor="$backgroundHover"
+                  opacity={deleteItemMutation.isPending ? 0.5 : 1}
+                  hoverStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+                  pressStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
+                >
+                  {deleteItemMutation.isPending ? (
+                    <ActivityIndicator size="small" color={theme.error?.val ?? '#EF4444'} />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="close"
+                      size={18}
+                      color={theme.textMuted?.val ?? '#71717A'}
+                    />
+                  )}
+                </Stack>
+              </Pressable>
+            )}
           </XStack>
         </XStack>
 
@@ -504,7 +488,7 @@ export function ExerciseInputCard({
                   Set {index + 1}
                 </Text>
 
-                {/* Inputs based on tracking type */}
+                {/* Inputs based on tracking type - read-only when session is completed */}
                 {trackingType === 'weight_reps' ? (
                   <XStack flex={1} alignItems="center" gap="$2" minWidth={0}>
                     <TextInput
@@ -521,6 +505,7 @@ export function ExerciseInputCard({
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
+                        opacity: isSessionInProgress ? 1 : 0.6,
                       }}
                       placeholder="kg"
                       placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
@@ -528,6 +513,7 @@ export function ExerciseInputCard({
                       value={localSet.weight}
                       onChangeText={(v) => handleInputChange(index, 'weight', v)}
                       onBlur={() => handleBlur(index)}
+                      editable={isSessionInProgress}
                     />
                     <Text color="$textMuted" fontSize={16}>×</Text>
                     <TextInput
@@ -544,6 +530,7 @@ export function ExerciseInputCard({
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
+                        opacity: isSessionInProgress ? 1 : 0.6,
                       }}
                       placeholder="reps"
                       placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
@@ -551,6 +538,7 @@ export function ExerciseInputCard({
                       value={localSet.reps}
                       onChangeText={(v) => handleInputChange(index, 'reps', v)}
                       onBlur={() => handleBlur(index)}
+                      editable={isSessionInProgress}
                     />
                   </XStack>
                 ) : (
@@ -570,6 +558,7 @@ export function ExerciseInputCard({
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
+                        opacity: isSessionInProgress ? 1 : 0.6,
                       }}
                       placeholder="seconds"
                       placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
@@ -577,13 +566,14 @@ export function ExerciseInputCard({
                       value={localSet.duration}
                       onChangeText={(v) => handleInputChange(index, 'duration', v)}
                       onBlur={() => handleBlur(index)}
+                      editable={isSessionInProgress}
                     />
                     <Text fontSize={12} color="$textMuted">sec</Text>
                   </XStack>
                 )}
 
-                {/* Copy button */}
-                {hasLastSetData && (
+                {/* Copy button - only show when session is in progress */}
+                {hasLastSetData && isSessionInProgress && (
                   <Pressable
                     onPress={() => handleCopySet(index)}
                     disabled={isSaving}
@@ -615,59 +605,48 @@ export function ExerciseInputCard({
                 {!hasLastSetData && isSaving && (
                   <ActivityIndicator size="small" color={theme.primary?.val} />
                 )}
-
-                {/* Delete button */}
-                <Pressable
-                  onPress={() => serverSet && handleDeleteSet(serverSet.id)}
-                  disabled={isSaving || deleteSetMutation.isPending}
-                  style={{ cursor: 'pointer', userSelect: 'none' } as never}
-                >
-                  <Stack
-                    width={32}
-                    height={32}
-                    borderRadius="$2"
-                    alignItems="center"
-                    justifyContent="center"
-                    backgroundColor="rgba(239, 68, 68, 0.1)"
-                    opacity={isSaving || deleteSetMutation.isPending ? 0.3 : 1}
-                    hoverStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.2)' }}
-                    pressStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.25)' }}
-                  >
-                    <MaterialCommunityIcons
-                      name="trash-can-outline"
-                      size={18}
-                      color={theme.error?.val ?? '#EF4444'}
-                    />
-                  </Stack>
-                </Pressable>
               </XStack>
             );
           })}
         </YStack>
 
-        {/* Add set button */}
-        <Button
-          variant="secondary"
-          size="small"
-          loading={addSetMutation.isPending}
-          onPress={() => addSetMutation.mutate()}
-        >
-          + Add Set
-        </Button>
+        {/* Add set button - only show when session is in progress */}
+        {isSessionInProgress && (
+          <Button
+            variant="ghost"
+            size="small"
+            loading={addSetMutation.isPending}
+            onPress={() => addSetMutation.mutate()}
+          >
+            + Add Set
+          </Button>
+        )}
 
         {/* Feedback buttons */}
         <YStack gap="$2">
-          <Text fontSize="$2" color="$textMuted">
-            How did it go?
-          </Text>
+          <XStack justifyContent="space-between" alignItems="center">
+            <Text fontSize="$2" color="$textMuted">
+              How did it go?
+            </Text>
+            {/* Show last session's feedback */}
+            {lastSessionItem?.feedback?.rating && (
+              <Text fontSize={11} color="$textMuted">
+                Last time: {lastSessionItem.feedback.rating}
+              </Text>
+            )}
+          </XStack>
           <XStack gap="$2">
             {(['success', 'hard', 'fail'] as FeedbackRating[]).map((rating) => {
-              const isSelected = item.feedback?.rating === rating;
-              const isLoading = feedbackMutation.isPending && feedbackMutation.variables === rating;
+              const isServerSelected = item.feedback?.rating === rating;
+              const isPendingThis = feedbackMutation.isPending && feedbackMutation.variables === rating;
+              // Show selected state if server says selected OR if we're currently saving this rating
+              const isSelected = isServerSelected || isPendingThis;
+              // Check if this was selected last session
+              const wasLastSession = lastSessionItem?.feedback?.rating === rating;
               const colors = {
-                success: { bg: 'rgba(16, 185, 129, 0.15)', activeBg: '$success', icon: 'check-circle' },
-                hard: { bg: 'rgba(245, 158, 11, 0.15)', activeBg: '$warning', icon: 'alert-circle' },
-                fail: { bg: 'rgba(239, 68, 68, 0.15)', activeBg: '$error', icon: 'close-circle' },
+                success: { bg: 'rgba(16, 185, 129, 0.15)', activeBg: '$success' },
+                hard: { bg: '$purple5', activeBg: '$primary' },
+                fail: { bg: 'rgba(239, 68, 68, 0.15)', activeBg: '$error' },
               };
               const colorConfig = colors[rating];
 
@@ -675,39 +654,31 @@ export function ExerciseInputCard({
                 <Pressable
                   key={rating}
                   onPress={() => feedbackMutation.mutate(rating)}
-                  disabled={feedbackMutation.isPending}
-                  style={{ flex: 1, cursor: 'pointer', userSelect: 'none', opacity: feedbackMutation.isPending && !isLoading ? 0.5 : 1 } as never}
+                  disabled={feedbackMutation.isPending || !isSessionInProgress}
+                  style={{
+                    flex: 1,
+                    cursor: isSessionInProgress ? 'pointer' : 'default',
+                    userSelect: 'none',
+                    opacity: !isSessionInProgress ? 0.7 : (feedbackMutation.isPending && !isPendingThis ? 0.5 : 1),
+                  } as never}
                 >
                   <Stack
                     backgroundColor={isSelected ? colorConfig.activeBg : colorConfig.bg}
-                    paddingVertical="$2"
+                    paddingVertical="$2.5"
                     paddingHorizontal="$3"
                     borderRadius="$2"
                     alignItems="center"
                     justifyContent="center"
-                    borderWidth={isSelected ? 2 : 0}
-                    borderColor={colorConfig.activeBg}
+                    borderWidth={wasLastSession && !isSelected ? 1 : 0}
+                    borderColor={wasLastSession ? colorConfig.activeBg : 'transparent'}
                   >
-                    {isLoading ? (
-                      <ActivityIndicator size="small" color={isSelected ? 'white' : (theme[rating === 'success' ? 'success' : rating === 'hard' ? 'warning' : 'error']?.val)} />
-                    ) : (
-                      <XStack alignItems="center" gap="$1">
-                        {isSelected && (
-                          <MaterialCommunityIcons
-                            name={colorConfig.icon as 'check-circle' | 'alert-circle' | 'close-circle'}
-                            size={16}
-                            color="white"
-                          />
-                        )}
-                        <Text
-                          fontSize={13}
-                          fontWeight="600"
-                          color={isSelected ? 'white' : getFeedbackColor(rating)}
-                        >
-                          {rating.charAt(0).toUpperCase() + rating.slice(1)}
-                        </Text>
-                      </XStack>
-                    )}
+                    <Text
+                      fontSize={13}
+                      fontWeight="600"
+                      color={isSelected ? 'white' : getFeedbackColor(rating)}
+                    >
+                      {rating.charAt(0).toUpperCase() + rating.slice(1)}
+                    </Text>
                   </Stack>
                 </Pressable>
               );

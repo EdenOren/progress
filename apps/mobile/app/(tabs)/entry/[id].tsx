@@ -7,15 +7,15 @@ import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate } from '@progress/shared';
 import type { ItemWithSets } from '@progress/shared';
-import { Card, Button, LoadingScreen, EmptyState, ExerciseInputCard } from '../../src/components';
-import { AddItemModal } from '../../src/components/AddItemModal';
+import { Card, Button, LoadingScreen, EmptyState, ExerciseInputCard } from '../../../src/components';
+import { AddItemModal } from '../../../src/components/AddItemModal';
 import {
   useEntryWithItems,
   useLastEntry,
   useCompleteEntry,
   useDeleteEntry,
-} from '../../src/hooks';
-import { showSuccessToast } from '../../src/utils';
+} from '../../../src/hooks';
+import { showSuccessToast } from '../../../src/utils';
 
 export default function EntryScreen(): React.ReactElement {
   const params = useLocalSearchParams<{ id: string }>();
@@ -151,12 +151,12 @@ export default function EntryScreen(): React.ReactElement {
                   </Stack>
                 ) : (
                   <Stack
-                    backgroundColor="rgba(245, 158, 11, 0.15)"
+                    backgroundColor="$purple5"
                     paddingHorizontal={12}
                     paddingVertical={6}
                     borderRadius={9999}
                   >
-                    <Text fontSize={13} color="$warning" fontWeight="600">
+                    <Text fontSize={13} color="$primary" fontWeight="600">
                       In Progress
                     </Text>
                   </Stack>
@@ -171,15 +171,15 @@ export default function EntryScreen(): React.ReactElement {
               onPress={() => setShowComparisonHint(!showComparisonHint)}
               style={{ marginBottom: 16, cursor: 'pointer', userSelect: 'none' } as never}
             >
-              <Card backgroundColor="$blue5">
+              <Card backgroundColor="$purple5">
                 <XStack alignItems="center" justifyContent="space-between">
                   <XStack alignItems="center" gap={8} flex={1}>
                     <MaterialCommunityIcons
                       name="history"
                       size={16}
-                      color={theme.secondary?.val ?? '#3B82F6'}
+                      color={theme.primary?.val ?? '#8B5CF6'}
                     />
-                    <Text fontSize={13} color="$secondary" flex={1}>
+                    <Text fontSize={13} color="$primary" flex={1}>
                       {showComparisonHint
                         ? `Comparing with ${formatDate(lastEntry.performed_at)}`
                         : 'Tap to show last session comparison'}
@@ -188,7 +188,7 @@ export default function EntryScreen(): React.ReactElement {
                   <MaterialCommunityIcons
                     name={showComparisonHint ? 'chevron-up' : 'chevron-down'}
                     size={18}
-                    color={theme.secondary?.val ?? '#3B82F6'}
+                    color={theme.primary?.val ?? '#8B5CF6'}
                   />
                 </XStack>
               </Card>
@@ -232,6 +232,7 @@ export default function EntryScreen(): React.ReactElement {
                   item={item}
                   entryId={entry.id}
                   lastSessionItem={showComparisonHint ? getLastSessionItem(item) : null}
+                  isSessionInProgress={!entry.is_completed}
                 />
               ))
             )}

@@ -1,5 +1,5 @@
 import { getSupabase } from '../supabase/client';
-import type { Exercise, ExerciseInsert } from '../types/domain';
+import type { Exercise, ExerciseInsert, ExerciseIcon } from '../types/domain';
 import { exerciseSchema, exerciseArraySchema, exerciseInsertSchema } from '../schemas/domain';
 import { type Result, ok, err } from '../types/result';
 import { mapSupabaseError, ValidationError } from '../errors/index';
@@ -182,4 +182,36 @@ export async function deleteCustomExercise(
   }
 
   return ok(undefined);
+}
+
+/**
+ * Update a custom exercise icon (only allowed for user's own exercises)
+ */
+export async function updateExerciseIcon(
+  exerciseId: string,
+  icon: ExerciseIcon,
+  userId: string
+): Promise<Result<Exercise>> {
+  const supabase = getSupabase();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('exercise_library')
+    .update({ icon })
+    .eq('id', exerciseId)
+    .eq('created_by', userId)
+    .eq('is_system', false)
+    .select()
+    .single();
+
+  if (error) {
+    return err(mapSupabaseError(error));
+  }
+
+  const parsed = exerciseSchema.safeParse(data);
+  if (!parsed.success) {
+    return err(new ValidationError(parsed.error));
+  }
+
+  return ok(parsed.data);
 }

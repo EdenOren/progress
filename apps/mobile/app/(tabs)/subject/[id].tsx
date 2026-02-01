@@ -7,9 +7,9 @@ import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
-import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../src/components';
-import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useWorkoutTemplate, useDeleteEntry } from '../../src/hooks';
-import { showSuccessToast } from '../../src/utils';
+import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../../src/components';
+import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useWorkoutTemplate, useDeleteEntry } from '../../../src/hooks';
+import { showSuccessToast } from '../../../src/utils';
 
 export default function SubjectDetailScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,7 +25,8 @@ export default function SubjectDetailScreen(): React.ReactElement {
   const hasExercises = (template?.length ?? 0) > 0;
 
   // Check if there's an in-progress session for this workout
-  const hasInProgressSession = entries?.some(entry => !entry.is_completed) ?? false;
+  const inProgressEntry = entries?.find(entry => !entry.is_completed);
+  const hasInProgressSession = !!inProgressEntry;
 
   const handleStartEntry = async (): Promise<void> => {
     if (!id || isCreatingEntry || !hasExercises) return;
@@ -98,12 +99,12 @@ export default function SubjectDetailScreen(): React.ReactElement {
               </Stack>
             ) : (
               <Stack
-                backgroundColor="rgba(245, 158, 11, 0.15)"
+                backgroundColor="$purple5"
                 paddingHorizontal={10}
                 paddingVertical={4}
                 borderRadius={9999}
               >
-                <Text fontSize={12} fontWeight="600" color="$warning">
+                <Text fontSize={12} fontWeight="600" color="$primary">
                   In Progress
                 </Text>
               </Stack>
@@ -207,7 +208,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
             }
           />
 
-          {/* FAB to start session - only enabled when exercises exist */}
+          {/* FAB - Start Session or Continue */}
           {hasExercises && (
             <Stack
               position="absolute"
@@ -225,13 +226,13 @@ export default function SubjectDetailScreen(): React.ReactElement {
                 scale: 0.94,
                 backgroundColor: '$primaryDark',
               }}
-              onPress={handleStartEntry}
+              onPress={hasInProgressSession ? () => handleEntryPress(inProgressEntry!) : handleStartEntry}
             >
               {isCreatingEntry ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text color="white" fontWeight="600" fontSize={15}>
-                  + Start Session
+                  {hasInProgressSession ? 'Continue Session' : '+ Start Session'}
                 </Text>
               )}
             </Stack>

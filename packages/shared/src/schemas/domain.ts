@@ -29,7 +29,42 @@ export const exerciseCategorySchema = z.enum(['strength', 'bodyweight', 'cardio'
 export const muscleGroupSchema = z.enum(['chest', 'back', 'legs', 'shoulders', 'arms', 'core', 'cardio', 'full_body']);
 
 /** Exercise icon (MaterialCommunityIcons) */
-export const exerciseIconSchema = z.enum(['dumbbell', 'weight-lifter', 'arm-flex', 'human-handsup', 'human', 'run', 'bike', 'rowing', 'yoga', 'stairs-up']);
+export const exerciseIconSchema = z.enum([
+  // Strength
+  'dumbbell',
+  'weight-lifter',
+  'arm-flex',
+  'weight',
+  'barbell',
+  // Body positions
+  'human-handsup',
+  'human',
+  'human-handsdown',
+  'yoga',
+  'meditation',
+  'kabaddi',
+  'karate',
+  // Cardio
+  'run',
+  'run-fast',
+  'walk',
+  'bike',
+  'rowing',
+  'swim',
+  'jump-rope',
+  // Equipment
+  'stairs-up',
+  'stairs',
+  'gymnastics',
+  'boxing-glove',
+  'basketball',
+  'soccer',
+  'tennis',
+  // Other
+  'heart-pulse',
+  'timer-outline',
+  'stretch',
+]);
 
 // ============================================================================
 // Profile Schemas

@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useMemo } from 'react';
-import { Pressable, Modal, ScrollView } from 'react-native';
+import { Pressable, Modal, ScrollView, Linking } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,8 +7,9 @@ import { useWorkoutTemplate, useHardRemoveFromTemplate, useAddExerciseToTemplate
 import { showSuccessToast } from '../utils';
 import { AddExerciseSheet } from './AddExerciseSheet';
 import { SetDefaultsSheet } from './SetDefaultsSheet';
+import { IconSelectSheet } from './IconSelectSheet';
 import { Button } from './Button';
-import type { Exercise, WorkoutTemplateWithExercise, TemplateSetConfig } from '@progress/shared';
+import type { Exercise, WorkoutTemplateWithExercise, TemplateSetConfig, ExerciseIcon } from '@progress/shared';
 
 interface TemplateSectionProps {
   subjectId: string;
@@ -22,6 +23,10 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
   const [showSetDefaultsSheet, setShowSetDefaultsSheet] = useState(false);
   const [selectedTemplateItem, setSelectedTemplateItem] = useState<WorkoutTemplateWithExercise | null>(null);
 
+  // Future feature: Icon selection modal
+  const [showIconModal, setShowIconModal] = useState(false);
+  const [selectedExerciseForIcon, setSelectedExerciseForIcon] = useState<WorkoutTemplateWithExercise | null>(null);
+
   const { data: template, isLoading } = useWorkoutTemplate(subjectId);
   const removeFromTemplate = useHardRemoveFromTemplate(subjectId);
   const addExercise = useAddExerciseToTemplate(subjectId);
@@ -33,11 +38,13 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
     [template]
   );
 
-  const handleAddExercises = useCallback((exercises: Exercise[]) => {
+  const handleAddExercises = useCallback((exercises: Exercise[], defaultSets?: Array<{ target_reps: number }>) => {
+    const sets = defaultSets ?? [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }];
+
     exercises.forEach(exercise => {
       addExercise.mutate({
         exerciseId: exercise.id,
-        defaultSets: [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }],
+        defaultSets: sets,
       });
     });
   }, [addExercise]);
@@ -62,6 +69,33 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
       onSuccess: () => showSuccessToast('Sets updated'),
     });
   }, [selectedTemplateItem, updateTemplate]);
+
+  const openYouTubeSearch = useCallback((exerciseName: string) => {
+    const query = encodeURIComponent(`${exerciseName} exercise tutorial`);
+    const url = `https://www.youtube.com/results?search_query=${query}`;
+    Linking.openURL(url);
+  }, []);
+
+  // Open icon selection modal
+  const handleIconPress = useCallback((item: WorkoutTemplateWithExercise) => {
+    setSelectedExerciseForIcon(item);
+    setShowIconModal(true);
+  }, []);
+
+  // Handle icon selection (for now just close - future: save to DB)
+  const handleSelectIcon = useCallback((icon: ExerciseIcon) => {
+    // TODO: Implement icon saving to database for custom exercises
+    // For now, just show a toast and close
+    showSuccessToast(`Icon "${icon}" selected`);
+    setShowIconModal(false);
+    setSelectedExerciseForIcon(null);
+  }, []);
+
+  // Future feature: Long press to reorder
+  const handleExerciseLongPress = useCallback((_item: WorkoutTemplateWithExercise) => {
+    // TODO: Implement drag-to-reorder functionality
+    showSuccessToast('Drag to reorder coming soon');
+  }, []);
 
   const formatDefaultSets = (item: WorkoutTemplateWithExercise): string => {
     const sets = item.default_sets;
@@ -93,44 +127,48 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
   }
 
   // Render exercise row (used in both collapsed preview and modal)
+  // Matches SetDefaultsSheet styling with smaller fonts
   const renderExerciseRow = (item: WorkoutTemplateWithExercise, index: number) => (
-    <XStack
+    <Pressable
       key={item.id}
-      backgroundColor="$backgroundHover"
-      borderRadius="$3"
-      padding="$3"
-      alignItems="center"
-      gap="$3"
+      onLongPress={() => handleExerciseLongPress(item)}
+      delayLongPress={400}
+      style={{ cursor: 'default', userSelect: 'none' } as never}
     >
-      {/* Position indicator */}
-      <YStack
-        width={28}
-        height={28}
-        borderRadius={14}
-        backgroundColor="$background"
+      <XStack
+        backgroundColor="$backgroundHover"
+        paddingVertical="$2.5"
+        paddingLeft="$3"
+        paddingRight="$2"
+        borderRadius="$3"
         alignItems="center"
-        justifyContent="center"
+        gap="$2"
       >
-        <Text fontSize={12} fontWeight="600" color="$textMuted">
+        {/* Position indicator */}
+        <Text fontSize={14} color="$textMuted" width={24}>
           {index + 1}
         </Text>
-      </YStack>
 
-      {/* Exercise icon */}
-      <YStack
-        width={36}
-        height={36}
-        borderRadius={18}
-        backgroundColor="$purple5"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <MaterialCommunityIcons
-          name={item.exercise.icon as keyof typeof MaterialCommunityIcons.glyphMap}
-          size={20}
-          color={theme.purple10?.val ?? '#8B5CF6'}
-        />
-      </YStack>
+        {/* Exercise icon - tap to change */}
+        <Pressable
+          onPress={() => handleIconPress(item)}
+          style={{ cursor: 'pointer', userSelect: 'none' } as never}
+        >
+          <YStack
+            width={32}
+            height={32}
+            borderRadius={16}
+            backgroundColor="$purple5"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <MaterialCommunityIcons
+              name={item.exercise.icon as keyof typeof MaterialCommunityIcons.glyphMap}
+              size={18}
+              color={theme.purple10?.val ?? '#8B5CF6'}
+            />
+          </YStack>
+        </Pressable>
 
       {/* Exercise info */}
       <Pressable
@@ -138,23 +176,45 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
         style={{ flex: 1, cursor: 'pointer', userSelect: 'none' } as never}
       >
         <YStack>
-          <Text fontSize={15} fontWeight="600" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$color">
             {item.exercise.name}
           </Text>
           <XStack alignItems="center" gap="$1">
-            <Text fontSize={12} color="$primary" fontWeight="600">
+            <Text fontSize={11} color="$primary" fontWeight="600">
               {formatDefaultSets(item)}
             </Text>
-            <Text fontSize={12} color="$textMuted">
+            <Text fontSize={11} color="$textMuted">
               · {item.exercise.muscle_group}
             </Text>
             <MaterialCommunityIcons
               name="pencil"
-              size={12}
+              size={10}
               color={theme.primary?.val ?? '#8B5CF6'}
             />
           </XStack>
         </YStack>
+      </Pressable>
+
+      {/* YouTube button */}
+      <Pressable
+        onPress={() => openYouTubeSearch(item.exercise.name)}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        style={{ cursor: 'pointer', userSelect: 'none' } as never}
+      >
+        <Stack
+          width={28}
+          height={28}
+          borderRadius={14}
+          backgroundColor="$purple5"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <MaterialCommunityIcons
+            name="youtube"
+            size={16}
+            color={theme.primary?.val ?? '#8B5CF6'}
+          />
+        </Stack>
       </Pressable>
 
       {/* Remove button - disabled during in-progress session */}
@@ -165,21 +225,22 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
         disabled={hasInProgressSession}
       >
         <Stack
-          width={32}
-          height={32}
-          borderRadius={16}
+          width={28}
+          height={28}
+          borderRadius={14}
           backgroundColor="rgba(239, 68, 68, 0.1)"
           alignItems="center"
           justifyContent="center"
         >
           <MaterialCommunityIcons
             name="trash-can-outline"
-            size={16}
+            size={14}
             color={theme.error?.val ?? '#EF4444'}
           />
         </Stack>
       </Pressable>
-    </XStack>
+      </XStack>
+    </Pressable>
   );
 
   return (
@@ -236,10 +297,10 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
         </XStack>
       </Pressable>
 
-      {/* Add Button (always visible) */}
+      {/* Add Button */}
       <XStack paddingHorizontal="$4" paddingTop="$3">
         <Button
-          variant="secondary"
+          variant="ghost"
           size="small"
           onPress={() => setShowAddSheet(true)}
           fullWidth
@@ -291,7 +352,7 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
             {/* Add more button in modal */}
             <YStack paddingTop="$4">
               <Button
-                variant="secondary"
+                variant="ghost"
                 size="medium"
                 onPress={() => {
                   setShowExerciseList(false);
@@ -323,6 +384,17 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
         }}
         onSave={handleSaveSets}
         templateItem={selectedTemplateItem}
+      />
+
+      {/* Icon Selection Sheet */}
+      <IconSelectSheet
+        open={showIconModal}
+        onClose={() => {
+          setShowIconModal(false);
+          setSelectedExerciseForIcon(null);
+        }}
+        onSelectIcon={handleSelectIcon}
+        templateItem={selectedExerciseForIcon}
       />
     </YStack>
   );

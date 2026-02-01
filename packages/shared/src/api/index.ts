@@ -87,6 +87,7 @@ export {
   getExerciseById,
   createCustomExercise,
   deleteCustomExercise,
+  updateExerciseIcon,
 } from './exercises';
 
 // Template API

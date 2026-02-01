@@ -29,7 +29,41 @@ export type ExerciseCategory = 'strength' | 'bodyweight' | 'cardio' | 'flexibili
 export type MuscleGroup = 'chest' | 'back' | 'legs' | 'shoulders' | 'arms' | 'core' | 'cardio' | 'full_body';
 
 /** Available exercise icons */
-export type ExerciseIcon = 'dumbbell' | 'weight-lifter' | 'arm-flex' | 'human-handsup' | 'human' | 'run' | 'bike' | 'rowing' | 'yoga' | 'stairs-up';
+export type ExerciseIcon =
+  // Strength
+  | 'dumbbell'
+  | 'weight-lifter'
+  | 'arm-flex'
+  | 'weight'
+  | 'barbell'
+  // Body positions
+  | 'human-handsup'
+  | 'human'
+  | 'human-handsdown'
+  | 'yoga'
+  | 'meditation'
+  | 'kabaddi'
+  | 'karate'
+  // Cardio
+  | 'run'
+  | 'run-fast'
+  | 'walk'
+  | 'bike'
+  | 'rowing'
+  | 'swim'
+  | 'jump-rope'
+  // Equipment
+  | 'stairs-up'
+  | 'stairs'
+  | 'gymnastics'
+  | 'boxing-glove'
+  | 'basketball'
+  | 'soccer'
+  | 'tennis'
+  // Other
+  | 'heart-pulse'
+  | 'timer-outline'
+  | 'stretch';
 
 // ============================================================================
 // Profile

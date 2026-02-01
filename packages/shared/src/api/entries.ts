@@ -362,12 +362,15 @@ export async function createEntryWithTemplate(
   }
 
   // Create sets for each item based on template default_sets
+  // Pre-fill reps/duration with target values so user only needs to add weight
   const setsToInsert: Array<{
     item_id: string;
     user_id: string;
     set_index: number;
     target_reps: number | null;
     target_duration_sec: number | null;
+    reps: number | null;
+    duration_sec: number | null;
   }> = [];
 
   // Type assertion for items returned from insert
@@ -386,6 +389,9 @@ export async function createEntryWithTemplate(
           set_index: setIndex,
           target_reps: setConfig.target_reps ?? null,
           target_duration_sec: setConfig.target_duration_seconds ?? null,
+          // Pre-fill actual values with targets so user only needs to enter weight
+          reps: setConfig.target_reps ?? null,
+          duration_sec: setConfig.target_duration_seconds ?? null,
         });
       });
     }

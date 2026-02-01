@@ -288,6 +288,7 @@ export {
   getExerciseById,
   createCustomExercise,
   deleteCustomExercise,
+  updateExerciseIcon,
 
   // Templates
   getWorkoutTemplate,

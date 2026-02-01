@@ -94,13 +94,6 @@ function WorkoutCard({
 }: WorkoutCardProps): React.ReactElement {
   const theme = useTheme();
 
-  // Determine card background based on state
-  const getBackgroundColor = () => {
-    if (isSelected) return 'rgba(239, 68, 68, 0.1)';
-    if (hasInProgressEntry) return 'rgba(245, 158, 11, 0.1)';
-    return '$backgroundHover';
-  };
-
   return (
     <Pressable
       onPress={onPress}
@@ -109,13 +102,15 @@ function WorkoutCard({
       style={{ cursor: 'pointer', userSelect: 'none' } as never}
     >
       <XStack
-        backgroundColor={getBackgroundColor()}
+        backgroundColor={isSelected ? 'rgba(239, 68, 68, 0.1)' : '$backgroundHover'}
         borderRadius="$3"
         padding="$3"
         alignItems="center"
         gap="$3"
-        borderWidth={isSelected || hasInProgressEntry ? 2 : 0}
-        borderColor={isSelected ? '$error' : '$warning'}
+        borderWidth={isSelected ? 2 : 0}
+        borderColor="$error"
+        borderLeftWidth={hasInProgressEntry && !isSelected ? 3 : (isSelected ? 2 : 0)}
+        borderLeftColor={hasInProgressEntry && !isSelected ? '$primary' : '$error'}
       >
         {/* Selection checkbox or workout icon */}
         {isSelectionMode ? (
@@ -142,14 +137,14 @@ function WorkoutCard({
             width={32}
             height={32}
             borderRadius={16}
-            backgroundColor={hasInProgressEntry ? 'rgba(245, 158, 11, 0.2)' : '$purple5'}
+            backgroundColor="$purple5"
             alignItems="center"
             justifyContent="center"
           >
             <MaterialCommunityIcons
-              name={hasInProgressEntry ? 'play' : 'dumbbell'}
+              name="dumbbell"
               size={16}
-              color={hasInProgressEntry ? (theme.warning?.val ?? '#F59E0B') : (theme.primary?.val ?? '#8B5CF6')}
+              color={theme.primary?.val ?? '#8B5CF6'}
             />
           </Stack>
         )}
@@ -159,15 +154,16 @@ function WorkoutCard({
           <Text fontSize={16} fontWeight="600" color="$color">
             {subject.name}
           </Text>
-          <Text fontSize={12} color={hasInProgressEntry ? '$warning' : '$textMuted'}>
-            {hasInProgressEntry ? 'In Progress' : `${exerciseCount} ${exerciseCount === 1 ? 'exercise' : 'exercises'}`}
+          <Text fontSize={12} color="$textMuted">
+            {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
+            {hasInProgressEntry && ' · In Progress'}
           </Text>
         </YStack>
 
         {/* Start/Continue button - only show when not in selection mode */}
         {!isSelectionMode && (
           <Stack
-            backgroundColor={hasInProgressEntry ? '$warning' : '$primary'}
+            backgroundColor="$primary"
             paddingHorizontal={16}
             paddingVertical={8}
             borderRadius={8}
@@ -302,13 +298,13 @@ function SessionCard({ entry, subjectName, onPress, onDelete }: SessionCardProps
 
   return (
     <XStack
-      backgroundColor={entry.is_completed ? '$backgroundHover' : 'rgba(245, 158, 11, 0.1)'}
+      backgroundColor="$backgroundHover"
       padding="$3"
       borderRadius="$3"
       alignItems="center"
       gap="$3"
-      borderWidth={entry.is_completed ? 0 : 1}
-      borderColor="$warning"
+      borderLeftWidth={entry.is_completed ? 0 : 3}
+      borderLeftColor="$primary"
     >
       <Pressable
         onPress={onPress}
@@ -318,41 +314,32 @@ function SessionCard({ entry, subjectName, onPress, onDelete }: SessionCardProps
           width={40}
           height={40}
           borderRadius={20}
-          backgroundColor={entry.is_completed ? '$green5' : 'rgba(245, 158, 11, 0.2)'}
+          backgroundColor={entry.is_completed ? '$green5' : '$purple5'}
           alignItems="center"
           justifyContent="center"
         >
           <MaterialCommunityIcons
             name={entry.is_completed ? 'check' : 'play'}
             size={20}
-            color={entry.is_completed ? '#10B981' : '#F59E0B'}
+            color={entry.is_completed ? '#10B981' : (theme.primary?.val ?? '#8B5CF6')}
           />
         </Stack>
         <YStack flex={1}>
-          <XStack alignItems="center" gap="$2">
-            <Text fontSize={15} fontWeight="600" color="$color">
-              {subjectName}
-            </Text>
-            {/* Status badge */}
-            <Stack
-              backgroundColor={entry.is_completed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)'}
-              paddingHorizontal={8}
-              paddingVertical={2}
-              borderRadius={9999}
-            >
-              <Text
-                fontSize={10}
-                fontWeight="600"
-                color={entry.is_completed ? '$success' : '$warning'}
-              >
-                {entry.is_completed ? 'Completed' : 'In Progress'}
-              </Text>
-            </Stack>
-          </XStack>
+          <Text fontSize={15} fontWeight="600" color="$color">
+            {subjectName}
+          </Text>
           <XStack gap="$2" alignItems="center">
             <Text fontSize={13} color="$textMuted">
               {formatRelativeDate(entry.performed_at)}
             </Text>
+            {!entry.is_completed && (
+              <>
+                <Text fontSize={13} color="$textMuted">·</Text>
+                <Text fontSize={13} fontWeight="500" color="$primary">
+                  In Progress
+                </Text>
+              </>
+            )}
             {entry.duration_seconds && (
               <>
                 <Text fontSize={13} color="$textMuted">·</Text>
@@ -558,18 +545,20 @@ function WorkoutModule(): React.ReactElement {
             style={{ cursor: 'pointer', userSelect: 'none' } as never}
           >
             <XStack
-              backgroundColor="$warning"
+              backgroundColor="$purple5"
               paddingHorizontal="$4"
               paddingVertical="$3"
               alignItems="center"
               justifyContent="space-between"
+              borderBottomWidth={1}
+              borderBottomColor="$borderColor"
             >
               <XStack alignItems="center" gap="$3">
                 <Stack
                   width={32}
                   height={32}
                   borderRadius={16}
-                  backgroundColor="rgba(255, 255, 255, 0.2)"
+                  backgroundColor="$primary"
                   alignItems="center"
                   justifyContent="center"
                 >
@@ -580,10 +569,10 @@ function WorkoutModule(): React.ReactElement {
                   />
                 </Stack>
                 <YStack>
-                  <Text fontSize={14} fontWeight="600" color="white">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     Continue: {inProgressWorkoutName}
                   </Text>
-                  <Text fontSize={12} color="rgba(255, 255, 255, 0.8)">
+                  <Text fontSize={12} color="$textMuted">
                     Session in progress
                   </Text>
                 </YStack>
@@ -591,7 +580,7 @@ function WorkoutModule(): React.ReactElement {
               <MaterialCommunityIcons
                 name="chevron-right"
                 size={24}
-                color="white"
+                color={theme.primary?.val ?? '#8B5CF6'}
               />
             </XStack>
           </Pressable>
@@ -726,26 +715,26 @@ function WorkoutModule(): React.ReactElement {
                   width={32}
                   height={32}
                   borderRadius={16}
-                  backgroundColor="$blue5"
+                  backgroundColor="$purple5"
                   alignItems="center"
                   justifyContent="center"
                 >
                   <MaterialCommunityIcons
                     name="history"
                     size={18}
-                    color="#3B82F6"
+                    color={theme.primary?.val ?? '#8B5CF6'}
                   />
                 </Stack>
                 <Text fontSize={14} fontWeight="600" color="$color">
                   Recent Sessions
                 </Text>
                 <Stack
-                  backgroundColor="$blue5"
+                  backgroundColor="$purple5"
                   paddingHorizontal="$2"
                   paddingVertical="$1"
                   borderRadius="$2"
                 >
-                  <Text fontSize={12} fontWeight="600" color="$secondary">
+                  <Text fontSize={12} fontWeight="600" color="$primary">
                     {recentEntries?.length}
                   </Text>
                 </Stack>

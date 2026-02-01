@@ -55,13 +55,28 @@ export default function TabsLayout(): React.ReactElement {
         options={{
           title: 'Menu',
           tabBarLabel: 'Menu',
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
-              name={focused ? 'menu' : 'menu'}
+              name="menu"
               size={24}
               color={color}
             />
           ),
+        }}
+      />
+      {/* Detail screens - hidden from tab bar but keep tabs visible */}
+      <Tabs.Screen
+        name="subject/[id]"
+        options={{
+          href: null,
+          headerShown: true,
+        }}
+      />
+      <Tabs.Screen
+        name="entry/[id]"
+        options={{
+          href: null,
+          headerShown: true,
         }}
       />
     </Tabs>

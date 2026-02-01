@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Modal } from 'react-native';
+import { Modal, Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
-import { Text } from '@tamagui/core';
+import { Text, Stack } from '@tamagui/core';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +9,31 @@ import { useCreateSubject } from '../hooks';
 import { getErrorMessage } from '../utils';
 import { Button } from './Button';
 import { Input } from './Input';
+
+// Same reps presets (4 options)
+const SAME_REPS_PRESETS = [
+  { label: '3×10', sets: [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }] },
+  { label: '4×8', sets: [{ target_reps: 8 }, { target_reps: 8 }, { target_reps: 8 }, { target_reps: 8 }] },
+  { label: '5×5', sets: [{ target_reps: 5 }, { target_reps: 5 }, { target_reps: 5 }, { target_reps: 5 }, { target_reps: 5 }] },
+  { label: '3×15', sets: [{ target_reps: 15 }, { target_reps: 15 }, { target_reps: 15 }] },
+];
+
+// Pyramid presets (4 options)
+const PYRAMID_PRESETS = [
+  { label: '12/10/8', sets: [{ target_reps: 12 }, { target_reps: 10 }, { target_reps: 8 }] },
+  { label: '15/12/10/8', sets: [{ target_reps: 15 }, { target_reps: 12 }, { target_reps: 10 }, { target_reps: 8 }] },
+  { label: '10/8/6/4', sets: [{ target_reps: 10 }, { target_reps: 8 }, { target_reps: 6 }, { target_reps: 4 }] },
+  { label: '6/8/10/12', sets: [{ target_reps: 6 }, { target_reps: 8 }, { target_reps: 10 }, { target_reps: 12 }] },
+];
+
+// Preset type
+interface SetPreset {
+  label: string;
+  sets: Array<{ target_reps: number }>;
+}
+
+// Default preset (first same reps preset - guaranteed to exist)
+const DEFAULT_PRESET: SetPreset = { label: '3×10', sets: [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }] };
 
 // Hardcoded workout domain ID (from seed.sql)
 const WORKOUT_DOMAIN_ID = 'd0000000-0000-0000-0000-000000000001';
@@ -31,6 +56,8 @@ export function CreateSubjectModal({
 }: CreateSubjectModalProps): React.ReactElement {
   const createSubject = useCreateSubject();
   const [error, setError] = useState<string | null>(null);
+  // Default sets configuration (TODO: persist to subject metadata)
+  const [selectedPreset, setSelectedPreset] = useState<SetPreset>(DEFAULT_PRESET);
 
   const {
     control,
@@ -65,6 +92,7 @@ export function CreateSubjectModal({
   const handleClose = (): void => {
     reset();
     setError(null);
+    setSelectedPreset(DEFAULT_PRESET);
     onClose();
   };
 
@@ -130,6 +158,84 @@ export function CreateSubjectModal({
               />
             )}
           />
+
+          {/* Default Sets Selection */}
+          <YStack gap="$3">
+            <YStack gap="$1">
+              <Text fontSize={14} fontWeight="600" color="$color">
+                Default Sets for Exercises
+              </Text>
+              <Text fontSize={12} color="$textMuted">
+                Applied when adding new exercises
+              </Text>
+            </YStack>
+
+            {/* Same Reps Section */}
+            <YStack gap="$2">
+              <Text fontSize={12} fontWeight="600" color="$textMuted">
+                Same Reps
+              </Text>
+              <XStack flexWrap="wrap" gap="$2">
+                {SAME_REPS_PRESETS.map((preset) => (
+                  <Pressable
+                    key={preset.label}
+                    onPress={() => setSelectedPreset(preset)}
+                    style={{ cursor: 'pointer', userSelect: 'none' } as never}
+                  >
+                    <Stack
+                      paddingVertical="$2"
+                      paddingHorizontal="$3"
+                      borderRadius="$3"
+                      backgroundColor={selectedPreset.label === preset.label ? '$primary' : '$backgroundHover'}
+                      borderWidth={1}
+                      borderColor={selectedPreset.label === preset.label ? '$primary' : 'transparent'}
+                    >
+                      <Text
+                        fontSize={14}
+                        fontWeight="600"
+                        color={selectedPreset.label === preset.label ? 'white' : '$color'}
+                      >
+                        {preset.label}
+                      </Text>
+                    </Stack>
+                  </Pressable>
+                ))}
+              </XStack>
+            </YStack>
+
+            {/* Pyramid Section */}
+            <YStack gap="$2">
+              <Text fontSize={12} fontWeight="600" color="$textMuted">
+                Pyramid
+              </Text>
+              <XStack flexWrap="wrap" gap="$2">
+                {PYRAMID_PRESETS.map((preset) => (
+                  <Pressable
+                    key={preset.label}
+                    onPress={() => setSelectedPreset(preset)}
+                    style={{ cursor: 'pointer', userSelect: 'none' } as never}
+                  >
+                    <Stack
+                      paddingVertical="$2"
+                      paddingHorizontal="$3"
+                      borderRadius="$3"
+                      backgroundColor={selectedPreset.label === preset.label ? '$primary' : '$backgroundHover'}
+                      borderWidth={1}
+                      borderColor={selectedPreset.label === preset.label ? '$primary' : 'transparent'}
+                    >
+                      <Text
+                        fontSize={14}
+                        fontWeight="600"
+                        color={selectedPreset.label === preset.label ? 'white' : '$color'}
+                      >
+                        {preset.label}
+                      </Text>
+                    </Stack>
+                  </Pressable>
+                ))}
+              </XStack>
+            </YStack>
+          </YStack>
 
           <Button
             variant="primary"

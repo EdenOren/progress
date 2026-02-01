@@ -9,3 +9,4 @@ export { ExerciseInputCard } from './ExerciseInputCard';
 export { AddItemModal } from './AddItemModal';
 export { AddExerciseSheet } from './AddExerciseSheet';
 export { TemplateSection } from './TemplateSection';
+export { IconSelectSheet } from './IconSelectSheet';
