@@ -12,8 +12,10 @@ import {
   useSubjectsWithStats,
   useHardDeleteSubject,
   useRecentEntries,
+  useInProgressEntry,
   useWorkoutTemplate,
   useCreateEntryWithTemplate,
+  useCompleteEntry,
   useDeleteEntry,
 } from '../../src/hooks';
 import { useModule } from '../../src/providers';
@@ -76,6 +78,7 @@ interface WorkoutCardProps {
   onStart: () => void;
   isStarting: boolean;
   exerciseCount: number;
+  hasInProgressEntry?: boolean;
 }
 
 function WorkoutCard({
@@ -87,8 +90,16 @@ function WorkoutCard({
   onStart,
   isStarting,
   exerciseCount,
+  hasInProgressEntry = false,
 }: WorkoutCardProps): React.ReactElement {
   const theme = useTheme();
+
+  // Determine card background based on state
+  const getBackgroundColor = () => {
+    if (isSelected) return 'rgba(239, 68, 68, 0.1)';
+    if (hasInProgressEntry) return 'rgba(245, 158, 11, 0.1)';
+    return '$backgroundHover';
+  };
 
   return (
     <Pressable
@@ -98,13 +109,13 @@ function WorkoutCard({
       style={{ cursor: 'pointer', userSelect: 'none' } as never}
     >
       <XStack
-        backgroundColor={isSelected ? 'rgba(239, 68, 68, 0.1)' : '$backgroundHover'}
+        backgroundColor={getBackgroundColor()}
         borderRadius="$3"
         padding="$3"
         alignItems="center"
         gap="$3"
-        borderWidth={isSelected ? 2 : 0}
-        borderColor="$error"
+        borderWidth={isSelected || hasInProgressEntry ? 2 : 0}
+        borderColor={isSelected ? '$error' : '$warning'}
       >
         {/* Selection checkbox or workout icon */}
         {isSelectionMode ? (
@@ -131,14 +142,14 @@ function WorkoutCard({
             width={32}
             height={32}
             borderRadius={16}
-            backgroundColor="$purple5"
+            backgroundColor={hasInProgressEntry ? 'rgba(245, 158, 11, 0.2)' : '$purple5'}
             alignItems="center"
             justifyContent="center"
           >
             <MaterialCommunityIcons
-              name="dumbbell"
+              name={hasInProgressEntry ? 'play' : 'dumbbell'}
               size={16}
-              color={theme.primary?.val ?? '#8B5CF6'}
+              color={hasInProgressEntry ? (theme.warning?.val ?? '#F59E0B') : (theme.primary?.val ?? '#8B5CF6')}
             />
           </Stack>
         )}
@@ -148,22 +159,31 @@ function WorkoutCard({
           <Text fontSize={16} fontWeight="600" color="$color">
             {subject.name}
           </Text>
-          <Text fontSize={12} color="$textMuted">
-            {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
+          <Text fontSize={12} color={hasInProgressEntry ? '$warning' : '$textMuted'}>
+            {hasInProgressEntry ? 'In Progress' : `${exerciseCount} ${exerciseCount === 1 ? 'exercise' : 'exercises'}`}
           </Text>
         </YStack>
 
-        {/* Start button - only show when not in selection mode */}
+        {/* Start/Continue button - only show when not in selection mode */}
         {!isSelectionMode && (
-          <Button
-            variant="primary"
-            size="small"
+          <Stack
+            backgroundColor={hasInProgressEntry ? '$warning' : '$primary'}
+            paddingHorizontal={16}
+            paddingVertical={8}
+            borderRadius={8}
+            opacity={isStarting ? 0.7 : 1}
+            pressStyle={{ opacity: 0.8 }}
             onPress={onStart}
-            disabled={isStarting || exerciseCount === 0}
-            loading={isStarting}
+            disabled={isStarting || (!hasInProgressEntry && exerciseCount === 0)}
           >
-            Start
-          </Button>
+            {isStarting ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text color="white" fontSize={14} fontWeight="600">
+                {hasInProgressEntry ? 'Continue' : 'Start'}
+              </Text>
+            )}
+          </Stack>
         )}
       </XStack>
     </Pressable>
@@ -179,6 +199,8 @@ interface WorkoutCardWithTemplateProps {
   onLongPress: () => void;
   startingSubjectId: string | null;
   setStartingSubjectId: (id: string | null) => void;
+  inProgressEntry: Entry | null;
+  onCompleteEntry: (entryId: string) => Promise<void>;
 }
 
 function WorkoutCardWithTemplate({
@@ -189,16 +211,39 @@ function WorkoutCardWithTemplate({
   onLongPress,
   startingSubjectId,
   setStartingSubjectId,
+  inProgressEntry,
+  onCompleteEntry,
 }: WorkoutCardWithTemplateProps): React.ReactElement {
   const { data: template } = useWorkoutTemplate(subject.id);
   const createEntry = useCreateEntryWithTemplate();
   const exerciseCount = template?.length ?? 0;
   const isStarting = startingSubjectId === subject.id && createEntry.isPending;
 
+  // Check if this subject has the in-progress entry
+  const hasInProgressEntry = inProgressEntry?.subject_id === subject.id;
+
   const handleStart = useCallback(async () => {
+    // If this subject already has an in-progress entry, continue it
+    if (hasInProgressEntry && inProgressEntry) {
+      router.push({
+        pathname: '/entry/[id]',
+        params: { id: inProgressEntry.id },
+      });
+      return;
+    }
+
     if (!template || createEntry.isPending || exerciseCount === 0) return;
 
     setStartingSubjectId(subject.id);
+
+    // Auto-complete any existing in-progress entry from another workout
+    if (inProgressEntry && inProgressEntry.subject_id !== subject.id) {
+      try {
+        await onCompleteEntry(inProgressEntry.id);
+      } catch {
+        // Continue even if completion fails
+      }
+    }
 
     const now = new Date();
     const today = now.toISOString().split('T')[0] as string;
@@ -228,7 +273,7 @@ function WorkoutCardWithTemplate({
     } finally {
       setStartingSubjectId(null);
     }
-  }, [template, createEntry, subject.id, exerciseCount, setStartingSubjectId]);
+  }, [template, createEntry, subject.id, exerciseCount, setStartingSubjectId, hasInProgressEntry, inProgressEntry, onCompleteEntry]);
 
   return (
     <WorkoutCard
@@ -240,6 +285,7 @@ function WorkoutCardWithTemplate({
       onStart={handleStart}
       isStarting={isStarting}
       exerciseCount={exerciseCount}
+      hasInProgressEntry={hasInProgressEntry}
     />
   );
 }
@@ -256,11 +302,13 @@ function SessionCard({ entry, subjectName, onPress, onDelete }: SessionCardProps
 
   return (
     <XStack
-      backgroundColor="$backgroundHover"
+      backgroundColor={entry.is_completed ? '$backgroundHover' : 'rgba(245, 158, 11, 0.1)'}
       padding="$3"
       borderRadius="$3"
       alignItems="center"
       gap="$3"
+      borderWidth={entry.is_completed ? 0 : 1}
+      borderColor="$warning"
     >
       <Pressable
         onPress={onPress}
@@ -270,20 +318,37 @@ function SessionCard({ entry, subjectName, onPress, onDelete }: SessionCardProps
           width={40}
           height={40}
           borderRadius={20}
-          backgroundColor="$blue5"
+          backgroundColor={entry.is_completed ? '$green5' : 'rgba(245, 158, 11, 0.2)'}
           alignItems="center"
           justifyContent="center"
         >
           <MaterialCommunityIcons
-            name="history"
+            name={entry.is_completed ? 'check' : 'play'}
             size={20}
-            color="#3B82F6"
+            color={entry.is_completed ? '#10B981' : '#F59E0B'}
           />
         </Stack>
         <YStack flex={1}>
-          <Text fontSize={15} fontWeight="600" color="$color">
-            {subjectName}
-          </Text>
+          <XStack alignItems="center" gap="$2">
+            <Text fontSize={15} fontWeight="600" color="$color">
+              {subjectName}
+            </Text>
+            {/* Status badge */}
+            <Stack
+              backgroundColor={entry.is_completed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)'}
+              paddingHorizontal={8}
+              paddingVertical={2}
+              borderRadius={9999}
+            >
+              <Text
+                fontSize={10}
+                fontWeight="600"
+                color={entry.is_completed ? '$success' : '$warning'}
+              >
+                {entry.is_completed ? 'Completed' : 'In Progress'}
+              </Text>
+            </Stack>
+          </XStack>
           <XStack gap="$2" alignItems="center">
             <Text fontSize={13} color="$textMuted">
               {formatRelativeDate(entry.performed_at)}
@@ -335,8 +400,10 @@ function WorkoutModule(): React.ReactElement {
   const theme = useTheme();
   const { data: subjects, isLoading: subjectsLoading, refetch, isRefetching } = useSubjectsWithStats();
   const { data: recentEntries, isLoading: entriesLoading } = useRecentEntries(5);
+  const inProgressEntry = useInProgressEntry();
   const hardDelete = useHardDeleteSubject();
   const deleteEntry = useDeleteEntry();
+  const completeEntry = useCompleteEntry();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRecentSessions, setShowRecentSessions] = useState(false);
 
@@ -344,6 +411,28 @@ function WorkoutModule(): React.ReactElement {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [startingSubjectId, setStartingSubjectId] = useState<string | null>(null);
+
+  // Get workout name for in-progress entry
+  const inProgressWorkoutName = useMemo(() => {
+    if (!inProgressEntry || !subjects) return null;
+    const subject = subjects.find(s => s.id === inProgressEntry.subject_id);
+    return subject?.name ?? 'Workout';
+  }, [inProgressEntry, subjects]);
+
+  // Handle completing an entry
+  const handleCompleteEntry = useCallback(async (entryId: string) => {
+    await completeEntry.mutateAsync(entryId);
+  }, [completeEntry]);
+
+  // Navigate to in-progress entry
+  const handleContinueSession = useCallback(() => {
+    if (inProgressEntry) {
+      router.push({
+        pathname: '/entry/[id]',
+        params: { id: inProgressEntry.id },
+      });
+    }
+  }, [inProgressEntry]);
 
   // Map subject IDs to names for recent sessions
   const subjectMap = useMemo(() => {
@@ -462,6 +551,52 @@ function WorkoutModule(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
       <YStack flex={1}>
+        {/* Continue session banner */}
+        {inProgressEntry && !isSelectionMode && (
+          <Pressable
+            onPress={handleContinueSession}
+            style={{ cursor: 'pointer', userSelect: 'none' } as never}
+          >
+            <XStack
+              backgroundColor="$warning"
+              paddingHorizontal="$4"
+              paddingVertical="$3"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <XStack alignItems="center" gap="$3">
+                <Stack
+                  width={32}
+                  height={32}
+                  borderRadius={16}
+                  backgroundColor="rgba(255, 255, 255, 0.2)"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <MaterialCommunityIcons
+                    name="play"
+                    size={18}
+                    color="white"
+                  />
+                </Stack>
+                <YStack>
+                  <Text fontSize={14} fontWeight="600" color="white">
+                    Continue: {inProgressWorkoutName}
+                  </Text>
+                  <Text fontSize={12} color="rgba(255, 255, 255, 0.8)">
+                    Session in progress
+                  </Text>
+                </YStack>
+              </XStack>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={24}
+                color="white"
+              />
+            </XStack>
+          </Pressable>
+        )}
+
         {/* Selection mode header */}
         {isSelectionMode && (
           <XStack
@@ -562,6 +697,8 @@ function WorkoutModule(): React.ReactElement {
                     onLongPress={() => handleWorkoutLongPress(subject)}
                     startingSubjectId={startingSubjectId}
                     setStartingSubjectId={setStartingSubjectId}
+                    inProgressEntry={inProgressEntry}
+                    onCompleteEntry={handleCompleteEntry}
                   />
                 ))}
               </YStack>

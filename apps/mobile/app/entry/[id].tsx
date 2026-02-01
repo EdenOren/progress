@@ -29,6 +29,7 @@ export default function EntryScreen(): React.ReactElement {
   const completeEntry = useCompleteEntry();
   const deleteEntry = useDeleteEntry();
   const [showAddItem, setShowAddItem] = useState(false);
+  const [showComparisonHint, setShowComparisonHint] = useState(true);
   const theme = useTheme();
 
   const handleComplete = (): void => {
@@ -164,15 +165,34 @@ export default function EntryScreen(): React.ReactElement {
             </Card>
           </Stack>
 
-          {/* Last time comparison hint */}
+          {/* Last time comparison hint - tappable to toggle */}
           {lastEntry && (
-            <Stack marginBottom={16}>
+            <Pressable
+              onPress={() => setShowComparisonHint(!showComparisonHint)}
+              style={{ marginBottom: 16, cursor: 'pointer', userSelect: 'none' } as never}
+            >
               <Card backgroundColor="$blue5">
-                <Text fontSize={13} color="$secondary">
-                  Comparing with your session from {formatDate(lastEntry.performed_at)}
-                </Text>
+                <XStack alignItems="center" justifyContent="space-between">
+                  <XStack alignItems="center" gap={8} flex={1}>
+                    <MaterialCommunityIcons
+                      name="history"
+                      size={16}
+                      color={theme.secondary?.val ?? '#3B82F6'}
+                    />
+                    <Text fontSize={13} color="$secondary" flex={1}>
+                      {showComparisonHint
+                        ? `Comparing with ${formatDate(lastEntry.performed_at)}`
+                        : 'Tap to show last session comparison'}
+                    </Text>
+                  </XStack>
+                  <MaterialCommunityIcons
+                    name={showComparisonHint ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color={theme.secondary?.val ?? '#3B82F6'}
+                  />
+                </XStack>
               </Card>
-            </Stack>
+            </Pressable>
           )}
 
           {/* Items list */}
@@ -211,7 +231,7 @@ export default function EntryScreen(): React.ReactElement {
                   key={item.id}
                   item={item}
                   entryId={entry.id}
-                  lastSessionItem={getLastSessionItem(item)}
+                  lastSessionItem={showComparisonHint ? getLastSessionItem(item) : null}
                 />
               ))
             )}

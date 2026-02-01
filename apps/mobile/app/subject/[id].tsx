@@ -24,6 +24,9 @@ export default function SubjectDetailScreen(): React.ReactElement {
   const isCreatingEntry = createEntry.isPending || createEntryWithTemplate.isPending;
   const hasExercises = (template?.length ?? 0) > 0;
 
+  // Check if there's an in-progress session for this workout
+  const hasInProgressSession = entries?.some(entry => !entry.is_completed) ?? false;
+
   const handleStartEntry = async (): Promise<void> => {
     if (!id || isCreatingEntry || !hasExercises) return;
 
@@ -174,7 +177,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
           {/* Template Section */}
           <YStack paddingTop={8} paddingBottom={16} borderBottomWidth={1} borderBottomColor="$borderColor">
-            <TemplateSection subjectId={id} />
+            <TemplateSection subjectId={id} hasInProgressSession={hasInProgressSession} />
           </YStack>
 
           {/* Sessions Header */}

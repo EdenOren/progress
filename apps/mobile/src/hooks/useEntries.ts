@@ -91,6 +91,19 @@ export function useRecentEntries(limit: number = 5) {
 }
 
 /**
+ * Hook to get the current in-progress entry (if any)
+ * Returns the most recent non-completed entry
+ */
+export function useInProgressEntry() {
+  const { data: recentEntries } = useRecentEntries(10);
+
+  // Find the first in-progress entry
+  const inProgressEntry = recentEntries?.find(entry => !entry.is_completed) ?? null;
+
+  return inProgressEntry;
+}
+
+/**
  * Hook to fetch the last entry for a subject (for comparison)
  */
 export function useLastEntry(subjectId: string, beforeDate?: string) {

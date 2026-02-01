@@ -13,6 +13,7 @@ export {
   useEntryWithItems,
   useLastEntry,
   useRecentEntries,
+  useInProgressEntry,
   useCreateEntry,
   useCreateEntryWithTemplate,
   useUpdateEntry,

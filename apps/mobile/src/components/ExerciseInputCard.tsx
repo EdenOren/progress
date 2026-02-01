@@ -202,9 +202,9 @@ export function ExerciseInputCard({
       if (!result.success) throw result.error;
       return result.data;
     },
-    onSuccess: (_, rating) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
-      showSuccessToast(`Marked as ${rating}`);
+      // No toast - visual selection state is enough feedback
     },
     onError: (error) => handleError(error),
   });
@@ -661,22 +661,57 @@ export function ExerciseInputCard({
             How did it go?
           </Text>
           <XStack gap="$2">
-            {(['success', 'hard', 'fail'] as FeedbackRating[]).map((rating) => (
-              <Button
-                key={rating}
-                flex={1}
-                size="small"
-                variant={item.feedback?.rating === rating ? 'primary' : 'secondary'}
-                backgroundColor={
-                  item.feedback?.rating === rating ? getFeedbackColor(rating) : undefined
-                }
-                onPress={() => feedbackMutation.mutate(rating)}
-                loading={feedbackMutation.isPending && feedbackMutation.variables === rating}
-                disabled={feedbackMutation.isPending}
-              >
-                {rating.charAt(0).toUpperCase() + rating.slice(1)}
-              </Button>
-            ))}
+            {(['success', 'hard', 'fail'] as FeedbackRating[]).map((rating) => {
+              const isSelected = item.feedback?.rating === rating;
+              const isLoading = feedbackMutation.isPending && feedbackMutation.variables === rating;
+              const colors = {
+                success: { bg: 'rgba(16, 185, 129, 0.15)', activeBg: '$success', icon: 'check-circle' },
+                hard: { bg: 'rgba(245, 158, 11, 0.15)', activeBg: '$warning', icon: 'alert-circle' },
+                fail: { bg: 'rgba(239, 68, 68, 0.15)', activeBg: '$error', icon: 'close-circle' },
+              };
+              const colorConfig = colors[rating];
+
+              return (
+                <Pressable
+                  key={rating}
+                  onPress={() => feedbackMutation.mutate(rating)}
+                  disabled={feedbackMutation.isPending}
+                  style={{ flex: 1, cursor: 'pointer', userSelect: 'none', opacity: feedbackMutation.isPending && !isLoading ? 0.5 : 1 } as never}
+                >
+                  <Stack
+                    backgroundColor={isSelected ? colorConfig.activeBg : colorConfig.bg}
+                    paddingVertical="$2"
+                    paddingHorizontal="$3"
+                    borderRadius="$2"
+                    alignItems="center"
+                    justifyContent="center"
+                    borderWidth={isSelected ? 2 : 0}
+                    borderColor={colorConfig.activeBg}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color={isSelected ? 'white' : (theme[rating === 'success' ? 'success' : rating === 'hard' ? 'warning' : 'error']?.val)} />
+                    ) : (
+                      <XStack alignItems="center" gap="$1">
+                        {isSelected && (
+                          <MaterialCommunityIcons
+                            name={colorConfig.icon as 'check-circle' | 'alert-circle' | 'close-circle'}
+                            size={16}
+                            color="white"
+                          />
+                        )}
+                        <Text
+                          fontSize={13}
+                          fontWeight="600"
+                          color={isSelected ? 'white' : getFeedbackColor(rating)}
+                        >
+                          {rating.charAt(0).toUpperCase() + rating.slice(1)}
+                        </Text>
+                      </XStack>
+                    )}
+                  </Stack>
+                </Pressable>
+              );
+            })}
           </XStack>
         </YStack>
       </YStack>

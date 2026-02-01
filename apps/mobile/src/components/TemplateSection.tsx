@@ -12,9 +12,10 @@ import type { Exercise, WorkoutTemplateWithExercise, TemplateSetConfig } from '@
 
 interface TemplateSectionProps {
   subjectId: string;
+  hasInProgressSession?: boolean;
 }
 
-export function TemplateSection({ subjectId }: TemplateSectionProps): React.ReactElement {
+export function TemplateSection({ subjectId, hasInProgressSession = false }: TemplateSectionProps): React.ReactElement {
   const theme = useTheme();
   const [showExerciseList, setShowExerciseList] = useState(false);
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -156,11 +157,12 @@ export function TemplateSection({ subjectId }: TemplateSectionProps): React.Reac
         </YStack>
       </Pressable>
 
-      {/* Remove button */}
+      {/* Remove button - disabled during in-progress session */}
       <Pressable
-        onPress={() => handleRemoveExercise(item)}
+        onPress={() => !hasInProgressSession && handleRemoveExercise(item)}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        style={{ cursor: 'pointer', userSelect: 'none' } as never}
+        style={{ cursor: hasInProgressSession ? 'not-allowed' : 'pointer', userSelect: 'none', opacity: hasInProgressSession ? 0.3 : 1 } as never}
+        disabled={hasInProgressSession}
       >
         <Stack
           width={32}
