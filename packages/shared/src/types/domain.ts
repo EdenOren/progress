@@ -173,7 +173,7 @@ export interface Item {
   exercise_id: UUID | null;
   is_from_template: boolean;
   tracking_type: TrackingType;
-  note: string | null;
+  note?: string | null;
   created_at: ISODateTime;
 }
 

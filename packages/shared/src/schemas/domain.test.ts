@@ -179,6 +179,9 @@ describe('Entry Schema', () => {
     performed_at: '2024-01-15',
     notes: 'Great session',
     is_completed: true,
+    duration_seconds: null,
+    started_at: null,
+    completed_at: null,
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T11:00:00Z',
   };

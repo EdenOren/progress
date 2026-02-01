@@ -163,7 +163,7 @@ export const itemSchema = z.object({
   exercise_id: uuidSchema.nullable(),
   is_from_template: z.boolean(),
   tracking_type: trackingTypeSchema,
-  note: z.string().max(1000).nullable(),
+  note: z.string().max(1000).nullable().optional(),
   created_at: isoDateTimeSchema,
 });
 

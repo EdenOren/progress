@@ -20,12 +20,8 @@ import { showSuccessToast } from '../../src/utils';
 export default function EntryScreen(): React.ReactElement {
   const params = useLocalSearchParams<{ id: string }>();
   const entryId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { data: entry, isLoading, isPending, isError, status, fetchStatus } = useEntryWithItems(entryId ?? '');
+  const { data: entry, isPending, isError } = useEntryWithItems(entryId ?? '');
 
-  // Debug logging - always show for now
-  console.log('[EntryScreen] params:', JSON.stringify(params));
-  console.log('[EntryScreen] entryId:', entryId);
-  console.log('[EntryScreen] query state:', { status, fetchStatus, isLoading, isPending, isError, hasEntry: !!entry });
   const { data: lastEntry } = useLastEntry(
     entry?.subject_id ?? '',
     entry?.performed_at
@@ -78,9 +74,8 @@ export default function EntryScreen(): React.ReactElement {
   };
 
   // Show loading while we don't have data yet
-  // isPending = no cached data, isLoading = isPending + isFetching
-  // Also show loading if entryId isn't ready yet
-  if (!entryId || isPending || status === 'pending') {
+  // isPending = no cached data (React Query v5)
+  if (!entryId || isPending) {
     return <LoadingScreen />;
   }
 

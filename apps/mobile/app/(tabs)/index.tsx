@@ -100,15 +100,12 @@ function WorkoutCard({ subject, onEdit, onDelete }: WorkoutCardProps): React.Rea
         templateItems,
       });
 
-      console.log('[WorkoutCard] Created entry - FULL OBJECT:', JSON.stringify(entry, null, 2));
-      console.log('[WorkoutCard] Entry ID to navigate:', entry.id);
-
       router.push({
         pathname: '/entry/[id]',
         params: { id: entry.id },
       });
-    } catch (error) {
-      console.error('[WorkoutCard] Failed to create entry:', error);
+    } catch {
+      // Error shown by mutation's onError handler
     }
   }, [template, createEntry, subject.id]);
 
