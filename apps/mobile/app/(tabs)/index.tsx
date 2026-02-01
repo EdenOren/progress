@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { ScrollView, RefreshControl, ActivityIndicator, Pressable, Modal } from 'react-native';
+import { ScrollView, RefreshControl, ActivityIndicator, Pressable, Modal, Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -359,6 +360,10 @@ function WorkoutModule(): React.ReactElement {
 
   // Toggle selection of a workout
   const toggleSelection = useCallback((id: string) => {
+    // Light haptic on selection toggle (mobile only)
+    if (Platform.OS !== 'web') {
+      Haptics.selectionAsync();
+    }
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -376,6 +381,10 @@ function WorkoutModule(): React.ReactElement {
 
   // Start selection mode with initial item
   const startSelectionMode = useCallback((id: string) => {
+    // Haptic feedback on long press (mobile only)
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     setIsSelectionMode(true);
     setSelectedIds(new Set([id]));
   }, []);
@@ -499,7 +508,13 @@ function WorkoutModule(): React.ReactElement {
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: hasRecentSessions ? 70 : 20 }}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={theme.primary?.val}
+              colors={[theme.primary?.val ?? '#8B5CF6']}
+              progressBackgroundColor={theme.backgroundHover?.val}
+            />
           }
         >
           {!hasWorkouts ? (
