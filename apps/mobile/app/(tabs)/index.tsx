@@ -68,18 +68,136 @@ function formatDuration(seconds: number | null): string {
 
 interface WorkoutCardProps {
   subject: SubjectWithStats;
-  onEdit: () => void;
-  onDelete: () => void;
+  isSelectionMode: boolean;
+  isSelected: boolean;
+  onPress: () => void;
+  onLongPress: () => void;
+  onStart: () => void;
+  isStarting: boolean;
+  exerciseCount: number;
 }
 
-function WorkoutCard({ subject, onEdit, onDelete }: WorkoutCardProps): React.ReactElement {
+function WorkoutCard({
+  subject,
+  isSelectionMode,
+  isSelected,
+  onPress,
+  onLongPress,
+  onStart,
+  isStarting,
+  exerciseCount,
+}: WorkoutCardProps): React.ReactElement {
   const theme = useTheme();
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={400}
+      style={{ cursor: 'pointer', userSelect: 'none' } as never}
+    >
+      <XStack
+        backgroundColor={isSelected ? '$blue5' : '$backgroundHover'}
+        borderRadius="$3"
+        padding="$3"
+        alignItems="center"
+        gap="$3"
+        borderWidth={isSelected ? 2 : 0}
+        borderColor="$secondary"
+      >
+        {/* Selection checkbox or workout icon */}
+        {isSelectionMode ? (
+          <Stack
+            width={32}
+            height={32}
+            borderRadius={16}
+            backgroundColor={isSelected ? '$secondary' : 'transparent'}
+            borderWidth={isSelected ? 0 : 2}
+            borderColor="$textMuted"
+            alignItems="center"
+            justifyContent="center"
+          >
+            {isSelected && (
+              <MaterialCommunityIcons
+                name="check"
+                size={18}
+                color="white"
+              />
+            )}
+          </Stack>
+        ) : (
+          <Stack
+            width={32}
+            height={32}
+            borderRadius={16}
+            backgroundColor="$purple5"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <MaterialCommunityIcons
+              name="dumbbell"
+              size={16}
+              color={theme.primary?.val ?? '#8B5CF6'}
+            />
+          </Stack>
+        )}
+
+        {/* Workout info */}
+        <YStack flex={1} gap="$0.5">
+          <Text fontSize={16} fontWeight="600" color="$color">
+            {subject.name}
+          </Text>
+          <Text fontSize={12} color="$textMuted">
+            {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
+          </Text>
+        </YStack>
+
+        {/* Start button - only show when not in selection mode */}
+        {!isSelectionMode && (
+          <Button
+            variant="primary"
+            size="small"
+            onPress={onStart}
+            disabled={isStarting || exerciseCount === 0}
+            loading={isStarting}
+          >
+            Start
+          </Button>
+        )}
+      </XStack>
+    </Pressable>
+  );
+}
+
+// Wrapper component that fetches template and handles start
+interface WorkoutCardWithTemplateProps {
+  subject: SubjectWithStats;
+  isSelectionMode: boolean;
+  isSelected: boolean;
+  onPress: () => void;
+  onLongPress: () => void;
+  startingSubjectId: string | null;
+  setStartingSubjectId: (id: string | null) => void;
+}
+
+function WorkoutCardWithTemplate({
+  subject,
+  isSelectionMode,
+  isSelected,
+  onPress,
+  onLongPress,
+  startingSubjectId,
+  setStartingSubjectId,
+}: WorkoutCardWithTemplateProps): React.ReactElement {
   const { data: template } = useWorkoutTemplate(subject.id);
   const createEntry = useCreateEntryWithTemplate();
   const exerciseCount = template?.length ?? 0;
+  const isStarting = startingSubjectId === subject.id && createEntry.isPending;
 
   const handleStart = useCallback(async () => {
-    if (!template || createEntry.isPending) return;
+    if (!template || createEntry.isPending || exerciseCount === 0) return;
+
+    setStartingSubjectId(subject.id);
 
     const now = new Date();
     const today = now.toISOString().split('T')[0] as string;
@@ -106,82 +224,22 @@ function WorkoutCard({ subject, onEdit, onDelete }: WorkoutCardProps): React.Rea
       });
     } catch {
       // Error shown by mutation's onError handler
+    } finally {
+      setStartingSubjectId(null);
     }
-  }, [template, createEntry, subject.id]);
+  }, [template, createEntry, subject.id, exerciseCount, setStartingSubjectId]);
 
   return (
-    <XStack
-      backgroundColor="$backgroundHover"
-      borderRadius="$3"
-      padding="$3"
-      alignItems="center"
-      gap="$3"
-    >
-      {/* Workout info */}
-      <YStack flex={1} gap="$0.5" style={{ userSelect: 'none' } as never}>
-        <Text fontSize={16} fontWeight="600" color="$color">
-          {subject.name}
-        </Text>
-        <Text fontSize={12} color="$textMuted">
-          {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
-        </Text>
-      </YStack>
-
-      {/* Start button */}
-      <Button
-        variant="primary"
-        size="small"
-        onPress={handleStart}
-        disabled={createEntry.isPending || exerciseCount === 0}
-        loading={createEntry.isPending}
-      >
-        Start
-      </Button>
-
-      {/* Edit icon */}
-      <Pressable
-        onPress={onEdit}
-        style={{ cursor: 'pointer', userSelect: 'none' } as never}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <Stack
-          width={32}
-          height={32}
-          borderRadius={16}
-          backgroundColor="rgba(59, 130, 246, 0.1)"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <MaterialCommunityIcons
-            name="pencil-outline"
-            size={16}
-            color={theme.secondary?.val ?? '#3B82F6'}
-          />
-        </Stack>
-      </Pressable>
-
-      {/* Delete icon */}
-      <Pressable
-        onPress={onDelete}
-        style={{ cursor: 'pointer', userSelect: 'none' } as never}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <Stack
-          width={32}
-          height={32}
-          borderRadius={16}
-          backgroundColor="rgba(239, 68, 68, 0.1)"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <MaterialCommunityIcons
-            name="trash-can-outline"
-            size={16}
-            color={theme.error?.val ?? '#EF4444'}
-          />
-        </Stack>
-      </Pressable>
-    </XStack>
+    <WorkoutCard
+      subject={subject}
+      isSelectionMode={isSelectionMode}
+      isSelected={isSelected}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      onStart={handleStart}
+      isStarting={isStarting}
+      exerciseCount={exerciseCount}
+    />
   );
 }
 
@@ -281,6 +339,11 @@ function WorkoutModule(): React.ReactElement {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRecentSessions, setShowRecentSessions] = useState(false);
 
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [startingSubjectId, setStartingSubjectId] = useState<string | null>(null);
+
   // Map subject IDs to names for recent sessions
   const subjectMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -288,19 +351,74 @@ function WorkoutModule(): React.ReactElement {
     return map;
   }, [subjects]);
 
-  const handleEditSubject = useCallback((subject: SubjectWithStats): void => {
-    router.push({
-      pathname: '/subject/[id]',
-      params: { id: subject.id },
+  // Exit selection mode
+  const exitSelectionMode = useCallback(() => {
+    setIsSelectionMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  // Toggle selection of a workout
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        // Exit selection mode if nothing selected
+        if (next.size === 0) {
+          setIsSelectionMode(false);
+        }
+      } else {
+        next.add(id);
+      }
+      return next;
     });
   }, []);
 
-  const handleDeleteSubject = useCallback((subject: SubjectWithStats): void => {
-    if (hardDelete.isPending) return;
-    hardDelete.mutate(subject.id, {
-      onSuccess: () => showSuccessToast('Workout deleted'),
+  // Start selection mode with initial item
+  const startSelectionMode = useCallback((id: string) => {
+    setIsSelectionMode(true);
+    setSelectedIds(new Set([id]));
+  }, []);
+
+  // Handle workout card press
+  const handleWorkoutPress = useCallback((subject: SubjectWithStats) => {
+    if (isSelectionMode) {
+      toggleSelection(subject.id);
+    } else {
+      // Navigate to edit
+      router.push({
+        pathname: '/subject/[id]',
+        params: { id: subject.id },
+      });
+    }
+  }, [isSelectionMode, toggleSelection]);
+
+  // Handle workout card long press
+  const handleWorkoutLongPress = useCallback((subject: SubjectWithStats) => {
+    if (!isSelectionMode) {
+      startSelectionMode(subject.id);
+    }
+  }, [isSelectionMode, startSelectionMode]);
+
+  // Delete selected workouts
+  const handleDeleteSelected = useCallback(() => {
+    if (hardDelete.isPending || selectedIds.size === 0) return;
+
+    const idsToDelete = Array.from(selectedIds);
+    let deletedCount = 0;
+
+    idsToDelete.forEach(id => {
+      hardDelete.mutate(id, {
+        onSuccess: () => {
+          deletedCount++;
+          if (deletedCount === idsToDelete.length) {
+            showSuccessToast(`${deletedCount} workout${deletedCount > 1 ? 's' : ''} deleted`);
+            exitSelectionMode();
+          }
+        },
+      });
     });
-  }, [hardDelete]);
+  }, [hardDelete, selectedIds, exitSelectionMode]);
 
   const handleViewSession = useCallback((entry: Entry): void => {
     router.push({
@@ -335,6 +453,48 @@ function WorkoutModule(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
       <YStack flex={1}>
+        {/* Selection mode header */}
+        {isSelectionMode && (
+          <XStack
+            backgroundColor="$secondary"
+            paddingHorizontal="$4"
+            paddingVertical="$3"
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <XStack alignItems="center" gap="$3">
+              <Pressable
+                onPress={exitSelectionMode}
+                style={{ cursor: 'pointer', userSelect: 'none' } as never}
+              >
+                <MaterialCommunityIcons
+                  name="close"
+                  size={24}
+                  color="white"
+                />
+              </Pressable>
+              <Text fontSize={17} fontWeight="600" color="white">
+                {selectedIds.size} selected
+              </Text>
+            </XStack>
+            <Pressable
+              onPress={handleDeleteSelected}
+              disabled={hardDelete.isPending}
+              style={{ cursor: 'pointer', userSelect: 'none', opacity: hardDelete.isPending ? 0.5 : 1 } as never}
+            >
+              {hardDelete.isPending ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <MaterialCommunityIcons
+                  name="trash-can-outline"
+                  size={24}
+                  color="white"
+                />
+              )}
+            </Pressable>
+          </XStack>
+        )}
+
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: hasRecentSessions ? 70 : 20 }}
@@ -352,35 +512,41 @@ function WorkoutModule(): React.ReactElement {
           ) : (
             <YStack padding="$4" gap="$3">
               {/* Header with title and add button */}
-              <XStack alignItems="center" justifyContent="space-between">
-                <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
-                  Your Workouts
-                </Text>
-                <Pressable
-                  onPress={() => setShowCreateModal(true)}
-                  style={{ cursor: 'pointer', userSelect: 'none' } as never}
-                >
-                  <XStack alignItems="center" gap="$1">
-                    <MaterialCommunityIcons
-                      name="plus"
-                      size={18}
-                      color={theme.primary?.val ?? '#8B5CF6'}
-                    />
-                    <Text fontSize={14} fontWeight="600" color="$primary">
-                      New
-                    </Text>
-                  </XStack>
-                </Pressable>
-              </XStack>
+              {!isSelectionMode && (
+                <XStack alignItems="center" justifyContent="space-between">
+                  <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
+                    Your Workouts
+                  </Text>
+                  <Pressable
+                    onPress={() => setShowCreateModal(true)}
+                    style={{ cursor: 'pointer', userSelect: 'none' } as never}
+                  >
+                    <XStack alignItems="center" gap="$1">
+                      <MaterialCommunityIcons
+                        name="plus"
+                        size={18}
+                        color={theme.primary?.val ?? '#8B5CF6'}
+                      />
+                      <Text fontSize={14} fontWeight="600" color="$primary">
+                        New
+                      </Text>
+                    </XStack>
+                  </Pressable>
+                </XStack>
+              )}
 
               {/* Workout cards */}
               <YStack gap="$3">
                 {subjects?.map(subject => (
-                  <WorkoutCard
+                  <WorkoutCardWithTemplate
                     key={subject.id}
                     subject={subject}
-                    onEdit={() => handleEditSubject(subject)}
-                    onDelete={() => handleDeleteSubject(subject)}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedIds.has(subject.id)}
+                    onPress={() => handleWorkoutPress(subject)}
+                    onLongPress={() => handleWorkoutLongPress(subject)}
+                    startingSubjectId={startingSubjectId}
+                    setStartingSubjectId={setStartingSubjectId}
                   />
                 ))}
               </YStack>
