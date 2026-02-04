@@ -66,6 +66,7 @@ export interface Database {
           name: string;
           description: string | null;
           is_active: boolean;
+          default_sets: Array<{ target_reps?: number; target_duration_seconds?: number }>;
           created_at: string;
           updated_at: string;
         };
@@ -76,6 +77,7 @@ export interface Database {
           name: string;
           description?: string | null;
           is_active?: boolean;
+          default_sets?: Array<{ target_reps?: number; target_duration_seconds?: number }>;
           created_at?: string;
           updated_at?: string;
         };
@@ -83,6 +85,7 @@ export interface Database {
           name?: string;
           description?: string | null;
           is_active?: boolean;
+          default_sets?: Array<{ target_reps?: number; target_duration_seconds?: number }>;
           updated_at?: string;
         };
         Relationships: [];

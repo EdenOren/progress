@@ -14,9 +14,10 @@ import type { Exercise, WorkoutTemplateWithExercise, TemplateSetConfig, Exercise
 interface TemplateSectionProps {
   subjectId: string;
   hasInProgressSession?: boolean;
+  defaultSets?: Array<{ target_reps?: number }>;
 }
 
-export function TemplateSection({ subjectId, hasInProgressSession = false }: TemplateSectionProps): React.ReactElement {
+export function TemplateSection({ subjectId, hasInProgressSession = false, defaultSets }: TemplateSectionProps): React.ReactElement {
   const theme = useTheme();
   const [showExerciseList, setShowExerciseList] = useState(false);
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -38,8 +39,9 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
     [template]
   );
 
-  const handleAddExercises = useCallback((exercises: Exercise[], defaultSets?: Array<{ target_reps: number }>) => {
-    const sets = defaultSets ?? [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }];
+  const handleAddExercises = useCallback((exercises: Exercise[], overrideSets?: Array<{ target_reps: number }>) => {
+    // Priority: overrideSets (from AddExerciseSheet) > defaultSets (from subject) > fallback
+    const sets = overrideSets ?? defaultSets ?? [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }];
 
     // Use bulk mutation - single API call instead of one per exercise
     bulkAddExercises.mutate(
@@ -48,7 +50,7 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
         defaultSets: sets,
       }))
     );
-  }, [bulkAddExercises]);
+  }, [bulkAddExercises, defaultSets]);
 
   const handleRemoveExercise = useCallback((item: WorkoutTemplateWithExercise) => {
     removeFromTemplate.mutate(item.id, {

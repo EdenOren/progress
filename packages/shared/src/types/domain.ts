@@ -121,6 +121,7 @@ export interface Subject {
   name: string;
   description: string | null;
   is_active: boolean;
+  default_sets: TemplateSetConfig[];
   created_at: ISODateTime;
   updated_at: ISODateTime;
 }
@@ -132,6 +133,7 @@ export interface SubjectInsert {
   name: string;
   description?: string | null;
   is_active?: boolean;
+  default_sets?: TemplateSetConfig[];
 }
 
 /** Subject update input */
@@ -139,6 +141,7 @@ export interface SubjectUpdate {
   name?: string;
   description?: string | null;
   is_active?: boolean;
+  default_sets?: TemplateSetConfig[];
 }
 
 /** Subject with related data */

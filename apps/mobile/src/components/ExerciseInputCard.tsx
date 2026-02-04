@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createSet,
   updateSet,
+  deleteSet,
   setFeedback,
   formatDuration,
   type ItemWithSets,
@@ -29,6 +30,7 @@ interface ExerciseInputCardProps {
   lastSessionItem?: ItemWithSets | null;
   isSessionInProgress?: boolean;
   isCollapsed?: boolean;
+  onExpand?: () => void;
   onFeedbackSelected?: (itemId: string) => void;
 }
 
@@ -46,6 +48,7 @@ export function ExerciseInputCard({
   lastSessionItem,
   isSessionInProgress = false,
   isCollapsed = false,
+  onExpand,
   onFeedbackSelected,
 }: ExerciseInputCardProps): React.ReactElement {
   const { user } = useSupabaseContext();
@@ -65,8 +68,9 @@ export function ExerciseInputCard({
     }))
   );
 
-  // Track which sets are currently being saved
+  // Track which sets are currently being saved or deleted
   const [savingSets, setSavingSets] = useState<Set<string>>(new Set());
+  const [deletingSets, setDeletingSets] = useState<Set<string>>(new Set());
   const [copiedSetIndex, setCopiedSetIndex] = useState<number | null>(null);
 
   // Note state
@@ -176,6 +180,20 @@ export function ExerciseInputCard({
       return result.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
+    },
+    onError: (error) => handleError(error),
+  });
+
+  // Delete set mutation
+  const deleteSetMutation = useMutation({
+    mutationFn: async (setId: string) => {
+      if (!user) throw new Error('Not authenticated');
+      const result = await deleteSet(user.id, setId);
+      if (!result.success) throw result.error;
+    },
+    onSuccess: () => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
     },
     onError: (error) => handleError(error),
@@ -378,48 +396,80 @@ export function ExerciseInputCard({
     }
   };
 
-  // Collapsed view - shown when exercise has feedback
-  if (isCollapsed && item.feedback?.rating) {
+  // Collapsed view - shown when isCollapsed is true
+  if (isCollapsed) {
     const completedSets = item.sets.filter(s => (s.weight_kg !== null || s.duration_sec !== null)).length;
     const totalSets = item.sets.length;
+    const hasFeedback = item.feedback?.rating;
 
     return (
-      <Card>
-        <XStack alignItems="center" gap="$3" paddingVertical="$1">
-          {/* Feedback indicator */}
-          <Stack
-            width={32}
-            height={32}
-            borderRadius={16}
-            backgroundColor={item.feedback.rating === 'done' ? 'rgba(16, 185, 129, 0.15)' : '$purple5'}
-            alignItems="center"
-            justifyContent="center"
-          >
-            <MaterialCommunityIcons
-              name={getFeedbackIcon(item.feedback.rating)}
-              size={18}
-              color={getFeedbackThemeColor(item.feedback.rating)}
-            />
-          </Stack>
+      <Pressable
+        onPress={onExpand}
+        disabled={!isSessionInProgress}
+        style={{ cursor: isSessionInProgress ? 'pointer' : 'default', userSelect: 'none' } as never}
+      >
+        <Card>
+          <XStack alignItems="center" gap="$3" paddingVertical="$1">
+            {/* Icon indicator */}
+            <Stack
+              width={32}
+              height={32}
+              borderRadius={16}
+              backgroundColor={
+                hasFeedback
+                  ? (item.feedback!.rating === 'done' ? 'rgba(16, 185, 129, 0.15)' : '$purple5')
+                  : '$backgroundHover'
+              }
+              alignItems="center"
+              justifyContent="center"
+            >
+              <MaterialCommunityIcons
+                name={hasFeedback ? getFeedbackIcon(item.feedback!.rating) : 'dumbbell'}
+                size={18}
+                color={
+                  hasFeedback
+                    ? getFeedbackThemeColor(item.feedback!.rating)
+                    : (theme.textMuted?.val ?? '#71717A')
+                }
+              />
+            </Stack>
 
-          {/* Exercise name and summary */}
-          <YStack flex={1}>
-            <Text fontSize={14} fontWeight="600" color="$color">
-              {item.name}
-            </Text>
-            <XStack alignItems="center" gap="$2">
-              <Text fontSize={12} color="$textMuted">
-                {completedSets}/{totalSets} sets · {item.feedback.rating}
+            {/* Exercise name and summary */}
+            <YStack flex={1}>
+              <Text fontSize={14} fontWeight="600" color="$color">
+                {item.name}
               </Text>
-              {lastSessionItem?.feedback?.rating && (
-                <Text fontSize={11} color="$textMuted">
-                  (prev: {lastSessionItem.feedback.rating})
-                </Text>
-              )}
-            </XStack>
-          </YStack>
-        </XStack>
-      </Card>
+              <XStack alignItems="center" gap="$2">
+                {hasFeedback ? (
+                  <>
+                    <Text fontSize={12} color="$textMuted">
+                      {completedSets}/{totalSets} sets · {item.feedback!.rating}
+                    </Text>
+                    {lastSessionItem?.feedback?.rating && (
+                      <Text fontSize={11} color="$textMuted">
+                        (prev: {lastSessionItem.feedback.rating})
+                      </Text>
+                    )}
+                  </>
+                ) : (
+                  <Text fontSize={12} color="$primary">
+                    {isSessionInProgress ? 'Tap to start' : `${totalSets} sets`}
+                  </Text>
+                )}
+              </XStack>
+            </YStack>
+
+            {/* Chevron indicator for expandable items */}
+            {isSessionInProgress && !hasFeedback && (
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={20}
+                color={theme.textMuted?.val ?? '#71717A'}
+              />
+            )}
+          </XStack>
+        </Card>
+      </Pressable>
     );
   }
 
@@ -546,8 +596,10 @@ export function ExerciseInputCard({
             const serverSet = item.sets[index];
             const lastSet = lastSessionItem?.sets[index];
             const isSaving = serverSet && savingSets.has(serverSet.id);
+            const isDeleting = serverSet && deletingSets.has(serverSet.id);
             const isCopied = copiedSetIndex === index;
             const hasLastSetData = lastSet && (lastSet.weight_kg !== null || lastSet.reps !== null || lastSet.duration_sec !== null);
+            const canDeleteSet = isSessionInProgress && localSets.length > 1;
 
             return (
               <XStack
@@ -679,6 +731,46 @@ export function ExerciseInputCard({
                 {/* Saving indicator (when no copy button) */}
                 {!hasLastSetData && isSaving && (
                   <ActivityIndicator size="small" color={theme.primary?.val} />
+                )}
+
+                {/* Delete set button - only show when session is in progress and more than 1 set */}
+                {canDeleteSet && serverSet && (
+                  <Pressable
+                    onPress={() => {
+                      setDeletingSets((prev) => new Set(prev).add(serverSet.id));
+                      deleteSetMutation.mutate(serverSet.id, {
+                        onSettled: () => {
+                          setDeletingSets((prev) => {
+                            const next = new Set(prev);
+                            next.delete(serverSet.id);
+                            return next;
+                          });
+                        },
+                      });
+                    }}
+                    disabled={isDeleting || isSaving}
+                    style={{ cursor: 'pointer', userSelect: 'none' } as never}
+                  >
+                    <Stack
+                      width={32}
+                      height={32}
+                      borderRadius="$2"
+                      alignItems="center"
+                      justifyContent="center"
+                      backgroundColor="rgba(239, 68, 68, 0.1)"
+                      opacity={isDeleting || isSaving ? 0.5 : 1}
+                    >
+                      {isDeleting ? (
+                        <ActivityIndicator size="small" color={theme.error?.val ?? '#EF4444'} />
+                      ) : (
+                        <MaterialCommunityIcons
+                          name="trash-can-outline"
+                          size={16}
+                          color={theme.error?.val ?? '#EF4444'}
+                        />
+                      )}
+                    </Stack>
+                  </Pressable>
                 )}
               </XStack>
             );

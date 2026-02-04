@@ -110,6 +110,15 @@ export const domainSchema = z.object({
 export const domainArraySchema = z.array(domainSchema);
 
 // ============================================================================
+// Template Set Config Schema (defined early for use in Subject)
+// ============================================================================
+
+export const templateSetConfigSchema = z.object({
+  target_reps: z.number().int().min(1).max(1000).optional(),
+  target_duration_seconds: z.number().int().min(1).max(86400).optional(),
+});
+
+// ============================================================================
 // Subject Schemas
 // ============================================================================
 
@@ -120,6 +129,7 @@ export const subjectSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).nullable(),
   is_active: z.boolean(),
+  default_sets: z.array(templateSetConfigSchema).default([{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }]),
   created_at: isoDateTimeSchema,
   updated_at: isoDateTimeSchema,
 });
@@ -130,12 +140,14 @@ export const subjectInsertSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).nullable().optional(),
   is_active: z.boolean().optional().default(true),
+  default_sets: z.array(templateSetConfigSchema).optional(),
 });
 
 export const subjectUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).nullable().optional(),
   is_active: z.boolean().optional(),
+  default_sets: z.array(templateSetConfigSchema).optional(),
 });
 
 export const subjectArraySchema = z.array(subjectSchema);
@@ -366,11 +378,6 @@ export const exerciseArraySchema = z.array(exerciseSchema);
 // ============================================================================
 // Workout Template Schemas
 // ============================================================================
-
-export const templateSetConfigSchema = z.object({
-  target_reps: z.number().int().min(1).max(1000).optional(),
-  target_duration_seconds: z.number().int().min(1).max(86400).optional(),
-});
 
 export const workoutTemplateSchema = z.object({
   id: uuidSchema,

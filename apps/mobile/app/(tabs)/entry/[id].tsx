@@ -37,7 +37,7 @@ export default function EntryScreen(): React.ReactElement {
   const [showAddItem, setShowAddItem] = useState(false);
   const [showComparisonHint, setShowComparisonHint] = useState(true);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [finalDuration, setFinalDuration] = useState(0);
   const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -52,21 +52,41 @@ export default function EntryScreen(): React.ReactElement {
     }
   }, [contentHeight, containerHeight]);
 
-  // Handle feedback selection - collapse item and move to bottom
-  const handleFeedbackSelected = useCallback((itemId: string) => {
-    setCollapsedItems(prev => new Set(prev).add(itemId));
+  // Handle expanding an item (only one can be expanded at a time)
+  const handleExpandItem = useCallback((itemId: string) => {
+    setExpandedItemId(itemId);
   }, []);
 
-  // Sort items: incomplete first, completed (collapsed) at bottom
+  // Handle feedback selection - collapse current item and auto-expand next item without feedback
+  const handleFeedbackSelected = useCallback((itemId: string) => {
+    if (!entry?.items) {
+      setExpandedItemId(null);
+      return;
+    }
+    // Find next item without feedback (excluding current item)
+    const nextItem = entry.items.find(i => i.id !== itemId && !i.feedback);
+    setExpandedItemId(nextItem?.id ?? null);
+  }, [entry?.items]);
+
+  // Sort items: expanded first, then no feedback, then with feedback at bottom
   const sortedItems = useMemo(() => {
     if (!entry?.items) return [];
     return [...entry.items].sort((a, b) => {
+      // Expanded item always first
+      if (a.id === expandedItemId) return -1;
+      if (b.id === expandedItemId) return 1;
+
+      // Items with feedback go to bottom
       const aHasFeedback = a.feedback !== null;
       const bHasFeedback = b.feedback !== null;
-      if (aHasFeedback === bHasFeedback) return 0;
-      return aHasFeedback ? 1 : -1;
+      if (aHasFeedback !== bHasFeedback) {
+        return aHasFeedback ? 1 : -1;
+      }
+
+      // Maintain original position for others
+      return 0;
     });
-  }, [entry?.items]);
+  }, [entry?.items, expandedItemId]);
 
   // Session timer - track elapsed time for in-progress sessions
   useEffect(() => {
@@ -212,21 +232,23 @@ export default function EntryScreen(): React.ReactElement {
                   )}
                 </Pressable>
               )}
-              {/* Delete button */}
-              {deleteEntry.isPending ? (
-                <ActivityIndicator size="small" color={theme.error?.val} />
-              ) : (
-                <Pressable
-                  onPress={handleDelete}
-                  style={{ padding: 8, cursor: 'pointer', userSelect: 'none' } as never}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <MaterialCommunityIcons
-                    name="trash-can-outline"
-                    size={22}
-                    color={theme.error?.val ?? '#EF4444'}
-                  />
-                </Pressable>
+              {/* Delete button - only show for completed sessions */}
+              {entry.is_completed && (
+                deleteEntry.isPending ? (
+                  <ActivityIndicator size="small" color={theme.error?.val} />
+                ) : (
+                  <Pressable
+                    onPress={handleDelete}
+                    style={{ padding: 8, cursor: 'pointer', userSelect: 'none' } as never}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <MaterialCommunityIcons
+                      name="trash-can-outline"
+                      size={22}
+                      color={theme.error?.val ?? '#EF4444'}
+                    />
+                  </Pressable>
+                )
               )}
             </XStack>
           ),
@@ -355,7 +377,8 @@ export default function EntryScreen(): React.ReactElement {
                   entryId={entry.id}
                   lastSessionItem={showComparisonHint ? getLastSessionItem(item) : null}
                   isSessionInProgress={!entry.is_completed}
-                  isCollapsed={collapsedItems.has(item.id) || item.feedback !== null}
+                  isCollapsed={item.id !== expandedItemId}
+                  onExpand={() => handleExpandItem(item.id)}
                   onFeedbackSelected={handleFeedbackSelected}
                 />
               ))

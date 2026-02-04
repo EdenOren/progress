@@ -178,7 +178,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
           {/* Template Section */}
           <YStack paddingTop={8} paddingBottom={16} borderBottomWidth={1} borderBottomColor="$borderColor">
-            <TemplateSection subjectId={id} hasInProgressSession={hasInProgressSession} />
+            <TemplateSection subjectId={id} hasInProgressSession={hasInProgressSession} defaultSets={subject.default_sets} />
           </YStack>
 
           {/* Sessions Header */}

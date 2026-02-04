@@ -80,6 +80,7 @@ export function CreateSubjectModal({
         domain_id: WORKOUT_DOMAIN_ID,
         name: data.name,
         description: data.description || null,
+        default_sets: selectedPreset.sets,
       });
 
       reset();
