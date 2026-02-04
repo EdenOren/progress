@@ -16,8 +16,8 @@ export const isoDateSchema = z.string().regex(
   'Invalid date format. Expected YYYY-MM-DD'
 );
 
-/** Feedback rating */
-export const feedbackRatingSchema = z.enum(['success', 'hard', 'fail']);
+/** Feedback rating: done = completed as expected, up = want to increase weight/reps */
+export const feedbackRatingSchema = z.enum(['done', 'up']);
 
 /** Tracking type for exercises */
 export const trackingTypeSchema = z.enum(['weight_reps', 'duration', 'distance']);

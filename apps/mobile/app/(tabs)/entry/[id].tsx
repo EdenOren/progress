@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ScrollView, ActivityIndicator, Pressable } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { ScrollView, ActivityIndicator, Pressable, Modal } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -28,18 +28,90 @@ export default function EntryScreen(): React.ReactElement {
   );
   const completeEntry = useCompleteEntry();
   const deleteEntry = useDeleteEntry();
+
+  // Reset delete mutation state on mount to prevent stale loader from previous screen
+  useEffect(() => {
+    deleteEntry.reset();
+  }, []);
+
   const [showAddItem, setShowAddItem] = useState(false);
   const [showComparisonHint, setShowComparisonHint] = useState(true);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
+  const [showSummary, setShowSummary] = useState(false);
+  const [finalDuration, setFinalDuration] = useState(0);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [contentHeight, setContentHeight] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
   const theme = useTheme();
+
+  // Disable scroll when content doesn't overflow
+  useEffect(() => {
+    if (contentHeight > 0 && containerHeight > 0) {
+      setScrollEnabled(contentHeight > containerHeight);
+    }
+  }, [contentHeight, containerHeight]);
+
+  // Handle feedback selection - collapse item and move to bottom
+  const handleFeedbackSelected = useCallback((itemId: string) => {
+    setCollapsedItems(prev => new Set(prev).add(itemId));
+  }, []);
+
+  // Sort items: incomplete first, completed (collapsed) at bottom
+  const sortedItems = useMemo(() => {
+    if (!entry?.items) return [];
+    return [...entry.items].sort((a, b) => {
+      const aHasFeedback = a.feedback !== null;
+      const bHasFeedback = b.feedback !== null;
+      if (aHasFeedback === bHasFeedback) return 0;
+      return aHasFeedback ? 1 : -1;
+    });
+  }, [entry?.items]);
+
+  // Session timer - track elapsed time for in-progress sessions
+  useEffect(() => {
+    if (!entry || entry.is_completed) return;
+
+    // Calculate initial elapsed time from started_at or created_at
+    const startTime = entry.started_at ?? entry.created_at;
+    const startDate = new Date(startTime);
+    const initialElapsed = Math.floor((Date.now() - startDate.getTime()) / 1000);
+    setElapsedSeconds(Math.max(0, initialElapsed));
+
+    // Update every second
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startDate.getTime()) / 1000);
+      setElapsedSeconds(Math.max(0, elapsed));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [entry?.id, entry?.is_completed, entry?.started_at, entry?.created_at]);
+
+  // Format seconds to MM:SS or HH:MM:SS
+  const formatTimer = (seconds: number): string => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleComplete = (): void => {
     if (!entryId || completeEntry.isPending) return;
     completeEntry.mutate(entryId, {
       onSuccess: () => {
-        showSuccessToast('Session completed!');
-        router.replace('/');
+        // Save final duration and show summary
+        setFinalDuration(elapsedSeconds);
+        setShowSummary(true);
       },
     });
+  };
+
+  const handleDismissSummary = (): void => {
+    setShowSummary(false);
+    router.replace('/');
   };
 
   const handleDelete = (): void => {
@@ -109,27 +181,77 @@ export default function EntryScreen(): React.ReactElement {
         options={{
           title: formatDate(entry.performed_at),
           headerBackTitle: 'Back',
-          headerRight: () => deleteEntry.isPending ? (
-            <ActivityIndicator size="small" color={theme.error?.val} />
-          ) : (
-            <Pressable
-              onPress={handleDelete}
-              style={{ padding: 8, cursor: 'pointer', userSelect: 'none' } as never}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <MaterialCommunityIcons
-                name="trash-can-outline"
-                size={22}
-                color={theme.error?.val ?? '#EF4444'}
-              />
-            </Pressable>
+          headerRight: () => (
+            <XStack alignItems="center" gap={8}>
+              {/* Timer - only show for in-progress sessions */}
+              {!entry.is_completed && (
+                <Text style={{ fontSize: 14, fontWeight: '600', color: theme.textMuted?.val ?? '#888', fontVariant: ['tabular-nums'] }}>
+                  {formatTimer(elapsedSeconds)}
+                </Text>
+              )}
+              {/* Complete button - only show for in-progress sessions */}
+              {!entry.is_completed && (
+                <Pressable
+                  onPress={handleComplete}
+                  disabled={completeEntry.isPending}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    backgroundColor: completeEntry.isPending ? 'rgba(139, 92, 246, 0.5)' : (theme.primary?.val ?? '#8B5CF6'),
+                    borderRadius: 16,
+                    cursor: completeEntry.isPending ? 'not-allowed' : 'pointer',
+                    userSelect: 'none',
+                  } as never}
+                >
+                  {completeEntry.isPending ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Text style={{ color: 'white', fontWeight: '600', fontSize: 13 }}>
+                      Complete
+                    </Text>
+                  )}
+                </Pressable>
+              )}
+              {/* Delete button */}
+              {deleteEntry.isPending ? (
+                <ActivityIndicator size="small" color={theme.error?.val} />
+              ) : (
+                <Pressable
+                  onPress={handleDelete}
+                  style={{ padding: 8, cursor: 'pointer', userSelect: 'none' } as never}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <MaterialCommunityIcons
+                    name="trash-can-outline"
+                    size={22}
+                    color={theme.error?.val ?? '#EF4444'}
+                  />
+                </Pressable>
+              )}
+            </XStack>
           ),
         }}
       />
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
+        {/* Progress bar - shows completion based on exercises with feedback */}
+        {!entry.is_completed && entry.items.length > 0 && (
+          <Stack
+            height={4}
+            backgroundColor="$backgroundHover"
+          >
+            <Stack
+              height={4}
+              backgroundColor="$primary"
+              width={`${(entry.items.filter(item => item.feedback !== null).length / entry.items.length) * 100}%`}
+            />
+          </Stack>
+        )}
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+          scrollEnabled={scrollEnabled}
+          onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}
+          onContentSizeChange={(_, height) => setContentHeight(height)}
         >
           {/* Status */}
           <Stack marginBottom={16}>
@@ -226,13 +348,15 @@ export default function EntryScreen(): React.ReactElement {
                 </YStack>
               </Card>
             ) : (
-              entry.items.map((item) => (
+              sortedItems.map((item) => (
                 <ExerciseInputCard
                   key={item.id}
                   item={item}
                   entryId={entry.id}
                   lastSessionItem={showComparisonHint ? getLastSessionItem(item) : null}
                   isSessionInProgress={!entry.is_completed}
+                  isCollapsed={collapsedItems.has(item.id) || item.feedback !== null}
+                  onFeedbackSelected={handleFeedbackSelected}
                 />
               ))
             )}
@@ -255,42 +379,111 @@ export default function EntryScreen(): React.ReactElement {
           )}
         </ScrollView>
 
-        {/* Bottom actions */}
-        {!entry.is_completed && (
-          <Stack
-            position="absolute"
-            bottom={24}
-            right={24}
-            backgroundColor="$primary"
-            borderRadius={9999}
-            paddingHorizontal={24}
-            height={52}
-            alignItems="center"
-            justifyContent="center"
-            opacity={completeEntry.isPending ? 0.7 : 1}
-            cursor={completeEntry.isPending ? 'not-allowed' : 'pointer'}
-            pressStyle={{
-              scale: 0.94,
-              backgroundColor: '$primaryDark',
-            }}
-            onPress={handleComplete}
-          >
-            {completeEntry.isPending ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text color="white" fontWeight="600" fontSize={15}>
-                Complete Session
-              </Text>
-            )}
-          </Stack>
-        )}
-
         <AddItemModal
           visible={showAddItem}
           onClose={() => setShowAddItem(false)}
           entryId={entry.id}
           subjectId={entry.subject_id}
         />
+
+        {/* Session Summary Modal */}
+        <Modal
+          visible={showSummary}
+          animationType="fade"
+          transparent
+          onRequestClose={handleDismissSummary}
+        >
+          <Pressable
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 24,
+            }}
+            onPress={handleDismissSummary}
+          >
+            <Pressable onPress={(e) => e.stopPropagation()}>
+              <Stack
+                backgroundColor="$surface"
+                borderRadius={16}
+                padding={24}
+                alignItems="center"
+                gap={16}
+                minWidth={280}
+              >
+                {/* Success Icon */}
+                <Stack
+                  width={64}
+                  height={64}
+                  borderRadius={32}
+                  backgroundColor="rgba(16, 185, 129, 0.15)"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <MaterialCommunityIcons
+                    name="check-circle"
+                    size={36}
+                    color={theme.success?.val ?? '#10B981'}
+                  />
+                </Stack>
+
+                {/* Title */}
+                <Text fontSize={20} fontWeight="700" color="$color">
+                  Great Workout!
+                </Text>
+
+                {/* Stats */}
+                <YStack gap={8} alignItems="center">
+                  <XStack gap={16}>
+                    <YStack alignItems="center">
+                      <Text fontSize={24} fontWeight="700" color="$primary">
+                        {formatTimer(finalDuration)}
+                      </Text>
+                      <Text fontSize={12} color="$textMuted">Duration</Text>
+                    </YStack>
+                    <YStack alignItems="center">
+                      <Text fontSize={24} fontWeight="700" color="$primary">
+                        {entry.items.length}
+                      </Text>
+                      <Text fontSize={12} color="$textMuted">Exercises</Text>
+                    </YStack>
+                  </XStack>
+                  <XStack gap={24}>
+                    <YStack alignItems="center">
+                      <Text fontSize={18} fontWeight="600" color="$success">
+                        {entry.items.filter(i => i.feedback?.rating === 'done').length}
+                      </Text>
+                      <Text fontSize={11} color="$textMuted">Done</Text>
+                    </YStack>
+                    <YStack alignItems="center">
+                      <Text fontSize={18} fontWeight="600" color="$primary">
+                        {entry.items.filter(i => i.feedback?.rating === 'up').length}
+                      </Text>
+                      <Text fontSize={11} color="$textMuted">Up</Text>
+                    </YStack>
+                  </XStack>
+                </YStack>
+
+                {/* Done Button */}
+                <Pressable
+                  onPress={handleDismissSummary}
+                  style={{
+                    backgroundColor: theme.primary?.val ?? '#8B5CF6',
+                    paddingHorizontal: 32,
+                    paddingVertical: 12,
+                    borderRadius: 24,
+                    marginTop: 8,
+                  }}
+                >
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 15 }}>
+                    Done
+                  </Text>
+                </Pressable>
+              </Stack>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </SafeAreaView>
     </>
   );

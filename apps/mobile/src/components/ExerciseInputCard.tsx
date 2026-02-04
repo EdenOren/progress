@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { TextInput, Pressable, ActivityIndicator, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,11 +18,18 @@ import { handleError, showSuccessToast, showAlert } from '../utils';
 import { Card } from './Card';
 import { Button } from './Button';
 
+// Enable LayoutAnimation for Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 interface ExerciseInputCardProps {
   item: ItemWithSets;
   entryId: string;
   lastSessionItem?: ItemWithSets | null;
   isSessionInProgress?: boolean;
+  isCollapsed?: boolean;
+  onFeedbackSelected?: (itemId: string) => void;
 }
 
 interface LocalSetState {
@@ -38,6 +45,8 @@ export function ExerciseInputCard({
   entryId,
   lastSessionItem,
   isSessionInProgress = false,
+  isCollapsed = false,
+  onFeedbackSelected,
 }: ExerciseInputCardProps): React.ReactElement {
   const { user } = useSupabaseContext();
   const queryClient = useQueryClient();
@@ -186,7 +195,8 @@ export function ExerciseInputCard({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
-      // No toast - visual selection state is enough feedback
+      // Notify parent that feedback was selected (for collapse/reorder)
+      onFeedbackSelected?.(item.id);
     },
     onError: (error) => handleError(error),
   });
@@ -238,6 +248,8 @@ export function ExerciseInputCard({
         reps,
         duration_sec,
       });
+      // Animate layout change when set is saved
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setLocalSets((prev) =>
         prev.map((s, i) => (i === setIndex ? { ...s, isDirty: false } : s))
       );
@@ -287,6 +299,8 @@ export function ExerciseInputCard({
         reps: lastSet.reps,
         duration_sec: lastSet.duration_sec ?? null,
       });
+      // Animate layout change when set is copied
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setLocalSets((prev) =>
         prev.map((s, i) => (i === setIndex ? { ...s, isDirty: false } : s))
       );
@@ -339,14 +353,75 @@ export function ExerciseInputCard({
 
   const getFeedbackColor = (rating: FeedbackRating): string => {
     switch (rating) {
-      case 'success':
+      case 'done':
         return '$success';
-      case 'hard':
+      case 'up':
         return '$primary';
-      case 'fail':
-        return '$error';
     }
   };
+
+  const getFeedbackIcon = (rating: FeedbackRating): 'check-circle' | 'arrow-up-circle' => {
+    switch (rating) {
+      case 'done':
+        return 'check-circle';
+      case 'up':
+        return 'arrow-up-circle';
+    }
+  };
+
+  const getFeedbackThemeColor = (rating: FeedbackRating): string => {
+    switch (rating) {
+      case 'done':
+        return theme.success?.val ?? '#10B981';
+      case 'up':
+        return theme.primary?.val ?? '#8B5CF6';
+    }
+  };
+
+  // Collapsed view - shown when exercise has feedback
+  if (isCollapsed && item.feedback?.rating) {
+    const completedSets = item.sets.filter(s => (s.weight_kg !== null || s.duration_sec !== null)).length;
+    const totalSets = item.sets.length;
+
+    return (
+      <Card>
+        <XStack alignItems="center" gap="$3" paddingVertical="$1">
+          {/* Feedback indicator */}
+          <Stack
+            width={32}
+            height={32}
+            borderRadius={16}
+            backgroundColor={item.feedback.rating === 'done' ? 'rgba(16, 185, 129, 0.15)' : '$purple5'}
+            alignItems="center"
+            justifyContent="center"
+          >
+            <MaterialCommunityIcons
+              name={getFeedbackIcon(item.feedback.rating)}
+              size={18}
+              color={getFeedbackThemeColor(item.feedback.rating)}
+            />
+          </Stack>
+
+          {/* Exercise name and summary */}
+          <YStack flex={1}>
+            <Text fontSize={14} fontWeight="600" color="$color">
+              {item.name}
+            </Text>
+            <XStack alignItems="center" gap="$2">
+              <Text fontSize={12} color="$textMuted">
+                {completedSets}/{totalSets} sets · {item.feedback.rating}
+              </Text>
+              {lastSessionItem?.feedback?.rating && (
+                <Text fontSize={11} color="$textMuted">
+                  (prev: {lastSessionItem.feedback.rating})
+                </Text>
+              )}
+            </XStack>
+          </YStack>
+        </XStack>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -636,7 +711,7 @@ export function ExerciseInputCard({
             )}
           </XStack>
           <XStack gap="$2">
-            {(['success', 'hard', 'fail'] as FeedbackRating[]).map((rating) => {
+            {(['done', 'up'] as FeedbackRating[]).map((rating) => {
               const isServerSelected = item.feedback?.rating === rating;
               const isPendingThis = feedbackMutation.isPending && feedbackMutation.variables === rating;
               // Show selected state if server says selected OR if we're currently saving this rating
@@ -644,11 +719,14 @@ export function ExerciseInputCard({
               // Check if this was selected last session
               const wasLastSession = lastSessionItem?.feedback?.rating === rating;
               const colors = {
-                success: { bg: 'rgba(16, 185, 129, 0.15)', activeBg: '$success' },
-                hard: { bg: '$purple5', activeBg: '$primary' },
-                fail: { bg: 'rgba(239, 68, 68, 0.15)', activeBg: '$error' },
+                done: { bg: 'rgba(16, 185, 129, 0.15)', activeBg: '$success' },
+                up: { bg: '$purple5', activeBg: '$primary' },
               };
               const colorConfig = colors[rating];
+              const labels = {
+                done: 'Done',
+                up: 'Up ↑',
+              };
 
               return (
                 <Pressable
@@ -677,7 +755,7 @@ export function ExerciseInputCard({
                       fontWeight="600"
                       color={isSelected ? 'white' : getFeedbackColor(rating)}
                     >
-                      {rating.charAt(0).toUpperCase() + rating.slice(1)}
+                      {labels[rating]}
                     </Text>
                   </Stack>
                 </Pressable>

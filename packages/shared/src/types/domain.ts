@@ -16,8 +16,8 @@ export type ISODateTime = string;
 /** ISO 8601 date string (YYYY-MM-DD) */
 export type ISODate = string;
 
-/** Rating for item feedback */
-export type FeedbackRating = 'success' | 'hard' | 'fail';
+/** Rating for item feedback: done = completed as expected, up = want to increase weight/reps */
+export type FeedbackRating = 'done' | 'up';
 
 /** Exercise tracking type */
 export type TrackingType = 'weight_reps' | 'duration' | 'distance';

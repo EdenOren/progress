@@ -30,12 +30,12 @@ Progress is a mobile app (iOS + Android) for tracking personal progress across m
 ### Data Flow
 
 ```
-User Action → Component → Hook → API Function → Supabase
-                                      ↓
+User Action -> Component -> Hook -> API Function -> Supabase
+                                      |
                               Zod Validation
-                                      ↓
+                                      |
                               Result<T> Return
-                                      ↓
+                                      |
                           Hook handles success/error
 ```
 
@@ -136,9 +136,12 @@ progress/
 ├── supabase/
 │   ├── migrations/                # SQL migrations
 │   └── seed.sql                   # Seed data
-└── docs/
-    ├── product.md                 # Product requirements
-    └── db.md                      # Database documentation
+├── docs/
+│   ├── product.md                 # Product requirements
+│   └── db.md                      # Database documentation
+└── .claude/
+    ├── agents/                    # Specialized AI agents
+    └── skills/                    # Development pattern references
 ```
 
 ---
@@ -176,7 +179,7 @@ npm run test -- --coverage
 
 ### React Native
 
-- **Small components**: Screen → Sections → Components
+- **Small components**: Screen -> Sections -> Components
 - **Hooks for logic**: Keep components presentation-focused
 - **Tamagui for styling**: Use theme tokens, avoid inline styles
 - **React Query for server state**: Don't duplicate in local state
@@ -245,8 +248,6 @@ Workflow:
 3. Push and merge back to `develop` when complete
 4. **Always** delete the branch after merge (local + remote)
 
----
-
 ### Modifying Database Schema
 
 1. Create new migration file in `supabase/migrations/`
@@ -254,3 +255,253 @@ Workflow:
 3. Update TypeScript types in `packages/shared/src/types/`
 4. Update Zod schemas in `packages/shared/src/schemas/`
 5. Update `docs/db.md`
+
+---
+
+## Agent & Skill Workflow
+
+Follow this workflow for feature development:
+
+### 1. Plan First (architect + planner)
+```
+User Request -> architect (if architectural) -> planner (always for complex tasks)
+```
+- Use **architect** when adding new domains, changing data models, or making structural decisions
+- Use **planner** to break down the work into specific implementation steps
+
+### 2. Write Tests (tdd-guide)
+```
+Plan -> tdd-guide -> Write failing tests first
+```
+- Write unit tests for API functions and schemas before implementation
+- Define expected behavior upfront
+
+### 3. Implement
+```
+Tests -> Implement code -> Run tests until green
+```
+- Follow the plan's step-by-step guidance
+- Reference **backend-patterns** for API functions
+- Reference **frontend-patterns** for components/hooks
+
+### 4. Review (code-reviewer + database-reviewer + security-reviewer)
+```
+Implementation -> code-reviewer -> database-reviewer (if SQL) -> security-reviewer (if auth/input)
+```
+- **code-reviewer**: Quality, patterns, error handling
+- **database-reviewer**: Migrations, RLS policies, query optimization
+- **security-reviewer**: Auth code, user input, sensitive data
+
+### 5. Cleanup (refactor-cleaner)
+```
+After feature complete -> refactor-cleaner -> Remove dead code
+```
+- Run after merging to clean up unused code
+- Document deletions
+
+### 6. E2E Testing (e2e-runner)
+```
+Feature complete -> e2e-runner -> Test critical user journeys
+```
+- Test complete flows: auth, CRUD operations
+- Ensure no regressions
+
+### Example Workflow
+
+**Task**: "Add ability to delete a subject"
+
+1. **planner**: Break down into steps (API function, hook, UI, confirmation dialog)
+2. **tdd-guide**: Write test for `deleteSubject` API function
+3. **Implement**: Create API function, hook, and UI
+4. **code-reviewer**: Check error handling, Result type usage
+5. **database-reviewer**: Verify cascade delete, RLS policy
+6. **security-reviewer**: Confirm user can only delete own subjects
+
+---
+
+## Agents
+
+Specialized agents in `.claude/agents/` handle complex tasks. Use them proactively.
+
+### Quick Reference
+
+| Agent | When to Use |
+|-------|-------------|
+| `architect` | Planning features, system design, architectural decisions |
+| `planner` | Breaking down complex tasks into implementation steps |
+| `code-reviewer` | After writing code - reviews quality, security, patterns |
+| `database-reviewer` | SQL, migrations, RLS policies, query optimization |
+| `security-reviewer` | Auth code, user input handling, sensitive data |
+| `tdd-guide` | New features or bugs - enforces test-first development |
+| `refactor-cleaner` | Dead code removal, duplicate consolidation |
+| `e2e-runner` | End-to-end test creation and maintenance |
+
+### Agent Details
+
+**architect** - Use when planning new features or making architectural decisions:
+- Adding new tracking domains (nutrition, sleep)
+- Designing data models and relationships
+- Evaluating trade-offs between approaches
+- Ensuring consistency with existing architecture
+
+**planner** - Use when breaking down complex work:
+- Creating step-by-step implementation plans
+- Identifying dependencies between tasks
+- Specifying file paths and changes needed
+- Prioritizing implementation order
+
+**code-reviewer** - Use after writing or modifying code:
+- Reviews for simplicity and readability
+- Checks error handling patterns
+- Validates Result type usage
+- Ensures Zod validation is present
+- Flags security issues (hardcoded values, missing validation)
+
+**database-reviewer** - Use for database work:
+- Designing new tables and relationships
+- Writing migration files
+- Creating and reviewing RLS policies
+- Optimizing Supabase queries
+- Adding appropriate indexes
+
+**security-reviewer** - Use when touching sensitive areas:
+- Authentication/authorization code
+- User input handling
+- API endpoints
+- Environment variable usage
+- Supabase RLS policy verification
+
+**tdd-guide** - Use when writing new functionality:
+- Guides test-first development
+- Writes unit tests for API functions
+- Tests Zod schemas with edge cases
+- Ensures 80%+ test coverage
+
+**refactor-cleaner** - Use for cleanup tasks:
+- Removing unused exports and files
+- Consolidating duplicate code
+- Running `knip` and `depcheck`
+- Documenting deletions
+
+**e2e-runner** - Use for integration testing:
+- Testing complete user flows
+- Auth flow testing
+- CRUD operation testing
+- Managing test stability
+
+### How to Invoke Agents
+
+Ask Claude to use specific agents by name:
+
+```
+"Use the planner agent to break down this feature"
+"Run code-reviewer on the changes I just made"
+"Use database-reviewer to check my migration"
+"Use security-reviewer on the auth code"
+```
+
+Or Claude will proactively suggest agents when appropriate based on the task.
+
+---
+
+## Skills
+
+Pattern references in `.claude/skills/` for development guidance.
+
+### Available Skills
+
+| Skill | Content |
+|-------|---------|
+| `backend-patterns` | API design, repository pattern, caching, error handling |
+| `frontend-patterns` | React components, hooks, state management, performance |
+
+### When to Reference
+
+**backend-patterns** - Reference when working on:
+- API functions in `packages/shared/src/api/`
+- Service layer logic
+- Error handling patterns
+- Query optimization
+
+**frontend-patterns** - Reference when working on:
+- React Native components in `apps/mobile/src/components/`
+- Custom hooks in `apps/mobile/src/hooks/`
+- State management with Context
+- Performance optimization (memoization)
+
+---
+
+## Project-Specific Patterns
+
+### API Function Pattern
+
+```typescript
+export async function getSubjects(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<Result<Subject[]>> {
+  const { data, error } = await supabase
+    .from('subjects')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    return { success: false, error: mapSupabaseError(error) };
+  }
+
+  const validated = SubjectArraySchema.safeParse(data);
+  if (!validated.success) {
+    return { success: false, error: new ValidationError('Invalid data') };
+  }
+
+  return { success: true, data: validated.data };
+}
+```
+
+### React Query Hook Pattern
+
+```typescript
+export function useSubjects(userId: string) {
+  const supabase = useSupabase();
+
+  return useQuery({
+    queryKey: ['subjects', userId],
+    queryFn: async () => {
+      const result = await getSubjects(supabase, userId);
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
+    },
+  });
+}
+```
+
+### RLS Policy Pattern
+
+```sql
+-- Standard user-owned resource policy
+CREATE POLICY "Users can access own data"
+  ON table_name
+  FOR ALL
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
+```
+
+### Database Security Checklist
+
+- [ ] RLS enabled on all tables with user data
+- [ ] Policies use `(SELECT auth.uid())` pattern (not `auth.uid()` directly)
+- [ ] Foreign key columns indexed
+- [ ] No direct database access from mobile app
+- [ ] All queries through `@progress/shared` API
+
+### Critical Code - Never Remove
+
+- Supabase client configuration
+- API functions in `packages/shared/src/api/`
+- Error classes and `mapSupabaseError()`
+- React Query hooks
+- Zod validation schemas
+- Auth flow components

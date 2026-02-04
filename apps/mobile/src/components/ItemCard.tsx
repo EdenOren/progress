@@ -141,9 +141,15 @@ export function ItemCard({ item, comparison, entryId, lastSessionItem }: ItemCar
 
   const getFeedbackColor = (rating: FeedbackRating): string => {
     switch (rating) {
-      case 'success': return '$success';
-      case 'hard': return '$warning';
-      case 'fail': return '$error';
+      case 'done': return '$success';
+      case 'up': return '$primary';
+    }
+  };
+
+  const getFeedbackLabel = (rating: FeedbackRating): string => {
+    switch (rating) {
+      case 'done': return 'Done';
+      case 'up': return 'Up ↑';
     }
   };
 
@@ -327,7 +333,7 @@ export function ItemCard({ item, comparison, entryId, lastSessionItem }: ItemCar
             How did it go?
           </Text>
           <XStack gap="$2">
-            {(['success', 'hard', 'fail'] as FeedbackRating[]).map((rating) => (
+            {(['done', 'up'] as FeedbackRating[]).map((rating) => (
               <Button
                 key={rating}
                 flex={1}
@@ -338,7 +344,7 @@ export function ItemCard({ item, comparison, entryId, lastSessionItem }: ItemCar
                 }
                 onPress={() => feedbackMutation.mutate(rating)}
               >
-                {rating.charAt(0).toUpperCase() + rating.slice(1)}
+                {getFeedbackLabel(rating)}
               </Button>
             ))}
           </XStack>

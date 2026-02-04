@@ -3,7 +3,7 @@ import { Pressable, Modal, ScrollView, Linking } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useWorkoutTemplate, useHardRemoveFromTemplate, useAddExerciseToTemplate, useUpdateTemplateItem } from '../hooks/useTemplates';
+import { useWorkoutTemplate, useHardRemoveFromTemplate, useBulkAddExercisesToTemplate, useUpdateTemplateItem } from '../hooks/useTemplates';
 import { showSuccessToast } from '../utils';
 import { AddExerciseSheet } from './AddExerciseSheet';
 import { SetDefaultsSheet } from './SetDefaultsSheet';
@@ -29,7 +29,7 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
 
   const { data: template, isLoading } = useWorkoutTemplate(subjectId);
   const removeFromTemplate = useHardRemoveFromTemplate(subjectId);
-  const addExercise = useAddExerciseToTemplate(subjectId);
+  const bulkAddExercises = useBulkAddExercisesToTemplate(subjectId);
   const updateTemplate = useUpdateTemplateItem(subjectId);
 
   // Get IDs of exercises already in the template
@@ -41,13 +41,14 @@ export function TemplateSection({ subjectId, hasInProgressSession = false }: Tem
   const handleAddExercises = useCallback((exercises: Exercise[], defaultSets?: Array<{ target_reps: number }>) => {
     const sets = defaultSets ?? [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }];
 
-    exercises.forEach(exercise => {
-      addExercise.mutate({
+    // Use bulk mutation - single API call instead of one per exercise
+    bulkAddExercises.mutate(
+      exercises.map(exercise => ({
         exerciseId: exercise.id,
         defaultSets: sets,
-      });
-    });
-  }, [addExercise]);
+      }))
+    );
+  }, [bulkAddExercises]);
 
   const handleRemoveExercise = useCallback((item: WorkoutTemplateWithExercise) => {
     removeFromTemplate.mutate(item.id, {

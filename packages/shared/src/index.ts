@@ -293,6 +293,7 @@ export {
   // Templates
   getWorkoutTemplate,
   addToTemplate,
+  addMultipleToTemplate,
   updateTemplateItem,
   removeFromTemplate,
   hardRemoveFromTemplate,

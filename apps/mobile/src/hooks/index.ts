@@ -35,6 +35,7 @@ export {
   useNextTemplatePosition,
   useAddToTemplate,
   useAddExerciseToTemplate,
+  useBulkAddExercisesToTemplate,
   useUpdateTemplateItem,
   useRemoveFromTemplate,
   useHardRemoveFromTemplate,

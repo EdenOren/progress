@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getWorkoutTemplate,
   addToTemplate,
+  addMultipleToTemplate,
   updateTemplateItem,
   removeFromTemplate,
   hardRemoveFromTemplate,
@@ -100,6 +101,44 @@ export function useAddExerciseToTemplate(subjectId: string) {
         default_sets: input.defaultSets,
       });
 
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.bySubject(subjectId) });
+      queryClient.invalidateQueries({ queryKey: templateKeys.position(subjectId) });
+    },
+    onError: (error) => {
+      handleError(error);
+    },
+  });
+}
+
+/**
+ * Add multiple exercises to template in one call (bulk add)
+ */
+export function useBulkAddExercisesToTemplate(subjectId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (inputs: Array<{ exerciseId: string; defaultSets?: TemplateSetConfig[] }>) => {
+      // Get next position
+      const posResult = await getNextTemplatePosition(subjectId);
+      if (!posResult.success) {
+        throw posResult.error;
+      }
+
+      // Build all inserts with sequential positions
+      const inserts: WorkoutTemplateInsert[] = inputs.map((input, index) => ({
+        subject_id: subjectId,
+        exercise_id: input.exerciseId,
+        position: posResult.data + index,
+        default_sets: input.defaultSets,
+      }));
+
+      const result = await addMultipleToTemplate(inserts);
       if (!result.success) {
         throw result.error;
       }

@@ -92,14 +92,14 @@ describe('Common Schemas', () => {
 
   describe('feedbackRatingSchema', () => {
     it('accepts valid ratings', () => {
-      expect(feedbackRatingSchema.safeParse('success').success).toBe(true);
-      expect(feedbackRatingSchema.safeParse('hard').success).toBe(true);
-      expect(feedbackRatingSchema.safeParse('fail').success).toBe(true);
+      expect(feedbackRatingSchema.safeParse('done').success).toBe(true);
+      expect(feedbackRatingSchema.safeParse('up').success).toBe(true);
     });
 
     it('rejects invalid ratings', () => {
-      expect(feedbackRatingSchema.safeParse('easy').success).toBe(false);
-      expect(feedbackRatingSchema.safeParse('good').success).toBe(false);
+      expect(feedbackRatingSchema.safeParse('success').success).toBe(false);
+      expect(feedbackRatingSchema.safeParse('hard').success).toBe(false);
+      expect(feedbackRatingSchema.safeParse('fail').success).toBe(false);
       expect(feedbackRatingSchema.safeParse('').success).toBe(false);
     });
   });

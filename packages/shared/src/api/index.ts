@@ -94,6 +94,7 @@ export {
 export {
   getWorkoutTemplate,
   addToTemplate,
+  addMultipleToTemplate,
   updateTemplateItem,
   removeFromTemplate,
   hardRemoveFromTemplate,

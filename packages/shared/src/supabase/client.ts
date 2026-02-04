@@ -206,7 +206,7 @@ export interface Database {
           id: string;
           item_id: string;
           user_id: string;
-          rating: 'success' | 'hard' | 'fail';
+          rating: 'done' | 'up';
           comment: string | null;
           created_at: string;
         };
@@ -214,12 +214,12 @@ export interface Database {
           id?: string;
           item_id: string;
           user_id: string;
-          rating: 'success' | 'hard' | 'fail';
+          rating: 'done' | 'up';
           comment?: string | null;
           created_at?: string;
         };
         Update: {
-          rating?: 'success' | 'hard' | 'fail';
+          rating?: 'done' | 'up';
           comment?: string | null;
         };
         Relationships: [];
@@ -257,7 +257,7 @@ export interface Database {
     Views: Record<string, never>;
     Functions: Record<string, never>;
     Enums: {
-      feedback_rating: 'success' | 'hard' | 'fail';
+      feedback_rating: 'done' | 'up';
     };
     CompositeTypes: Record<string, never>;
   };

@@ -68,6 +68,51 @@ export async function addToTemplate(
 }
 
 /**
+ * Add multiple exercises to workout template in one call
+ */
+export async function addMultipleToTemplate(
+  inputs: WorkoutTemplateInsert[]
+): Promise<Result<WorkoutTemplate[]>> {
+  if (inputs.length === 0) {
+    return ok([]);
+  }
+
+  // Validate all inputs
+  const validatedInputs: WorkoutTemplateInsert[] = [];
+  for (const input of inputs) {
+    const validated = workoutTemplateInsertSchema.safeParse(input);
+    if (!validated.success) {
+      return err(new ValidationError(validated.error));
+    }
+    validatedInputs.push(validated.data);
+  }
+
+  const supabase = getSupabase();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('workout_templates')
+    .insert(validatedInputs)
+    .select();
+
+  if (error) {
+    return err(mapSupabaseError(error));
+  }
+
+  // Validate response as array
+  const results: WorkoutTemplate[] = [];
+  for (const item of data) {
+    const parsed = workoutTemplateSchema.safeParse(item);
+    if (!parsed.success) {
+      return err(new ValidationError(parsed.error));
+    }
+    results.push(parsed.data);
+  }
+
+  return ok(results);
+}
+
+/**
  * Update template item (default sets, position, etc.)
  */
 export async function updateTemplateItem(
