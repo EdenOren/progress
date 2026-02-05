@@ -73,6 +73,9 @@ export function ExerciseInputCard({
   const [deletingSets, setDeletingSets] = useState<Set<string>>(new Set());
   const [copiedSetIndex, setCopiedSetIndex] = useState<number | null>(null);
 
+  // Track optimistic feedback (shown immediately before server data updates)
+  const [optimisticFeedback, setOptimisticFeedback] = useState<FeedbackRating | null>(null);
+
   // Note state
   const [localNote, setLocalNote] = useState(item.note ?? '');
   const [showNoteInput, setShowNoteInput] = useState(false);
@@ -95,6 +98,13 @@ export function ExerciseInputCard({
       }))
     );
   }, [item.sets]);
+
+  // Clear optimistic feedback when server data catches up
+  useEffect(() => {
+    if (item.feedback?.rating) {
+      setOptimisticFeedback(null);
+    }
+  }, [item.feedback?.rating]);
 
   // Sync note state when item.note changes from server
   useEffect(() => {
@@ -211,13 +221,21 @@ export function ExerciseInputCard({
       if (!result.success) throw result.error;
       return result.data;
     },
+    onMutate: (rating) => {
+      // Set optimistic feedback immediately for UI responsiveness
+      setOptimisticFeedback(rating);
+    },
     onSuccess: () => {
       // Notify parent FIRST (before query invalidation) to update accordion state
       onFeedbackSelected?.(item.id);
       // Then refetch data
       queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
     },
-    onError: (error) => handleError(error),
+    onError: (error) => {
+      // Clear optimistic feedback on error
+      setOptimisticFeedback(null);
+      handleError(error);
+    },
   });
 
   // Handle input change (just updates local state)
@@ -401,7 +419,9 @@ export function ExerciseInputCard({
   if (isCollapsed) {
     const completedSets = item.sets.filter(s => (s.weight_kg !== null || s.duration_sec !== null)).length;
     const totalSets = item.sets.length;
-    const hasFeedback = item.feedback?.rating;
+    // Use optimistic feedback if server data hasn't caught up yet
+    const feedbackRating = item.feedback?.rating ?? optimisticFeedback;
+    const hasFeedback = !!feedbackRating;
 
     return (
       <Pressable
@@ -418,18 +438,18 @@ export function ExerciseInputCard({
               borderRadius={16}
               backgroundColor={
                 hasFeedback
-                  ? (item.feedback!.rating === 'done' ? 'rgba(16, 185, 129, 0.15)' : '$purple5')
+                  ? (feedbackRating === 'done' ? 'rgba(16, 185, 129, 0.15)' : '$purple5')
                   : '$backgroundHover'
               }
               alignItems="center"
               justifyContent="center"
             >
               <MaterialCommunityIcons
-                name={hasFeedback ? getFeedbackIcon(item.feedback!.rating) : 'dumbbell'}
+                name={hasFeedback ? getFeedbackIcon(feedbackRating!) : 'dumbbell'}
                 size={18}
                 color={
                   hasFeedback
-                    ? getFeedbackThemeColor(item.feedback!.rating)
+                    ? getFeedbackThemeColor(feedbackRating!)
                     : (theme.textMuted?.val ?? '#71717A')
                 }
               />
@@ -456,7 +476,7 @@ export function ExerciseInputCard({
             {/* Feedback badge or chevron indicator */}
             {hasFeedback ? (
               <Stack
-                backgroundColor={item.feedback!.rating === 'done' ? 'rgba(16, 185, 129, 0.15)' : '$purple5'}
+                backgroundColor={feedbackRating === 'done' ? 'rgba(16, 185, 129, 0.15)' : '$purple5'}
                 paddingHorizontal={10}
                 paddingVertical={4}
                 borderRadius={9999}
@@ -464,9 +484,9 @@ export function ExerciseInputCard({
                 <Text
                   fontSize={12}
                   fontWeight="600"
-                  color={item.feedback!.rating === 'done' ? '$success' : '$primary'}
+                  color={feedbackRating === 'done' ? '$success' : '$primary'}
                 >
-                  {item.feedback!.rating === 'done' ? 'Done' : 'Up ↑'}
+                  {feedbackRating === 'done' ? 'Done' : 'Up ↑'}
                 </Text>
               </Stack>
             ) : isSessionInProgress ? (
