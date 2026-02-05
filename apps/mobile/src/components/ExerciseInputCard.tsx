@@ -212,9 +212,10 @@ export function ExerciseInputCard({
       return result.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
-      // Notify parent that feedback was selected (for collapse/reorder)
+      // Notify parent FIRST (before query invalidation) to update accordion state
       onFeedbackSelected?.(item.id);
+      // Then refetch data
+      queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
     },
     onError: (error) => handleError(error),
   });

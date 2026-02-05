@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ScrollView, ActivityIndicator, Pressable, Modal } from 'react-native';
+import { ScrollView, ActivityIndicator, Pressable, Modal, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -52,13 +52,22 @@ export default function EntryScreen(): React.ReactElement {
     }
   }, [contentHeight, containerHeight]);
 
+  // Enable LayoutAnimation on Android
+  useEffect(() => {
+    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+  }, []);
+
   // Handle expanding an item (only one can be expanded at a time)
   const handleExpandItem = useCallback((itemId: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedItemId(itemId);
   }, []);
 
   // Handle feedback selection - collapse current item and auto-expand next item without feedback
   const handleFeedbackSelected = useCallback((itemId: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     if (!entry?.items) {
       setExpandedItemId(null);
       return;
