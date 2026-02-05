@@ -178,7 +178,12 @@ export default function EntryScreen(): React.ReactElement {
   // Show loading while we don't have data yet
   // isPending = no cached data (React Query v5)
   if (!entryId || isPending) {
-    return <LoadingScreen />;
+    return (
+      <>
+        <RouterStack.Screen options={{ title: 'Loading...' }} />
+        <LoadingScreen />
+      </>
+    );
   }
 
   // Only show error if we actually tried to fetch and failed
@@ -211,7 +216,7 @@ export default function EntryScreen(): React.ReactElement {
           title: formatDate(entry.performed_at),
           headerBackTitle: 'Back',
           headerRight: () => (
-            <XStack alignItems="center" gap={8}>
+            <XStack alignItems="center" gap={8} marginRight={8}>
               {/* Timer - only show for in-progress sessions */}
               {!entry.is_completed && (
                 <Text style={{ fontSize: 14, fontWeight: '600', color: theme.textMuted?.val ?? '#888', fontVariant: ['tabular-nums'] }}>

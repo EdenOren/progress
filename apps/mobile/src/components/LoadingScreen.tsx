@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Platform, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { YStack } from '@tamagui/stacks';
 import { Text, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,14 +8,13 @@ export function LoadingScreen(): React.ReactElement {
   const theme = useTheme();
 
   return (
-    <YStack
-      flex={1}
-      width="100%"
-      justifyContent="center"
-      alignItems="center"
-      backgroundColor="$background"
-      style={Platform.OS === 'web' ? styles.webContainer : undefined}
-    >
+    <View style={[styles.container, { backgroundColor: theme.background?.val ?? '#09090B' }]}>
+      <YStack
+        flex={1}
+        width="100%"
+        justifyContent="center"
+        alignItems="center"
+      >
       <YStack alignItems="center" gap="$4">
         <YStack
           width={80}
@@ -40,16 +39,25 @@ export function LoadingScreen(): React.ReactElement {
         />
       </YStack>
     </YStack>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  webContainer: {
-    minHeight: '100vh',
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  } as any,
+  container: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    ...Platform.select({
+      web: {
+        minHeight: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      } as any,
+      default: {},
+    }),
+  },
 });
