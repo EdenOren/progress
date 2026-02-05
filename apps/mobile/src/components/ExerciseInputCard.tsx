@@ -442,16 +442,9 @@ export function ExerciseInputCard({
               </Text>
               <XStack alignItems="center" gap="$2">
                 {hasFeedback ? (
-                  <>
-                    <Text fontSize={12} color="$textMuted">
-                      {completedSets}/{totalSets} sets · {item.feedback!.rating}
-                    </Text>
-                    {lastSessionItem?.feedback?.rating && (
-                      <Text fontSize={11} color="$textMuted">
-                        (prev: {lastSessionItem.feedback.rating})
-                      </Text>
-                    )}
-                  </>
+                  <Text fontSize={12} color="$textMuted">
+                    {completedSets}/{totalSets} sets completed
+                  </Text>
                 ) : (
                   <Text fontSize={12} color="$primary">
                     {isSessionInProgress ? 'Tap to start' : `${totalSets} sets`}
@@ -460,14 +453,29 @@ export function ExerciseInputCard({
               </XStack>
             </YStack>
 
-            {/* Chevron indicator for expandable items */}
-            {isSessionInProgress && !hasFeedback && (
+            {/* Feedback badge or chevron indicator */}
+            {hasFeedback ? (
+              <Stack
+                backgroundColor={item.feedback!.rating === 'done' ? 'rgba(16, 185, 129, 0.15)' : '$purple5'}
+                paddingHorizontal={10}
+                paddingVertical={4}
+                borderRadius={9999}
+              >
+                <Text
+                  fontSize={12}
+                  fontWeight="600"
+                  color={item.feedback!.rating === 'done' ? '$success' : '$primary'}
+                >
+                  {item.feedback!.rating === 'done' ? 'Done' : 'Up ↑'}
+                </Text>
+              </Stack>
+            ) : isSessionInProgress ? (
               <MaterialCommunityIcons
                 name="chevron-right"
                 size={20}
                 color={theme.textMuted?.val ?? '#71717A'}
               />
-            )}
+            ) : null}
           </XStack>
         </Card>
       </Pressable>
