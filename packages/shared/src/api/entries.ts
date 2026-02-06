@@ -8,6 +8,7 @@ import {
 } from '../schemas/domain';
 import { type Result, ok, err } from '../types/result';
 import { mapSupabaseError, ValidationError, NotFoundError } from '../errors/index';
+import { logWarn } from '../utils/logger';
 
 // Type for raw Supabase query result with nested relations
 type RawItemRow = Database['public']['Tables']['items']['Row'];
@@ -167,11 +168,12 @@ export async function getEntryWithItems(
 
 /**
  * Get the most recent entry for a subject (for "last time" comparison)
+ * @param excludeEntryId - Entry ID to exclude (the current session)
  */
 export async function getLastEntryForSubject(
   userId: string,
   subjectId: string,
-  beforeDate?: string
+  excludeEntryId?: string
 ): Promise<Result<EntryWithItems | null>> {
   const supabase = getSupabase();
 
@@ -180,11 +182,14 @@ export async function getLastEntryForSubject(
     .select('*')
     .eq('user_id', userId)
     .eq('subject_id', subjectId)
+    .eq('is_completed', true)  // Only get completed entries for comparison
     .order('performed_at', { ascending: false })
+    .order('created_at', { ascending: false })  // Secondary sort for same-day entries
     .limit(1);
 
-  if (beforeDate) {
-    query = query.lt('performed_at', beforeDate);
+  // Exclude the current entry by ID (more reliable than date comparison)
+  if (excludeEntryId) {
+    query = query.neq('id', excludeEntryId);
   }
 
   const { data, error } = await query.single();
@@ -319,6 +324,7 @@ interface TemplateItemForEntry {
 /**
  * Create an entry and populate items from template
  * This is the main function for starting a new session
+ * Auto-copies weight/distance values from the last completed session
  */
 export async function createEntryWithTemplate(
   input: EntryInsert,
@@ -338,6 +344,29 @@ export async function createEntryWithTemplate(
   }
 
   const supabase = getSupabase();
+
+  // Fetch last completed session for this subject to copy weight/distance values
+  const lastSessionResult = await getLastCompletedSession(input.user_id, input.subject_id);
+  const lastSession = lastSessionResult.success ? lastSessionResult.data : null;
+
+  // Build a map of exercise_id -> last session's sets for quick lookup
+  const lastSessionSetsByExercise = new Map<string, Array<{
+    set_index: number;
+    weight_kg: number | null;
+    distance_m: number | null;
+  }>>();
+
+  if (lastSession) {
+    for (const item of lastSession.items) {
+      if (item.exercise_id) {
+        lastSessionSetsByExercise.set(item.exercise_id, item.sets.map(s => ({
+          set_index: s.set_index,
+          weight_kg: s.weight_kg,
+          distance_m: s.distance_m,
+        })));
+      }
+    }
+  }
 
   // Create items from template
   const itemsToInsert = templateItems.map((template, index) => ({
@@ -362,7 +391,7 @@ export async function createEntryWithTemplate(
   }
 
   // Create sets for each item based on template default_sets
-  // Pre-fill reps/duration with target values so user only needs to add weight
+  // Pre-fill reps/duration with target values and weight/distance from last session
   const setsToInsert: Array<{
     item_id: string;
     user_id: string;
@@ -371,6 +400,8 @@ export async function createEntryWithTemplate(
     target_duration_sec: number | null;
     reps: number | null;
     duration_sec: number | null;
+    weight_kg: number | null;
+    distance_m: number | null;
   }> = [];
 
   // Type assertion for items returned from insert
@@ -382,7 +413,13 @@ export async function createEntryWithTemplate(
     const template = templateItems[i];
 
     if (item && template) {
+      // Get last session's sets for this exercise
+      const lastSets = lastSessionSetsByExercise.get(template.exercise_id) ?? [];
+
       template.default_sets.forEach((setConfig, setIndex) => {
+        // Find matching set from last session by set_index
+        const lastSet = lastSets.find(s => s.set_index === setIndex);
+
         setsToInsert.push({
           item_id: item.id,
           user_id: input.user_id,
@@ -392,6 +429,9 @@ export async function createEntryWithTemplate(
           // Pre-fill actual values with targets so user only needs to enter weight
           reps: setConfig.target_reps ?? null,
           duration_sec: setConfig.target_duration_seconds ?? null,
+          // Copy weight and distance from last session
+          weight_kg: lastSet?.weight_kg ?? null,
+          distance_m: lastSet?.distance_m ?? null,
         });
       });
     }
@@ -404,9 +444,48 @@ export async function createEntryWithTemplate(
 
     if (setsError) {
       // Log but don't fail - entry and items were created successfully
-      console.warn('Failed to create template sets:', setsError);
+      logWarn('Failed to create template sets', { error: setsError });
     }
   }
 
   return ok(entry);
+}
+
+/**
+ * Get the most recent completed entry for a subject (for auto-copying data)
+ */
+async function getLastCompletedSession(
+  userId: string,
+  subjectId: string
+): Promise<Result<EntryWithItems | null>> {
+  const supabase = getSupabase();
+
+  // Get the last completed entry
+  const { data: entry, error: entryError } = await supabase
+    .from('entries')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('subject_id', subjectId)
+    .eq('is_completed', true)
+    .order('performed_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (entryError) {
+    if (entryError.code === 'PGRST116') {
+      return ok(null); // No previous completed entry
+    }
+    return err(mapSupabaseError(entryError));
+  }
+
+  if (!entry) {
+    return ok(null);
+  }
+
+  // Type assertion for query result
+  type EntryRow = Database['public']['Tables']['entries']['Row'];
+  const typedEntry = entry as EntryRow;
+
+  // Get full entry with items
+  return getEntryWithItems(userId, typedEntry.id);
 }

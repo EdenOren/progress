@@ -75,11 +75,28 @@ export type {
   WorkoutTemplateInsert,
   WorkoutTemplateUpdate,
 
+  // Settings
+  ModuleKey,
+  DistanceUnit,
+  WeightUnit,
+  WorkoutModuleSettings,
+  ModuleSettingsMap,
+  UserSettings,
+  UserSettingsUpdate,
+  ModuleInfo,
+
   // Utility types
   BaseRow,
   UserOwnedRow,
   PaginationParams,
   PaginatedResponse,
+} from './types/index';
+
+// Settings constants
+export {
+  MODULE_INFO,
+  DEFAULT_WORKOUT_SETTINGS,
+  DEFAULT_USER_SETTINGS,
 } from './types/index';
 
 // Result helpers
@@ -165,6 +182,17 @@ export {
   // Pagination
   paginationParamsSchema,
   createPaginatedResponseSchema,
+
+  // Settings
+  moduleKeySchema,
+  distanceUnitSchema,
+  weightUnitSchema,
+  workoutModuleSettingsSchema,
+  moduleSettingsMapSchema,
+  userSettingsSchema,
+  userSettingsUpdateSchema,
+  toggleModuleInputSchema,
+  updateModuleSettingsInputSchema,
 } from './schemas/index';
 
 // ============================================================================
@@ -299,7 +327,26 @@ export {
   hardRemoveFromTemplate,
   reorderTemplate,
   getNextTemplatePosition,
+
+  // Settings
+  getUserSettings,
+  updateUserSettings,
+  toggleModule,
+  updateModuleSettings,
+  getModuleSettings,
+  isModuleEnabled,
+  updateActiveModule,
 } from './api/index';
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+export {
+  WORKOUT_DOMAIN_ID,
+  SLEEP_DOMAIN_ID,
+  NUTRITION_DOMAIN_ID,
+} from './constants/index';
 
 // ============================================================================
 // Utilities
@@ -352,4 +399,10 @@ export {
   addDays,
   getDayOfWeek,
   calculateStreak,
+
+  // Logger utilities
+  logDebug,
+  logInfo,
+  logWarn,
+  logError,
 } from './utils/index';

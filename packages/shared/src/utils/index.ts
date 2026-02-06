@@ -49,3 +49,11 @@ export {
   getDayOfWeek,
   calculateStreak,
 } from './dates';
+
+// Logger utilities
+export {
+  logDebug,
+  logInfo,
+  logWarn,
+  logError,
+} from './logger';

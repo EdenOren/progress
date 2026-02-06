@@ -256,11 +256,106 @@ export interface Database {
         };
         Relationships: [];
       };
+      user_settings: {
+        Row: {
+          id: string;
+          user_id: string;
+          enabled_modules: string[];
+          module_settings: Record<string, unknown>;
+          active_module: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          enabled_modules?: string[];
+          module_settings?: Record<string, unknown>;
+          active_module?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          enabled_modules?: string[];
+          module_settings?: Record<string, unknown>;
+          active_module?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      exercise_library: {
+        Row: {
+          id: string;
+          name: string;
+          icon: string;
+          category: string;
+          muscle_group: string;
+          tracking_type: 'weight_reps' | 'duration' | 'distance';
+          is_system: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          icon: string;
+          category: string;
+          muscle_group: string;
+          tracking_type?: 'weight_reps' | 'duration' | 'distance';
+          is_system?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          icon?: string;
+          category?: string;
+          muscle_group?: string;
+          tracking_type?: 'weight_reps' | 'duration' | 'distance';
+          is_system?: boolean;
+          created_by?: string | null;
+        };
+        Relationships: [];
+      };
+      workout_templates: {
+        Row: {
+          id: string;
+          subject_id: string;
+          exercise_id: string;
+          position: number;
+          default_sets: Array<{ target_reps?: number; target_duration_seconds?: number }>;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          subject_id: string;
+          exercise_id: string;
+          position: number;
+          default_sets?: Array<{ target_reps?: number; target_duration_seconds?: number }>;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          subject_id?: string;
+          exercise_id?: string;
+          position?: number;
+          default_sets?: Array<{ target_reps?: number; target_duration_seconds?: number }>;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
     Enums: {
       feedback_rating: 'done' | 'up';
+      tracking_type: 'weight_reps' | 'duration' | 'distance';
+      exercise_category: 'strength' | 'bodyweight' | 'cardio' | 'flexibility' | 'yoga' | 'pilates';
+      muscle_group: 'chest' | 'back' | 'legs' | 'shoulders' | 'arms' | 'core' | 'cardio' | 'full_body';
     };
     CompositeTypes: Record<string, never>;
   };

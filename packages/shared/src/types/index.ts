@@ -11,6 +11,24 @@ export {
   mapErr,
 } from './result';
 
+// Settings types
+export type {
+  ModuleKey,
+  DistanceUnit,
+  WeightUnit,
+  WorkoutModuleSettings,
+  ModuleSettingsMap,
+  UserSettings,
+  UserSettingsUpdate,
+  ModuleInfo,
+} from './settings';
+
+export {
+  MODULE_INFO,
+  DEFAULT_WORKOUT_SETTINGS,
+  DEFAULT_USER_SETTINGS,
+} from './settings';
+
 // Domain types
 export type {
   // Common

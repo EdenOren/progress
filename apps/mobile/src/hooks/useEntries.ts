@@ -105,16 +105,17 @@ export function useInProgressEntry() {
 
 /**
  * Hook to fetch the last entry for a subject (for comparison)
+ * @param excludeEntryId - Entry ID to exclude (the current session)
  */
-export function useLastEntry(subjectId: string, beforeDate?: string) {
+export function useLastEntry(subjectId: string, excludeEntryId?: string) {
   const { user } = useSupabaseContext();
 
   return useQuery({
-    queryKey: [...QUERY_KEYS.lastEntry(subjectId), beforeDate],
+    queryKey: [...QUERY_KEYS.lastEntry(subjectId), excludeEntryId],
     queryFn: async (): Promise<EntryWithItems | null> => {
       if (!user) throw new Error('Not authenticated');
 
-      const result = await getLastEntryForSubject(user.id, subjectId, beforeDate);
+      const result = await getLastEntryForSubject(user.id, subjectId, excludeEntryId);
       if (!result.success) {
         throw result.error;
       }

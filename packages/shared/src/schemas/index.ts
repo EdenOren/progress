@@ -10,6 +10,19 @@ export {
   exerciseIconSchema,
 } from './domain';
 
+// Settings schemas
+export {
+  moduleKeySchema,
+  distanceUnitSchema,
+  weightUnitSchema,
+  workoutModuleSettingsSchema,
+  moduleSettingsMapSchema,
+  userSettingsSchema,
+  userSettingsUpdateSchema,
+  toggleModuleInputSchema,
+  updateModuleSettingsInputSchema,
+} from './settings';
+
 // Profile schemas
 export {
   profileSchema,

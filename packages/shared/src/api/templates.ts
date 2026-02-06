@@ -12,8 +12,7 @@ export async function getWorkoutTemplate(
 ): Promise<Result<WorkoutTemplateWithExercise[]>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('workout_templates')
     .select(`
       *,
@@ -48,8 +47,7 @@ export async function addToTemplate(
 
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('workout_templates')
     .insert(validatedInput.data)
     .select()
@@ -89,8 +87,7 @@ export async function addMultipleToTemplate(
 
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('workout_templates')
     .insert(validatedInputs)
     .select();
@@ -121,8 +118,7 @@ export async function updateTemplateItem(
 ): Promise<Result<WorkoutTemplate>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('workout_templates')
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', templateItemId)
@@ -149,8 +145,7 @@ export async function removeFromTemplate(
 ): Promise<Result<void>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('workout_templates')
     .update({ is_active: false, updated_at: new Date().toISOString() })
     .eq('id', templateItemId);
@@ -170,8 +165,7 @@ export async function hardRemoveFromTemplate(
 ): Promise<Result<void>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('workout_templates')
     .delete()
     .eq('id', templateItemId);
@@ -194,11 +188,13 @@ export async function reorderTemplate(
 
   // Update positions based on array order
   for (let i = 0; i < orderedIds.length; i++) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const id = orderedIds[i];
+    if (!id) continue; // TypeScript guard
+
+    const { error } = await supabase
       .from('workout_templates')
       .update({ position: i, updated_at: new Date().toISOString() })
-      .eq('id', orderedIds[i])
+      .eq('id', id)
       .eq('subject_id', subjectId);
 
     if (error) {
@@ -217,8 +213,7 @@ export async function getNextTemplatePosition(
 ): Promise<Result<number>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('workout_templates')
     .select('position')
     .eq('subject_id', subjectId)

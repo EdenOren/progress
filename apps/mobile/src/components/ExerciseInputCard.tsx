@@ -10,6 +10,7 @@ import {
   deleteSet,
   setFeedback,
   formatDuration,
+  formatDistance,
   type ItemWithSets,
   type FeedbackRating,
 } from '@progress/shared';
@@ -31,7 +32,7 @@ interface ExerciseInputCardProps {
   isSessionInProgress?: boolean;
   isCollapsed?: boolean;
   onExpand?: () => void;
-  onFeedbackSelected?: (itemId: string) => void;
+  onFeedbackSelected?: (itemId: string, rating: FeedbackRating) => void;
 }
 
 interface LocalSetState {
@@ -39,7 +40,37 @@ interface LocalSetState {
   weight: string;
   reps: string;
   duration: string;
+  distance: string;
   isDirty: boolean;
+}
+
+// Helper: Convert seconds to MM:SS string
+function secondsToMMSS(totalSeconds: number | null): string {
+  if (totalSeconds === null || totalSeconds === 0) return '';
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  if (mins === 0) return secs.toString();
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Helper: Parse MM:SS or plain seconds string to total seconds
+function parseTimeInput(input: string): number | null {
+  if (!input || input.trim() === '') return null;
+  const trimmed = input.trim();
+
+  // Handle MM:SS format
+  if (trimmed.includes(':')) {
+    const parts = trimmed.split(':');
+    if (parts.length === 2) {
+      const mins = parseInt(parts[0], 10) || 0;
+      const secs = parseInt(parts[1], 10) || 0;
+      return mins * 60 + secs;
+    }
+  }
+
+  // Handle plain number (treat as seconds)
+  const num = parseInt(trimmed, 10);
+  return isNaN(num) ? null : num;
 }
 
 export function ExerciseInputCard({
@@ -63,7 +94,11 @@ export function ExerciseInputCard({
       id: set.id,
       weight: set.weight_kg?.toString() ?? '',
       reps: set.reps?.toString() ?? '',
-      duration: set.duration_sec?.toString() ?? '',
+      // Use MM:SS format for distance tracking, plain seconds for duration tracking
+      duration: trackingType === 'distance'
+        ? secondsToMMSS(set.duration_sec)
+        : (set.duration_sec?.toString() ?? ''),
+      distance: set.distance_m ? (set.distance_m / 1000).toString() : '',
       isDirty: false,
     }))
   );
@@ -93,11 +128,15 @@ export function ExerciseInputCard({
         id: set.id,
         weight: set.weight_kg?.toString() ?? '',
         reps: set.reps?.toString() ?? '',
-        duration: set.duration_sec?.toString() ?? '',
+        // Use MM:SS format for distance tracking, plain seconds for duration tracking
+        duration: trackingType === 'distance'
+          ? secondsToMMSS(set.duration_sec)
+          : (set.duration_sec?.toString() ?? ''),
+        distance: set.distance_m ? (set.distance_m / 1000).toString() : '',
         isDirty: false,
       }))
     );
-  }, [item.sets]);
+  }, [item.sets, trackingType]);
 
   // Clear optimistic feedback when server data catches up
   useEffect(() => {
@@ -128,6 +167,19 @@ export function ExerciseInputCard({
       return durations.length > 0 ? durations.join(' · ') : null;
     }
 
+    if (trackingType === 'distance') {
+      const distances = lastSessionItem.sets
+        .filter((s) => s.distance_m !== null)
+        .map((s) => {
+          const distStr = formatDistance(s.distance_m!);
+          if (s.duration_sec !== null) {
+            return `${distStr} in ${formatDuration(s.duration_sec)}`;
+          }
+          return distStr;
+        });
+      return distances.length > 0 ? distances.join(' · ') : null;
+    }
+
     const setStrings = lastSessionItem.sets
       .filter((s) => s.weight_kg !== null || s.reps !== null)
       .map((s) => {
@@ -154,17 +206,20 @@ export function ExerciseInputCard({
       weight_kg,
       reps,
       duration_sec,
+      distance_m,
     }: {
       setId: string;
       weight_kg: number | null;
       reps: number | null;
       duration_sec: number | null;
+      distance_m?: number | null;
     }) => {
       if (!user) throw new Error('Not authenticated');
       const result = await updateSet(user.id, setId, {
         weight_kg,
         reps,
         duration_sec,
+        distance_m,
       });
       if (!result.success) throw result.error;
       return result.data;
@@ -225,9 +280,9 @@ export function ExerciseInputCard({
       // Set optimistic feedback immediately for UI responsiveness
       setOptimisticFeedback(rating);
     },
-    onSuccess: () => {
+    onSuccess: (_, rating) => {
       // Notify parent FIRST (before query invalidation) to update accordion state
-      onFeedbackSelected?.(item.id);
+      onFeedbackSelected?.(item.id, rating);
       // Then refetch data
       queryClient.invalidateQueries({ queryKey: ['entries', 'detail', entryId] });
     },
@@ -241,7 +296,7 @@ export function ExerciseInputCard({
   // Handle input change (just updates local state)
   const handleInputChange = (
     setIndex: number,
-    field: 'weight' | 'reps' | 'duration',
+    field: 'weight' | 'reps' | 'duration' | 'distance',
     value: string
   ): void => {
     setLocalSets((prev) =>
@@ -261,14 +316,20 @@ export function ExerciseInputCard({
 
     const weight_kg = localSet.weight ? parseFloat(localSet.weight) : null;
     const reps = localSet.reps ? parseInt(localSet.reps, 10) : null;
-    const duration_sec = localSet.duration ? parseInt(localSet.duration, 10) : null;
+    // For distance tracking, parse MM:SS format; for duration tracking, parse plain seconds
+    const duration_sec = trackingType === 'distance'
+      ? parseTimeInput(localSet.duration)
+      : (localSet.duration ? parseInt(localSet.duration, 10) : null);
+    // Convert km to meters for storage
+    const distance_m = localSet.distance ? Math.round(parseFloat(localSet.distance) * 1000) : null;
 
     // Check if values actually changed
     const weightChanged = weight_kg !== serverSet.weight_kg;
     const repsChanged = reps !== serverSet.reps;
     const durationChanged = duration_sec !== serverSet.duration_sec;
+    const distanceChanged = distance_m !== serverSet.distance_m;
 
-    if (!weightChanged && !repsChanged && !durationChanged) {
+    if (!weightChanged && !repsChanged && !durationChanged && !distanceChanged) {
       // Mark as not dirty if nothing changed
       setLocalSets((prev) =>
         prev.map((s, i) => (i === setIndex ? { ...s, isDirty: false } : s))
@@ -284,6 +345,7 @@ export function ExerciseInputCard({
         weight_kg,
         reps,
         duration_sec,
+        distance_m,
       });
       // Animate layout change when set is saved
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -316,7 +378,11 @@ export function ExerciseInputCard({
               ...s,
               weight: lastSet.weight_kg?.toString() ?? '',
               reps: lastSet.reps?.toString() ?? '',
-              duration: lastSet.duration_sec?.toString() ?? '',
+              // Use MM:SS format for distance tracking
+              duration: trackingType === 'distance'
+                ? secondsToMMSS(lastSet.duration_sec)
+                : (lastSet.duration_sec?.toString() ?? ''),
+              distance: lastSet.distance_m ? (lastSet.distance_m / 1000).toString() : '',
               isDirty: true,
             }
           : s
@@ -335,6 +401,7 @@ export function ExerciseInputCard({
         weight_kg: lastSet.weight_kg,
         reps: lastSet.reps,
         duration_sec: lastSet.duration_sec ?? null,
+        distance_m: lastSet.distance_m ?? null,
       });
       // Animate layout change when set is copied
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -417,11 +484,13 @@ export function ExerciseInputCard({
 
   // Collapsed view - shown when isCollapsed is true
   if (isCollapsed) {
-    const completedSets = item.sets.filter(s => (s.weight_kg !== null || s.duration_sec !== null)).length;
+    const completedSets = item.sets.filter(s => (s.weight_kg !== null || s.duration_sec !== null || s.distance_m !== null)).length;
     const totalSets = item.sets.length;
     // Use optimistic feedback if server data hasn't caught up yet
     const feedbackRating = item.feedback?.rating ?? optimisticFeedback;
     const hasFeedback = !!feedbackRating;
+    // Last session info for collapsed view
+    const lastFeedback = lastSessionItem?.feedback?.rating;
 
     return (
       <Pressable
@@ -465,6 +534,26 @@ export function ExerciseInputCard({
                   <Text fontSize={12} color="$textMuted">
                     {completedSets}/{totalSets} sets completed
                   </Text>
+                ) : lastFeedback ? (
+                  <XStack alignItems="center" gap="$1">
+                    <Text fontSize={12} color="$textMuted">
+                      Last:
+                    </Text>
+                    <MaterialCommunityIcons
+                      name={lastFeedback === 'done' ? 'check-circle' : 'arrow-up-circle'}
+                      size={12}
+                      color={lastFeedback === 'done'
+                        ? (theme.success?.val ?? '#10B981')
+                        : (theme.primary?.val ?? '#8B5CF6')}
+                    />
+                    <Text
+                      fontSize={12}
+                      color={lastFeedback === 'done' ? '$success' : '$primary'}
+                      fontWeight="500"
+                    >
+                      {lastFeedback === 'done' ? 'Done' : 'Up'}
+                    </Text>
+                  </XStack>
                 ) : (
                   <Text fontSize={12} color="$primary">
                     {isSessionInProgress ? 'Tap to start' : `${totalSets} sets`}
@@ -600,23 +689,62 @@ export function ExerciseInputCard({
         )}
 
         {/* Last session reference */}
-        {lastRef && (
-          <XStack
+        {lastSessionItem && (lastRef || lastSessionItem.feedback || lastSessionItem.note) && (
+          <YStack
             backgroundColor="$blue5"
             paddingHorizontal="$3"
             paddingVertical="$2"
             borderRadius="$2"
-            alignItems="center"
+            gap="$1"
           >
-            <MaterialCommunityIcons
-              name="history"
-              size={14}
-              color={theme.blue10?.val ?? '#3B82F6'}
-            />
-            <Text fontSize={13} color="$secondary" marginLeft="$2">
-              Last: {lastRef}
-            </Text>
-          </XStack>
+            {/* Sets from last session */}
+            {lastRef && (
+              <XStack alignItems="center">
+                <MaterialCommunityIcons
+                  name="history"
+                  size={14}
+                  color={theme.blue10?.val ?? '#3B82F6'}
+                />
+                <Text fontSize={13} color="$secondary" marginLeft="$2">
+                  Last: {lastRef}
+                </Text>
+              </XStack>
+            )}
+            {/* Feedback from last session */}
+            {lastSessionItem.feedback?.rating && (
+              <XStack alignItems="center">
+                <MaterialCommunityIcons
+                  name={lastSessionItem.feedback.rating === 'done' ? 'check-circle' : 'arrow-up-circle'}
+                  size={14}
+                  color={lastSessionItem.feedback.rating === 'done'
+                    ? (theme.success?.val ?? '#10B981')
+                    : (theme.primary?.val ?? '#8B5CF6')}
+                />
+                <Text
+                  fontSize={13}
+                  color={lastSessionItem.feedback.rating === 'done' ? '$success' : '$primary'}
+                  marginLeft="$2"
+                  fontWeight="500"
+                >
+                  Last: {lastSessionItem.feedback.rating === 'done' ? 'Done' : 'Up'}
+                </Text>
+              </XStack>
+            )}
+            {/* Note from last session */}
+            {lastSessionItem.note && (
+              <XStack alignItems="flex-start">
+                <MaterialCommunityIcons
+                  name="note-text-outline"
+                  size={14}
+                  color={theme.blue10?.val ?? '#3B82F6'}
+                  style={{ marginTop: 2 }}
+                />
+                <Text fontSize={13} color="$secondary" marginLeft="$2" fontStyle="italic" flex={1}>
+                  "{lastSessionItem.note}"
+                </Text>
+              </XStack>
+            )}
+          </YStack>
         )}
 
         {/* Sets with inputs */}
@@ -627,7 +755,7 @@ export function ExerciseInputCard({
             const isSaving = serverSet && savingSets.has(serverSet.id);
             const isDeleting = serverSet && deletingSets.has(serverSet.id);
             const isCopied = copiedSetIndex === index;
-            const hasLastSetData = lastSet && (lastSet.weight_kg !== null || lastSet.reps !== null || lastSet.duration_sec !== null);
+            const hasLastSetData = lastSet && (lastSet.weight_kg !== null || lastSet.reps !== null || lastSet.duration_sec !== null || lastSet.distance_m !== null);
             const canDeleteSet = isSessionInProgress && localSets.length > 1;
 
             return (
@@ -640,18 +768,19 @@ export function ExerciseInputCard({
                 gap="$2"
               >
                 {/* Set number */}
-                <Text fontSize="$2" color="$textMuted" width={40}>
+                <Text fontSize="$2" color="$textMuted" width={36}>
                   Set {index + 1}
                 </Text>
 
+                {/* Inputs container - takes remaining space */}
+                <XStack flex={1} alignItems="center" gap="$2">
+
                 {/* Inputs based on tracking type - read-only when session is completed */}
-                {trackingType === 'weight_reps' ? (
-                  <XStack flex={1} alignItems="center" gap="$2" minWidth={0}>
+                {trackingType === 'weight_reps' && (
+                  <XStack alignItems="center" gap="$2">
                     <TextInput
                       style={{
-                        flex: 1,
-                        minWidth: 50,
-                        maxWidth: 80,
+                        width: 70,
                         height: 36,
                         backgroundColor: theme.background?.val ?? '#09090B',
                         borderRadius: 6,
@@ -674,9 +803,7 @@ export function ExerciseInputCard({
                     <Text color="$textMuted" fontSize={16}>×</Text>
                     <TextInput
                       style={{
-                        flex: 1,
-                        minWidth: 50,
-                        maxWidth: 80,
+                        width: 70,
                         height: 36,
                         backgroundColor: theme.background?.val ?? '#09090B',
                         borderRadius: 6,
@@ -697,14 +824,12 @@ export function ExerciseInputCard({
                       editable={isSessionInProgress}
                     />
                   </XStack>
-                ) : (
-                  // Duration input
-                  <XStack flex={1} alignItems="center" gap="$2" minWidth={0}>
+                )}
+                {trackingType === 'duration' && (
+                  <XStack alignItems="center" gap="$2">
                     <TextInput
                       style={{
-                        flex: 1,
-                        minWidth: 60,
-                        maxWidth: 100,
+                        width: 80,
                         height: 36,
                         backgroundColor: theme.background?.val ?? '#09090B',
                         borderRadius: 6,
@@ -727,7 +852,60 @@ export function ExerciseInputCard({
                     <Text fontSize={12} color="$textMuted">sec</Text>
                   </XStack>
                 )}
+                {trackingType === 'distance' && (
+                  <XStack alignItems="center" gap="$2">
+                    <TextInput
+                      style={{
+                        width: 60,
+                        height: 36,
+                        backgroundColor: theme.background?.val ?? '#09090B',
+                        borderRadius: 6,
+                        borderWidth: 1,
+                        borderColor: theme.borderColor?.val ?? '#27272A',
+                        paddingHorizontal: 8,
+                        fontSize: 14,
+                        color: theme.color?.val ?? '#FAFAFA',
+                        textAlign: 'center',
+                        opacity: isSessionInProgress ? 1 : 0.6,
+                      }}
+                      placeholder="0.0"
+                      placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
+                      keyboardType="decimal-pad"
+                      value={localSet.distance}
+                      onChangeText={(v) => handleInputChange(index, 'distance', v)}
+                      onBlur={() => handleBlur(index)}
+                      editable={isSessionInProgress}
+                    />
+                    <Text fontSize={12} color="$textMuted">km</Text>
+                    <Text color="$textMuted" fontSize={12}>in</Text>
+                    <TextInput
+                      style={{
+                        width: 60,
+                        height: 36,
+                        backgroundColor: theme.background?.val ?? '#09090B',
+                        borderRadius: 6,
+                        borderWidth: 1,
+                        borderColor: theme.borderColor?.val ?? '#27272A',
+                        paddingHorizontal: 8,
+                        fontSize: 14,
+                        color: theme.color?.val ?? '#FAFAFA',
+                        textAlign: 'center',
+                        opacity: isSessionInProgress ? 1 : 0.6,
+                      }}
+                      placeholder="m:ss"
+                      placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
+                      keyboardType="numbers-and-punctuation"
+                      value={localSet.duration}
+                      onChangeText={(v) => handleInputChange(index, 'duration', v)}
+                      onBlur={() => handleBlur(index)}
+                      editable={isSessionInProgress}
+                    />
+                  </XStack>
+                )}
+                </XStack>
 
+                {/* Action buttons - aligned to right */}
+                <XStack alignItems="center" gap="$1">
                 {/* Copy button - only show when session is in progress */}
                 {hasLastSetData && isSessionInProgress && (
                   <Pressable
@@ -801,6 +979,7 @@ export function ExerciseInputCard({
                     </Stack>
                   </Pressable>
                 )}
+                </XStack>
               </XStack>
             );
           })}

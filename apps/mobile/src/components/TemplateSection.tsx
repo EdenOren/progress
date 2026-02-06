@@ -41,13 +41,18 @@ export function TemplateSection({ subjectId, hasInProgressSession = false, defau
 
   const handleAddExercises = useCallback((exercises: Exercise[], overrideSets?: Array<{ target_reps: number }>) => {
     // Priority: overrideSets (from AddExerciseSheet) > defaultSets (from subject) > fallback
-    const sets = overrideSets ?? defaultSets ?? [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }];
+    const weightRepsSets = overrideSets ?? defaultSets ?? [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }];
+    // Distance/duration exercises always get 1 set (you do one run, not 3 sets of running)
+    const cardioSets = [{}];
 
     // Use bulk mutation - single API call instead of one per exercise
     bulkAddExercises.mutate(
       exercises.map(exercise => ({
         exerciseId: exercise.id,
-        defaultSets: sets,
+        // Use 1 set for distance/duration, otherwise use weight_reps defaults
+        defaultSets: exercise.tracking_type === 'distance' || exercise.tracking_type === 'duration'
+          ? cardioSets
+          : weightRepsSets,
       }))
     );
   }, [bulkAddExercises, defaultSets]);

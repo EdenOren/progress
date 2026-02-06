@@ -7,8 +7,9 @@ import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
+import { Alert } from 'react-native';
 import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../../src/components';
-import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useWorkoutTemplate, useDeleteEntry } from '../../../src/hooks';
+import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useWorkoutTemplate, useDeleteEntry, useHardDeleteSubject } from '../../../src/hooks';
 import { showSuccessToast } from '../../../src/utils';
 
 export default function SubjectDetailScreen(): React.ReactElement {
@@ -19,6 +20,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
   const createEntry = useCreateEntry();
   const createEntryWithTemplate = useCreateEntryWithTemplate();
   const deleteEntry = useDeleteEntry();
+  const deleteSubject = useHardDeleteSubject();
   const theme = useTheme();
 
   const isCreatingEntry = createEntry.isPending || createEntryWithTemplate.isPending;
@@ -72,6 +74,29 @@ export default function SubjectDetailScreen(): React.ReactElement {
       }
     );
   }, [deleteEntry, id]);
+
+  const handleDeleteWorkout = useCallback((): void => {
+    if (!subject || deleteSubject.isPending) return;
+    Alert.alert(
+      'Delete Workout',
+      `Are you sure you want to delete "${subject.name}"? This will permanently delete all sessions and data.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteSubject.mutate(id, {
+              onSuccess: () => {
+                showSuccessToast('Workout deleted successfully');
+                router.replace('/');
+              },
+            });
+          },
+        },
+      ]
+    );
+  }, [subject, deleteSubject, id]);
 
   const renderEntry = ({ item }: { item: Entry }): React.ReactElement => (
     <Stack marginHorizontal={16} marginBottom={12}>
@@ -164,6 +189,24 @@ export default function SubjectDetailScreen(): React.ReactElement {
         options={{
           title: subject.name,
           headerBackTitle: 'Back',
+          headerRightContainerStyle: { paddingRight: 16 },
+          headerRight: () => (
+            deleteSubject.isPending ? (
+              <ActivityIndicator size="small" color={theme.error?.val} />
+            ) : (
+              <Pressable
+                onPress={handleDeleteWorkout}
+                style={{ padding: 8, cursor: 'pointer', userSelect: 'none' } as never}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <MaterialCommunityIcons
+                  name="trash-can-outline"
+                  size={22}
+                  color={theme.error?.val ?? '#EF4444'}
+                />
+              </Pressable>
+            )
+          ),
         }}
       />
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>

@@ -5,7 +5,7 @@ import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useSupabaseContext, useModule, type ModuleType } from '../../src/providers';
+import { useSupabaseContext } from '../../src/providers';
 import { useAuth } from '../../src/hooks';
 
 interface MenuRowProps {
@@ -63,86 +63,9 @@ function MenuRow({ icon, label, onPress, rightElement, color }: MenuRowProps): R
   );
 }
 
-interface ModuleRowProps {
-  icon: string;
-  label: string;
-  moduleKey: ModuleType;
-  currentModule: ModuleType;
-  onSelect: (module: ModuleType) => void;
-  disabled?: boolean;
-  comingSoon?: boolean;
-}
-
-function ModuleRow({
-  icon,
-  label,
-  moduleKey,
-  currentModule,
-  onSelect,
-  disabled,
-  comingSoon,
-}: ModuleRowProps): React.ReactElement {
-  const theme = useTheme();
-  const isSelected = currentModule === moduleKey;
-
-  return (
-    <Pressable
-      onPress={() => !disabled && onSelect(moduleKey)}
-      disabled={disabled}
-      style={{ cursor: disabled ? 'default' : 'pointer', userSelect: 'none' } as never}
-    >
-      <XStack
-        backgroundColor="$backgroundHover"
-        paddingHorizontal="$4"
-        paddingVertical="$3"
-        borderRadius="$3"
-        alignItems="center"
-        gap="$3"
-        opacity={disabled ? 0.5 : 1}
-        borderWidth={isSelected ? 2 : 0}
-        borderColor={isSelected ? '$primary' : 'transparent'}
-        hoverStyle={disabled ? {} : { opacity: 0.8 }}
-        pressStyle={disabled ? {} : { opacity: 0.7 }}
-      >
-        <Stack
-          width={36}
-          height={36}
-          borderRadius={18}
-          backgroundColor={isSelected ? '$primary' : '$backgroundPress'}
-          alignItems="center"
-          justifyContent="center"
-        >
-          <MaterialCommunityIcons
-            name={icon as never}
-            size={20}
-            color={isSelected ? 'white' : theme.textMuted?.val ?? '#71717A'}
-          />
-        </Stack>
-        <Text flex={1} fontSize={16} color={disabled ? '$textMuted' : '$color'}>
-          {label}
-        </Text>
-        {comingSoon ? (
-          <Stack backgroundColor="$backgroundPress" paddingHorizontal="$2" paddingVertical="$1" borderRadius="$2">
-            <Text fontSize={11} color="$textMuted">
-              Coming Soon
-            </Text>
-          </Stack>
-        ) : isSelected ? (
-          <MaterialCommunityIcons
-            name="check"
-            size={20}
-            color={theme.primary?.val ?? '#8B5CF6'}
-          />
-        ) : null}
-      </XStack>
-    </Pressable>
-  );
-}
-
 export default function MenuScreen(): React.ReactElement {
   const { user } = useSupabaseContext();
   const { signOut } = useAuth();
-  const { currentModule, setModule } = useModule();
   const theme = useTheme();
 
   const handleSignOut = async (): Promise<void> => {
@@ -150,11 +73,6 @@ export default function MenuScreen(): React.ReactElement {
     if (result.success) {
       router.replace('/(auth)/login');
     }
-  };
-
-  const handleModuleSelect = (module: ModuleType): void => {
-    setModule(module);
-    router.navigate('/(tabs)');
   };
 
   return (
@@ -204,38 +122,6 @@ export default function MenuScreen(): React.ReactElement {
             />
           </XStack>
         </Pressable>
-
-        {/* Modules Section */}
-        <YStack gap="$3">
-          <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase" marginLeft="$2">
-            Modules
-          </Text>
-          <YStack gap="$2">
-            <ModuleRow
-              icon="dumbbell"
-              label="Workout"
-              moduleKey="workout"
-              currentModule={currentModule}
-              onSelect={handleModuleSelect}
-            />
-            <ModuleRow
-              icon="sleep"
-              label="Sleep"
-              moduleKey="sleep"
-              currentModule={currentModule}
-              onSelect={handleModuleSelect}
-            />
-            <ModuleRow
-              icon="food-apple-outline"
-              label="Nutrition"
-              moduleKey={'nutrition' as ModuleType}
-              currentModule={currentModule}
-              onSelect={() => {}}
-              disabled
-              comingSoon
-            />
-          </YStack>
-        </YStack>
 
         {/* Settings Section */}
         <YStack gap="$3">

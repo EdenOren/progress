@@ -5,6 +5,7 @@ import { Text, Stack } from '@tamagui/core';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { WORKOUT_DOMAIN_ID } from '@progress/shared';
 import { useCreateSubject } from '../hooks';
 import { getErrorMessage } from '../utils';
 import { Button } from './Button';
@@ -34,9 +35,6 @@ interface SetPreset {
 
 // Default preset (first same reps preset - guaranteed to exist)
 const DEFAULT_PRESET: SetPreset = { label: '3×10', sets: [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }] };
-
-// Hardcoded workout domain ID (from seed.sql)
-const WORKOUT_DOMAIN_ID = 'd0000000-0000-0000-0000-000000000001';
 
 const createSubjectSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),

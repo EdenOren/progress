@@ -16,6 +16,40 @@ import {
   useDeleteEntry,
 } from '../../../src/hooks';
 import { showSuccessToast } from '../../../src/utils';
+import type { EntryWithItems } from '@progress/shared';
+
+/** Format seconds to MM:SS or HH:MM:SS */
+function formatTimer(seconds: number): string {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  if (hrs > 0) {
+    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+/** Find matching item from last session by exercise_id or name */
+function getLastSessionItem(
+  item: ItemWithSets,
+  lastEntry: EntryWithItems | null | undefined
+): ItemWithSets | null {
+  if (!lastEntry) return null;
+
+  // Try to match by exercise_id first if available
+  const itemWithExercise = item as ItemWithSets & { exercise_id?: string };
+  if (itemWithExercise.exercise_id) {
+    const matchById = lastEntry.items.find(
+      (lastItem) => (lastItem as ItemWithSets & { exercise_id?: string }).exercise_id === itemWithExercise.exercise_id
+    );
+    if (matchById) return matchById;
+  }
+
+  // Fall back to matching by name (case-insensitive)
+  return lastEntry.items.find(
+    (lastItem) => lastItem.name.toLowerCase() === item.name.toLowerCase()
+  ) ?? null;
+}
 
 export default function EntryScreen(): React.ReactElement {
   const params = useLocalSearchParams<{ id: string }>();
@@ -24,7 +58,7 @@ export default function EntryScreen(): React.ReactElement {
 
   const { data: lastEntry } = useLastEntry(
     entry?.subject_id ?? '',
-    entry?.performed_at
+    entry?.id  // Exclude current entry by ID
   );
   const completeEntry = useCompleteEntry();
   const deleteEntry = useDeleteEntry();
@@ -40,9 +74,12 @@ export default function EntryScreen(): React.ReactElement {
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [finalDuration, setFinalDuration] = useState(0);
+  const [finalStats, setFinalStats] = useState({ done: 0, up: 0, total: 0 });
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const [contentHeight, setContentHeight] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
+  // Track items that have been marked with feedback this session (to handle stale data)
+  const [markedItems, setMarkedItems] = useState<Map<string, 'done' | 'up'>>(new Map());
   const theme = useTheme();
 
   // Disable scroll when content doesn't overflow
@@ -66,16 +103,25 @@ export default function EntryScreen(): React.ReactElement {
   }, []);
 
   // Handle feedback selection - collapse current item and auto-expand next item without feedback
-  const handleFeedbackSelected = useCallback((itemId: string) => {
+  const handleFeedbackSelected = useCallback((itemId: string, rating: 'done' | 'up') => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+    // Track this item as marked with its rating (handles stale data issue)
+    setMarkedItems(prev => new Map(prev).set(itemId, rating));
+
     if (!entry?.items) {
       setExpandedItemId(null);
       return;
     }
-    // Find next item without feedback (excluding current item)
-    const nextItem = entry.items.find(i => i.id !== itemId && !i.feedback);
+
+    // Find next item without feedback (excluding current item and any we've marked this session)
+    const nextItem = entry.items.find(i =>
+      i.id !== itemId &&
+      !i.feedback &&
+      !markedItems.has(i.id)
+    );
     setExpandedItemId(nextItem?.id ?? null);
-  }, [entry?.items]);
+  }, [entry?.items, markedItems]);
 
   // Sort items: expanded first, then no feedback, then with feedback at bottom
   const sortedItems = useMemo(() => {
@@ -116,23 +162,27 @@ export default function EntryScreen(): React.ReactElement {
     return () => clearInterval(interval);
   }, [entry?.id, entry?.is_completed, entry?.started_at, entry?.created_at]);
 
-  // Format seconds to MM:SS or HH:MM:SS
-  const formatTimer = (seconds: number): string => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    if (hrs > 0) {
-      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const handleComplete = (): void => {
-    if (!entryId || completeEntry.isPending) return;
+    if (!entryId || completeEntry.isPending || !entry) return;
+
+    // Capture stats - combine server data with locally tracked feedback (handles stale data)
+    let doneCount = 0;
+    let upCount = 0;
+
+    entry.items.forEach(item => {
+      // Check local tracked feedback first (more recent), then server data
+      const localRating = markedItems.get(item.id);
+      const rating = localRating ?? item.feedback?.rating;
+
+      if (rating === 'done') doneCount++;
+      else if (rating === 'up') upCount++;
+    });
+
     completeEntry.mutate(entryId, {
       onSuccess: () => {
-        // Save final duration and show summary
+        // Save final duration and stats, then show summary
         setFinalDuration(elapsedSeconds);
+        setFinalStats({ done: doneCount, up: upCount, total: entry.items.length });
         setShowSummary(true);
       },
     });
@@ -154,25 +204,6 @@ export default function EntryScreen(): React.ReactElement {
         },
       }
     );
-  };
-
-  // Find matching item from last session by name or exercise_id
-  const getLastSessionItem = (item: ItemWithSets): ItemWithSets | null => {
-    if (!lastEntry) return null;
-
-    // Try to match by exercise_id first if available
-    const itemWithExercise = item as ItemWithSets & { exercise_id?: string };
-    if (itemWithExercise.exercise_id) {
-      const matchById = lastEntry.items.find(
-        (lastItem) => (lastItem as ItemWithSets & { exercise_id?: string }).exercise_id === itemWithExercise.exercise_id
-      );
-      if (matchById) return matchById;
-    }
-
-    // Fall back to matching by name (case-insensitive)
-    return lastEntry.items.find(
-      (lastItem) => lastItem.name.toLowerCase() === item.name.toLowerCase()
-    ) ?? null;
   };
 
   // Show loading while we don't have data yet
@@ -215,8 +246,9 @@ export default function EntryScreen(): React.ReactElement {
         options={{
           title: formatDate(entry.performed_at),
           headerBackTitle: 'Back',
+          headerRightContainerStyle: { paddingRight: 16 },
           headerRight: () => (
-            <XStack alignItems="center" gap={8} marginRight={8}>
+            <XStack alignItems="center" gap="$3">
               {/* Timer - only show for in-progress sessions */}
               {!entry.is_completed && (
                 <Text style={{ fontSize: 14, fontWeight: '600', color: theme.textMuted?.val ?? '#888', fontVariant: ['tabular-nums'] }}>
@@ -389,7 +421,7 @@ export default function EntryScreen(): React.ReactElement {
                   key={item.id}
                   item={item}
                   entryId={entry.id}
-                  lastSessionItem={showComparisonHint ? getLastSessionItem(item) : null}
+                  lastSessionItem={showComparisonHint ? getLastSessionItem(item, lastEntry) : null}
                   isSessionInProgress={!entry.is_completed}
                   isCollapsed={item.id !== expandedItemId}
                   onExpand={() => handleExpandItem(item.id)}
@@ -481,7 +513,7 @@ export default function EntryScreen(): React.ReactElement {
                     </YStack>
                     <YStack alignItems="center">
                       <Text fontSize={24} fontWeight="700" color="$primary">
-                        {entry.items.length}
+                        {finalStats.total}
                       </Text>
                       <Text fontSize={12} color="$textMuted">Exercises</Text>
                     </YStack>
@@ -489,13 +521,13 @@ export default function EntryScreen(): React.ReactElement {
                   <XStack gap={24}>
                     <YStack alignItems="center">
                       <Text fontSize={18} fontWeight="600" color="$success">
-                        {entry.items.filter(i => i.feedback?.rating === 'done').length}
+                        {finalStats.done}
                       </Text>
                       <Text fontSize={11} color="$textMuted">Done</Text>
                     </YStack>
                     <YStack alignItems="center">
                       <Text fontSize={18} fontWeight="600" color="$primary">
-                        {entry.items.filter(i => i.feedback?.rating === 'up').length}
+                        {finalStats.up}
                       </Text>
                       <Text fontSize={11} color="$textMuted">Up</Text>
                     </YStack>

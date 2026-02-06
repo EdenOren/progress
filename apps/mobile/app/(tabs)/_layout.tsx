@@ -1,16 +1,83 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import React, { useState } from 'react';
+import { Tabs, Redirect } from 'expo-router';
+import { useColorScheme, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useModule } from '../../src/providers';
+import { XStack } from '@tamagui/stacks';
+import { Text } from '@tamagui/core';
+import { useModule, useSupabaseContext } from '../../src/providers';
+import { ModuleSelectorSheet, LoadingScreen } from '../../src/components';
+
+function HeaderTitle(): React.ReactElement {
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const { currentModule, enabledModules, setModule } = useModule();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme !== 'light';
+
+  const titleText = currentModule === 'sleep' ? 'Sleep' : 'Workouts';
+  const textColor = isDark ? '#FAFAFA' : '#18181B';
+
+  // Only show dropdown if there are multiple enabled modules
+  const hasMultipleModules = enabledModules.length > 1;
+
+  const handlePress = (): void => {
+    if (hasMultipleModules) {
+      setSheetOpen(true);
+    }
+  };
+
+  return (
+    <>
+      <Pressable
+        onPress={handlePress}
+        disabled={!hasMultipleModules}
+        style={{ cursor: hasMultipleModules ? 'pointer' : 'default', userSelect: 'none' } as never}
+      >
+        <XStack alignItems="center" gap={4}>
+          <Text
+            fontSize={17}
+            fontWeight="600"
+            color={textColor}
+          >
+            {titleText}
+          </Text>
+          {hasMultipleModules && (
+            <MaterialCommunityIcons
+              name="chevron-down"
+              size={20}
+              color={textColor}
+            />
+          )}
+        </XStack>
+      </Pressable>
+
+      <ModuleSelectorSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onSelectModule={setModule}
+        currentModule={currentModule}
+        enabledModules={enabledModules}
+      />
+    </>
+  );
+}
 
 export default function TabsLayout(): React.ReactElement {
+  const { session, isLoading } = useSupabaseContext();
   const colorScheme = useColorScheme();
   const isDark = colorScheme !== 'light';
   const { currentModule } = useModule();
 
-  const homeTitle = currentModule === 'sleep' ? 'Sleep' : 'Workouts';
+  // Auth guard: Redirect to login if not authenticated (prevents deep-link bypass)
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  if (!session) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   const homeIcon = currentModule === 'sleep' ? 'sleep' : 'dumbbell';
+  const tabLabel = currentModule === 'sleep' ? 'Sleep' : 'Workouts';
 
   return (
     <Tabs
@@ -39,8 +106,8 @@ export default function TabsLayout(): React.ReactElement {
       <Tabs.Screen
         name="index"
         options={{
-          title: homeTitle,
-          tabBarLabel: homeTitle,
+          headerTitle: () => <HeaderTitle />,
+          tabBarLabel: tabLabel,
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name={homeIcon}

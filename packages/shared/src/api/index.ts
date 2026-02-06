@@ -101,3 +101,14 @@ export {
   reorderTemplate,
   getNextTemplatePosition,
 } from './templates';
+
+// Settings API
+export {
+  getUserSettings,
+  updateUserSettings,
+  toggleModule,
+  updateModuleSettings,
+  getModuleSettings,
+  isModuleEnabled,
+  updateActiveModule,
+} from './settings';

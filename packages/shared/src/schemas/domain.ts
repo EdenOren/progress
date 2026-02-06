@@ -23,7 +23,7 @@ export const feedbackRatingSchema = z.enum(['done', 'up']);
 export const trackingTypeSchema = z.enum(['weight_reps', 'duration', 'distance']);
 
 /** Exercise category */
-export const exerciseCategorySchema = z.enum(['strength', 'bodyweight', 'cardio', 'flexibility']);
+export const exerciseCategorySchema = z.enum(['strength', 'bodyweight', 'cardio', 'flexibility', 'yoga', 'pilates']);
 
 /** Muscle group */
 export const muscleGroupSchema = z.enum(['chest', 'back', 'legs', 'shoulders', 'arms', 'core', 'cardio', 'full_body']);

@@ -48,3 +48,10 @@ export {
 } from './useSets';
 export { useUpdateItem, useDeleteItem } from './useItems';
 export { useAppColorScheme } from './useAppColorScheme';
+export {
+  useUserSettings,
+  useUpdateSettings,
+  useToggleModule,
+  useUpdateModuleSettings,
+  useUpdateWorkoutSettings,
+} from './useSettings';

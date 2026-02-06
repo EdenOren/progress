@@ -14,8 +14,7 @@ export async function searchExercises(
 ): Promise<Result<Exercise[]>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('exercise_library')
     .select('*')
     .or(`is_system.eq.true,created_by.eq.${userId}`)
@@ -41,8 +40,7 @@ export async function searchExercises(
 export async function getAllExercises(userId: string): Promise<Result<Exercise[]>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('exercise_library')
     .select('*')
     .or(`is_system.eq.true,created_by.eq.${userId}`)
@@ -70,8 +68,7 @@ export async function getExercisesByMuscleGroup(
 ): Promise<Result<Exercise[]>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('exercise_library')
     .select('*')
     .or(`is_system.eq.true,created_by.eq.${userId}`)
@@ -99,8 +96,7 @@ export async function getExerciseById(
 ): Promise<Result<Exercise>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('exercise_library')
     .select('*')
     .eq('id', exerciseId)
@@ -138,8 +134,7 @@ export async function createCustomExercise(
 
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('exercise_library')
     .insert({
       ...validatedInput.data,
@@ -169,8 +164,7 @@ export async function deleteCustomExercise(
 ): Promise<Result<void>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('exercise_library')
     .delete()
     .eq('id', exerciseId)
@@ -194,8 +188,7 @@ export async function updateExerciseIcon(
 ): Promise<Result<Exercise>> {
   const supabase = getSupabase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('exercise_library')
     .update({ icon })
     .eq('id', exerciseId)

@@ -23,7 +23,7 @@ export type FeedbackRating = 'done' | 'up';
 export type TrackingType = 'weight_reps' | 'duration' | 'distance';
 
 /** Exercise category */
-export type ExerciseCategory = 'strength' | 'bodyweight' | 'cardio' | 'flexibility';
+export type ExerciseCategory = 'strength' | 'bodyweight' | 'cardio' | 'flexibility' | 'yoga' | 'pilates';
 
 /** Muscle group */
 export type MuscleGroup = 'chest' | 'back' | 'legs' | 'shoulders' | 'arms' | 'core' | 'cardio' | 'full_body';

@@ -505,3 +505,180 @@ CREATE POLICY "Users can access own data"
 - React Query hooks
 - Zod validation schemas
 - Auth flow components
+
+---
+
+## Anti-Patterns to Avoid
+
+These are common mistakes identified during code reviews. Follow these guidelines to maintain code quality.
+
+### 1. Missing Auth Guards
+
+**Problem**: Protected routes can be bypassed via deep links.
+
+```typescript
+// WRONG - No auth check
+export default function ProtectedScreen() {
+  return <Content />;
+}
+
+// CORRECT - Always guard protected routes
+export default function ProtectedScreen() {
+  const { session, isLoading } = useSupabaseContext();
+
+  if (isLoading) return <LoadingScreen />;
+  if (!session) return <Redirect href="/(auth)/login" />;
+
+  return <Content />;
+}
+```
+
+### 2. Using `as any` for Missing Database Types
+
+**Problem**: When a table isn't in the Database interface, using `as any` bypasses type safety.
+
+```typescript
+// WRONG - Using `as any` to bypass missing types
+const { data } = await (supabase as any).from('new_table').select('*');
+
+// CORRECT - Add table to Database interface first
+// In packages/shared/src/supabase/client.ts:
+interface Database {
+  public: {
+    Tables: {
+      new_table: {
+        Row: { /* columns */ };
+        Insert: { /* columns */ };
+        Update: { /* columns */ };
+      };
+    };
+  };
+}
+```
+
+### 3. Utility Functions Inside Components
+
+**Problem**: Functions recreated on every render, harder to test.
+
+```typescript
+// WRONG - Function inside component
+function MyComponent() {
+  const formatTimer = (seconds: number) => { /* ... */ };
+  return <Text>{formatTimer(elapsed)}</Text>;
+}
+
+// CORRECT - Function outside component
+function formatTimer(seconds: number): string { /* ... */ }
+
+function MyComponent() {
+  return <Text>{formatTimer(elapsed)}</Text>;
+}
+```
+
+### 4. Hardcoded UUIDs
+
+**Problem**: Scattered magic values, hard to maintain.
+
+```typescript
+// WRONG - Hardcoded UUID in component
+const WORKOUT_DOMAIN_ID = 'd0000000-0000-0000-0000-000000000001';
+
+// CORRECT - Import from shared constants
+import { WORKOUT_DOMAIN_ID } from '@progress/shared';
+```
+
+### 5. Using console.log/warn/error
+
+**Problem**: No structured logging, can't filter or aggregate.
+
+```typescript
+// WRONG - Direct console usage
+console.warn('Failed to create sets:', error);
+
+// CORRECT - Use logger utility
+import { logWarn } from '@progress/shared';
+logWarn('Failed to create sets', { error });
+```
+
+### 6. Stale State in Async Operations
+
+**Problem**: Using state that may be outdated when async operation completes.
+
+```typescript
+// WRONG - Reading state after async, may be stale
+const handleComplete = () => {
+  completeEntry.mutate(entryId, {
+    onSuccess: () => {
+      // items may have changed since mutation started
+      const count = entry.items.filter(i => i.feedback).length;
+    },
+  });
+};
+
+// CORRECT - Capture values before mutation
+const handleComplete = () => {
+  // Capture current state before async operation
+  const stats = calculateStats(entry.items, localMarkedItems);
+
+  completeEntry.mutate(entryId, {
+    onSuccess: () => {
+      showSummary(stats); // Use captured values
+    },
+  });
+};
+```
+
+### 7. Not Tracking Local State for Optimistic Updates
+
+**Problem**: React Query cache may be stale, causing UI glitches.
+
+```typescript
+// WRONG - Relying only on server state
+const isMarked = item.feedback !== null;
+
+// CORRECT - Track local state for items marked this session
+const [markedItems, setMarkedItems] = useState<Map<string, 'done' | 'up'>>(new Map());
+
+const handleFeedback = (itemId: string, rating: 'done' | 'up') => {
+  setMarkedItems(prev => new Map(prev).set(itemId, rating));
+};
+
+const isMarked = item.feedback !== null || markedItems.has(item.id);
+```
+
+### 8. Using Sequential IDs Instead of UUIDs
+
+**Problem**: Sequential IDs leak information and are predictable.
+
+```sql
+-- WRONG - Sequential IDs
+CREATE TABLE entries (
+  id SERIAL PRIMARY KEY
+);
+
+-- CORRECT - UUIDs
+CREATE TABLE entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+);
+```
+
+### 9. Oversized Components
+
+**Problem**: Hard to maintain, test, and understand.
+
+- Screen components should be < 300 lines
+- Extract sections into subcomponents
+- Move logic to custom hooks
+- Keep UI components presentation-focused
+
+### 10. Missing Index Signature Access
+
+**Problem**: TypeScript strict mode requires bracket notation for index signatures.
+
+```typescript
+// WRONG - Dot notation on index signature
+if (process.env.NODE_ENV !== 'production') { }
+
+// CORRECT - Bracket notation
+if (process.env['NODE_ENV'] !== 'production') { }
+```

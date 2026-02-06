@@ -213,6 +213,36 @@ Targets for future sessions, per item within a subject.
 
 ---
 
+### user_settings
+
+User preferences and module configuration.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | UUID | PK | Settings ID |
+| `user_id` | UUID | FK → auth.users, UNIQUE, NOT NULL | Owner |
+| `enabled_modules` | TEXT[] | NOT NULL, default ['workout'] | Array of enabled module keys |
+| `active_module` | TEXT | NOT NULL, default 'workout' | Currently selected module |
+| `module_settings` | JSONB | NOT NULL, default '{}' | Module-specific settings |
+| `created_at` | TIMESTAMPTZ | NOT NULL, default NOW() | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | NOT NULL, default NOW() | Last update timestamp |
+
+**Check constraint**: `active_module` must be one of 'workout', 'sleep', 'nutrition'.
+
+**Auto-creation**: Settings are automatically created via trigger when a user signs up.
+
+**Module settings JSONB structure**:
+```json
+{
+  "workout": {
+    "distance_unit": "km",
+    "weight_unit": "kg"
+  }
+}
+```
+
+---
+
 ## Row Level Security (RLS)
 
 All tables have RLS enabled with the following policy pattern:
@@ -249,9 +279,10 @@ Automatically updates `updated_at` on UPDATE for:
 - `subjects`
 - `entries`
 - `goals`
+- `user_settings`
 
 ### `handle_new_user()`
-Automatically creates a profile when a user signs up via Supabase Auth.
+Automatically creates a profile and user_settings when a user signs up via Supabase Auth.
 
 ---
 
@@ -272,6 +303,7 @@ Automatically creates a profile when a user signs up via Supabase Auth.
 | item_sets | idx_item_sets_item_index | item_id, set_index | Ordered sets |
 | item_feedback | idx_item_feedback_item_id | item_id | Feedback lookup |
 | goals | idx_goals_user_subject | user_id, subject_id | Goals per subject |
+| user_settings | idx_user_settings_user_id | user_id | Settings lookup |
 
 ---
 
@@ -315,6 +347,13 @@ LIMIT 1;
 ## Migration Files
 
 - `001_initial_schema.sql` - Creates all tables, RLS policies, triggers, indexes
+- `002_exercise_library.sql` - Adds exercise library table
+- `003_feedback_unique_constraint.sql` - Adds unique constraint on item_feedback
+- `004_update_feedback_rating_enum.sql` - Updates feedback rating enum
+- `005_add_subject_default_sets.sql` - Adds default sets to subjects
+- `006_add_yoga_pilates_cardio_exercises.sql` - Adds more exercises
+- `007_user_settings.sql` - Adds user_settings table
+- `008_active_module.sql` - Adds active_module column for cross-device sync
 
 ## Seed Files
 
