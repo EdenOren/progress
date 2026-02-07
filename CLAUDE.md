@@ -258,6 +258,85 @@ Workflow:
 
 ---
 
+## Database Migration Rules (CRITICAL)
+
+**ALL migrations MUST be backwards compatible with existing data. NO DATA LOSS is acceptable.**
+
+### Mandatory Rules
+
+1. **NEVER drop columns** that contain user data
+2. **NEVER drop tables** that contain user data
+3. **NEVER change column types** in ways that lose precision or data
+4. **NEVER add NOT NULL constraints** to existing columns without a DEFAULT value
+5. **NEVER rename columns** - add new column, migrate data, then deprecate old (in separate migration)
+
+### Safe Migration Patterns
+
+```sql
+-- SAFE: Adding a new nullable column
+ALTER TABLE entries ADD COLUMN new_field TEXT;
+
+-- SAFE: Adding a new column with default
+ALTER TABLE entries ADD COLUMN status TEXT NOT NULL DEFAULT 'active';
+
+-- SAFE: Adding a new table
+CREATE TABLE new_feature (...);
+
+-- SAFE: Adding an index
+CREATE INDEX idx_entries_date ON entries(performed_at);
+
+-- SAFE: Adding a CHECK constraint (validates future data only)
+ALTER TABLE entries ADD CONSTRAINT check_positive CHECK (value >= 0);
+```
+
+### Unsafe Patterns (NEVER DO)
+
+```sql
+-- UNSAFE: Dropping a column
+ALTER TABLE entries DROP COLUMN notes;  -- DATA LOSS!
+
+-- UNSAFE: Dropping a table
+DROP TABLE old_feature;  -- DATA LOSS!
+
+-- UNSAFE: Changing type that loses data
+ALTER TABLE entries ALTER COLUMN weight_kg TYPE INTEGER;  -- Loses decimals!
+
+-- UNSAFE: Adding NOT NULL without default to existing table
+ALTER TABLE entries ADD COLUMN required_field TEXT NOT NULL;  -- Fails on existing rows!
+
+-- UNSAFE: Renaming (use add + migrate + deprecate instead)
+ALTER TABLE entries RENAME COLUMN old_name TO new_name;  -- Breaks existing code!
+```
+
+### Column Deprecation Process
+
+When you need to "rename" or remove a column:
+
+1. **Migration 1**: Add new column, copy data
+   ```sql
+   ALTER TABLE entries ADD COLUMN new_name TEXT;
+   UPDATE entries SET new_name = old_name;
+   ```
+
+2. **Code Update**: Update all code to use new column
+
+3. **Migration 2** (after verification): Add comment marking old column deprecated
+   ```sql
+   COMMENT ON COLUMN entries.old_name IS 'DEPRECATED: Use new_name instead. Do not delete - contains historical data.';
+   ```
+
+4. **NEVER delete the old column** - it stays forever as historical record
+
+### Pre-Migration Checklist
+
+- [ ] Does this migration work on a database with existing data?
+- [ ] Have I tested the migration on a copy of production data?
+- [ ] Are all new NOT NULL columns given DEFAULT values?
+- [ ] Am I adding columns, not removing or modifying existing ones?
+- [ ] Will this migration succeed if run multiple times (idempotent)?
+
+---
+
 ## Agent & Skill Workflow
 
 Follow this workflow for feature development:
