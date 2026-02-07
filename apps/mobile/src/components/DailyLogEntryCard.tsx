@@ -1,0 +1,133 @@
+import React from 'react';
+import { Pressable } from 'react-native';
+import { YStack, XStack } from '@tamagui/stacks';
+import { Text, Stack, useTheme } from '@tamagui/core';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { formatRelativeDate, isToday, type DailyLogEntry } from '@progress/shared';
+
+interface DailyLogEntryCardProps {
+  entry: DailyLogEntry;
+  onPress: () => void;
+}
+
+function formatSleepHours(hours: number): string {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+export function DailyLogEntryCard({
+  entry,
+  onPress,
+}: DailyLogEntryCardProps): React.ReactElement {
+  const theme = useTheme();
+  const isEntryToday = isToday(entry.logged_date);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{ cursor: 'pointer', userSelect: 'none' } as never}
+    >
+      <YStack
+        backgroundColor="$backgroundHover"
+        borderRadius="$3"
+        padding="$3"
+        gap="$2"
+        borderLeftWidth={isEntryToday ? 3 : 0}
+        borderLeftColor="$primary"
+      >
+        {/* Date header */}
+        <XStack justifyContent="space-between" alignItems="center">
+          <Text fontSize={14} fontWeight="600" color="$color">
+            {isEntryToday ? 'Today' : formatRelativeDate(entry.logged_date)}
+          </Text>
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={20}
+            color={theme.textMuted?.val ?? '#71717A'}
+          />
+        </XStack>
+
+        {/* Metrics row */}
+        <XStack gap="$4" flexWrap="wrap">
+          {/* Sleep */}
+          {entry.sleep_hours !== null && (
+            <XStack alignItems="center" gap="$1.5">
+              <Stack
+                width={28}
+                height={28}
+                borderRadius={14}
+                backgroundColor="$purple5"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <MaterialCommunityIcons
+                  name="sleep"
+                  size={14}
+                  color={theme.primary?.val ?? '#8B5CF6'}
+                />
+              </Stack>
+              <Text fontSize={15} fontWeight="600" color="$color">
+                {formatSleepHours(entry.sleep_hours)}
+              </Text>
+            </XStack>
+          )}
+
+          {/* Weight */}
+          {entry.weight_kg !== null && (
+            <XStack alignItems="center" gap="$1.5">
+              <Stack
+                width={28}
+                height={28}
+                borderRadius={14}
+                backgroundColor="$green5"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <MaterialCommunityIcons
+                  name="scale-bathroom"
+                  size={14}
+                  color="#10B981"
+                />
+              </Stack>
+              <Text fontSize={15} fontWeight="600" color="$color">
+                {entry.weight_kg} kg
+              </Text>
+            </XStack>
+          )}
+
+          {/* Body Fat */}
+          {entry.body_fat_percent !== null && (
+            <XStack alignItems="center" gap="$1.5">
+              <Stack
+                width={28}
+                height={28}
+                borderRadius={14}
+                backgroundColor="$blue5"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <MaterialCommunityIcons
+                  name="percent"
+                  size={14}
+                  color="#3B82F6"
+                />
+              </Stack>
+              <Text fontSize={15} fontWeight="600" color="$color">
+                {entry.body_fat_percent}%
+              </Text>
+            </XStack>
+          )}
+        </XStack>
+
+        {/* Notes preview */}
+        {entry.notes && (
+          <Text fontSize={13} color="$textMuted" numberOfLines={1}>
+            {entry.notes}
+          </Text>
+        )}
+      </YStack>
+    </Pressable>
+  );
+}

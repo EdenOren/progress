@@ -110,3 +110,11 @@ export {
   paginationParamsSchema,
   createPaginatedResponseSchema,
 } from './domain';
+
+// Daily Log schemas
+export {
+  dailyLogEntrySchema,
+  dailyLogEntryArraySchema,
+  dailyLogEntryInsertSchema,
+  dailyLogEntryUpdateSchema,
+} from './dailyLog';

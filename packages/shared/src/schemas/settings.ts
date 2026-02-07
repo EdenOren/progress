@@ -6,7 +6,7 @@ import { uuidSchema, isoDateTimeSchema } from './domain';
 // ============================================================================
 
 /** Module key validation */
-export const moduleKeySchema = z.enum(['workout', 'sleep', 'nutrition']);
+export const moduleKeySchema = z.enum(['workout', 'daily_log', 'nutrition']);
 
 /** Distance unit validation */
 export const distanceUnitSchema = z.enum(['km', 'miles']);

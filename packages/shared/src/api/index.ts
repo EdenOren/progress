@@ -112,3 +112,13 @@ export {
   isModuleEnabled,
   updateActiveModule,
 } from './settings';
+
+// Daily Log API
+export {
+  getDailyLogEntries,
+  getDailyLogEntryByDate,
+  getDailyLogEntryById,
+  upsertDailyLogEntry,
+  updateDailyLogEntry,
+  deleteDailyLogEntry,
+} from './dailyLog';

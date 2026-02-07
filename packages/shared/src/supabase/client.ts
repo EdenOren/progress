@@ -348,6 +348,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      daily_log_entries: {
+        Row: {
+          id: string;
+          user_id: string;
+          logged_date: string;
+          sleep_hours: number | null;
+          weight_kg: number | null;
+          body_fat_percent: number | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          logged_date: string;
+          sleep_hours?: number | null;
+          weight_kg?: number | null;
+          body_fat_percent?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          logged_date?: string;
+          sleep_hours?: number | null;
+          weight_kg?: number | null;
+          body_fat_percent?: number | null;
+          notes?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

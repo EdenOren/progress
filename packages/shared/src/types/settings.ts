@@ -10,7 +10,7 @@ import type { UUID, ISODateTime } from './domain';
 // ============================================================================
 
 /** Available tracking modules */
-export type ModuleKey = 'workout' | 'sleep' | 'nutrition';
+export type ModuleKey = 'workout' | 'daily_log' | 'nutrition';
 
 /** Distance unit preference */
 export type DistanceUnit = 'km' | 'miles';
@@ -81,11 +81,11 @@ export const MODULE_INFO: ModuleInfo[] = [
     isAvailable: true,
   },
   {
-    key: 'sleep',
-    name: 'Sleep',
-    icon: 'sleep',
-    description: 'Track sleep patterns and quality',
-    isAvailable: false,
+    key: 'daily_log',
+    name: 'Daily Log',
+    icon: 'calendar-check',
+    description: 'Track sleep, weight, and body metrics',
+    isAvailable: true,
   },
   {
     key: 'nutrition',

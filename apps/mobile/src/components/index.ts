@@ -11,3 +11,5 @@ export { AddExerciseSheet } from './AddExerciseSheet';
 export { TemplateSection } from './TemplateSection';
 export { IconSelectSheet } from './IconSelectSheet';
 export { ModuleSelectorSheet } from './ModuleSelectorSheet';
+export { DailyLogEntryCard } from './DailyLogEntryCard';
+export { LogDailyLogModal } from './LogDailyLogModal';

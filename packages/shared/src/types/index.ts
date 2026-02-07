@@ -100,3 +100,10 @@ export type {
   PaginationParams,
   PaginatedResponse,
 } from './domain';
+
+// Daily Log types
+export type {
+  DailyLogEntry,
+  DailyLogEntryInsert,
+  DailyLogEntryUpdate,
+} from './dailyLog';

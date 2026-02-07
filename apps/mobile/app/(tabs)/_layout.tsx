@@ -13,7 +13,7 @@ function HeaderTitle(): React.ReactElement {
   const colorScheme = useColorScheme();
   const isDark = colorScheme !== 'light';
 
-  const titleText = currentModule === 'sleep' ? 'Sleep' : 'Workouts';
+  const titleText = currentModule === 'daily_log' ? 'Daily Log' : 'Workouts';
   const textColor = isDark ? '#FAFAFA' : '#18181B';
 
   // Only show dropdown if there are multiple enabled modules
@@ -76,8 +76,8 @@ export default function TabsLayout(): React.ReactElement {
     return <Redirect href="/(auth)/login" />;
   }
 
-  const homeIcon = currentModule === 'sleep' ? 'sleep' : 'dumbbell';
-  const tabLabel = currentModule === 'sleep' ? 'Sleep' : 'Workouts';
+  const homeIcon = currentModule === 'daily_log' ? 'calendar-check' : 'dumbbell';
+  const tabLabel = currentModule === 'daily_log' ? 'Daily Log' : 'Workouts';
 
   return (
     <Tabs

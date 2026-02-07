@@ -6,8 +6,8 @@ import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { formatRelativeDate } from '@progress/shared';
-import { EmptyState, Button } from '../../src/components';
+import { formatRelativeDate, getTodayISO, isToday, type DailyLogEntry } from '@progress/shared';
+import { EmptyState, DailyLogEntryCard, LogDailyLogModal } from '../../src/components';
 import {
   useSubjectsWithStats,
   useHardDeleteSubject,
@@ -17,45 +17,199 @@ import {
   useCreateEntryWithTemplate,
   useCompleteEntry,
   useDeleteEntry,
+  useDailyLogEntries,
+  useDailyLogEntryByDate,
 } from '../../src/hooks';
 import { useModule } from '../../src/providers';
 import { showSuccessToast } from '../../src/utils';
 import { CreateSubjectModal } from '../../src/components/CreateSubjectModal';
 import type { SubjectWithStats, Entry } from '@progress/shared';
 
-// Sleep Module Empty State
-function SleepModule(): React.ReactElement {
+// Daily Log Module
+function DailyLogModule(): React.ReactElement {
   const theme = useTheme();
+  const { data: entries, isLoading, refetch, isRefetching } = useDailyLogEntries(30);
+  const today = getTodayISO();
+  const { data: todayEntry } = useDailyLogEntryByDate(today);
+
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<DailyLogEntry | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const handleLogToday = useCallback(() => {
+    setSelectedEntry(todayEntry ?? null);
+    setSelectedDate(today);
+    setShowLogModal(true);
+  }, [todayEntry, today]);
+
+  const handleEditEntry = useCallback((entry: DailyLogEntry) => {
+    setSelectedEntry(entry);
+    setSelectedDate(entry.logged_date);
+    setShowLogModal(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setShowLogModal(false);
+    setSelectedEntry(null);
+    setSelectedDate(null);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
+        <ActivityIndicator size="large" color={theme.primary?.val ?? '#8B5CF6'} />
+      </YStack>
+    );
+  }
+
+  const hasEntries = (entries?.length ?? 0) > 0;
+  const hasTodayEntry = entries?.some(e => isToday(e.logged_date)) ?? false;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
-      <YStack flex={1} justifyContent="center" alignItems="center" padding={32} gap={24}>
-        <Stack
-          width={120}
-          height={120}
-          borderRadius={60}
-          backgroundColor="$blue5"
-          justifyContent="center"
-          alignItems="center"
+      <YStack flex={1}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={theme.primary?.val}
+              colors={[theme.primary?.val ?? '#8B5CF6']}
+              progressBackgroundColor={theme.backgroundHover?.val}
+            />
+          }
         >
-          <MaterialCommunityIcons
-            name="sleep"
-            size={64}
-            color={theme.secondary?.val ?? '#3B82F6'}
-          />
-        </Stack>
-        <YStack alignItems="center" gap={8}>
-          <Text fontSize={24} fontWeight="700" color="$color">
-            Track Your Sleep
-          </Text>
-          <Text fontSize={15} color="$textMuted" textAlign="center" lineHeight={22}>
-            Log your sleep duration and quality to build better habits and improve your rest.
-          </Text>
-        </YStack>
-        <Button variant="primary" disabled>
-          Coming Soon
-        </Button>
+          {!hasEntries ? (
+            <EmptyState
+              title="No entries yet"
+              message="Start tracking your sleep, weight, and body metrics"
+              actionLabel="Log Today"
+              onAction={handleLogToday}
+            />
+          ) : (
+            <YStack padding="$4" gap="$3">
+              {/* Header */}
+              <XStack alignItems="center" justifyContent="space-between">
+                <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
+                  Recent Entries
+                </Text>
+                {!hasTodayEntry && (
+                  <Pressable
+                    onPress={handleLogToday}
+                    style={{ cursor: 'pointer', userSelect: 'none' } as never}
+                  >
+                    <XStack alignItems="center" gap="$1">
+                      <MaterialCommunityIcons
+                        name="plus"
+                        size={18}
+                        color={theme.primary?.val ?? '#8B5CF6'}
+                      />
+                      <Text fontSize={14} fontWeight="600" color="$primary">
+                        Log Today
+                      </Text>
+                    </XStack>
+                  </Pressable>
+                )}
+              </XStack>
+
+              {/* Entry cards */}
+              <YStack gap="$3">
+                {entries?.map(entry => (
+                  <DailyLogEntryCard
+                    key={entry.id}
+                    entry={entry}
+                    onPress={() => handleEditEntry(entry)}
+                  />
+                ))}
+              </YStack>
+            </YStack>
+          )}
+        </ScrollView>
+
+        {/* Floating Log Today button (when there are entries but no today entry) */}
+        {hasEntries && !hasTodayEntry && (
+          <Stack
+            position="absolute"
+            bottom={24}
+            left={0}
+            right={0}
+            alignItems="center"
+          >
+            <Pressable
+              onPress={handleLogToday}
+              style={{ cursor: 'pointer', userSelect: 'none' } as never}
+            >
+              <XStack
+                backgroundColor="$primary"
+                paddingHorizontal={24}
+                paddingVertical={14}
+                borderRadius={28}
+                alignItems="center"
+                gap="$2"
+                shadowColor="black"
+                shadowOffset={{ width: 0, height: 4 }}
+                shadowOpacity={0.3}
+                shadowRadius={8}
+                elevation={8}
+              >
+                <MaterialCommunityIcons
+                  name="plus"
+                  size={20}
+                  color="white"
+                />
+                <Text color="white" fontSize={16} fontWeight="700">
+                  Log Today
+                </Text>
+              </XStack>
+            </Pressable>
+          </Stack>
+        )}
+
+        {/* Edit button when today entry exists */}
+        {hasTodayEntry && (
+          <Stack
+            position="absolute"
+            bottom={24}
+            left={0}
+            right={0}
+            alignItems="center"
+          >
+            <Pressable
+              onPress={handleLogToday}
+              style={{ cursor: 'pointer', userSelect: 'none' } as never}
+            >
+              <XStack
+                backgroundColor="$backgroundHover"
+                paddingHorizontal={24}
+                paddingVertical={14}
+                borderRadius={28}
+                alignItems="center"
+                gap="$2"
+                borderWidth={1}
+                borderColor="$borderColor"
+              >
+                <MaterialCommunityIcons
+                  name="pencil"
+                  size={20}
+                  color={theme.primary?.val ?? '#8B5CF6'}
+                />
+                <Text color="$primary" fontSize={16} fontWeight="700">
+                  Edit Today
+                </Text>
+              </XStack>
+            </Pressable>
+          </Stack>
+        )}
       </YStack>
+
+      <LogDailyLogModal
+        visible={showLogModal}
+        onClose={handleCloseModal}
+        date={selectedDate ?? undefined}
+        existingEntry={selectedEntry}
+      />
     </SafeAreaView>
   );
 }
@@ -815,8 +969,8 @@ function WorkoutModule(): React.ReactElement {
 export default function HomeScreen(): React.ReactElement {
   const { currentModule } = useModule();
 
-  if (currentModule === 'sleep') {
-    return <SleepModule />;
+  if (currentModule === 'daily_log') {
+    return <DailyLogModule />;
   }
 
   return <WorkoutModule />;

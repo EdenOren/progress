@@ -85,6 +85,11 @@ export type {
   UserSettingsUpdate,
   ModuleInfo,
 
+  // Daily Log
+  DailyLogEntry,
+  DailyLogEntryInsert,
+  DailyLogEntryUpdate,
+
   // Utility types
   BaseRow,
   UserOwnedRow,
@@ -193,6 +198,12 @@ export {
   userSettingsUpdateSchema,
   toggleModuleInputSchema,
   updateModuleSettingsInputSchema,
+
+  // Daily Log
+  dailyLogEntrySchema,
+  dailyLogEntryArraySchema,
+  dailyLogEntryInsertSchema,
+  dailyLogEntryUpdateSchema,
 } from './schemas/index';
 
 // ============================================================================
@@ -336,6 +347,14 @@ export {
   getModuleSettings,
   isModuleEnabled,
   updateActiveModule,
+
+  // Daily Log
+  getDailyLogEntries,
+  getDailyLogEntryByDate,
+  getDailyLogEntryById,
+  upsertDailyLogEntry,
+  updateDailyLogEntry,
+  deleteDailyLogEntry,
 } from './api/index';
 
 // ============================================================================
@@ -344,7 +363,7 @@ export {
 
 export {
   WORKOUT_DOMAIN_ID,
-  SLEEP_DOMAIN_ID,
+  DAILY_LOG_DOMAIN_ID,
   NUTRITION_DOMAIN_ID,
 } from './constants/index';
 

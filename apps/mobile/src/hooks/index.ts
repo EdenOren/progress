@@ -55,3 +55,9 @@ export {
   useUpdateModuleSettings,
   useUpdateWorkoutSettings,
 } from './useSettings';
+export {
+  useDailyLogEntries,
+  useDailyLogEntryByDate,
+  useUpsertDailyLogEntry,
+  useDeleteDailyLogEntry,
+} from './useDailyLog';
