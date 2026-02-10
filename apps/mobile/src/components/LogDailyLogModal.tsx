@@ -6,8 +6,15 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getTodayISO, formatDate, type DailyLogEntry } from '@progress/shared';
-import { useUpsertDailyLogEntry, useDeleteDailyLogEntry } from '../hooks';
+import {
+  getTodayISO,
+  formatDate,
+  kgToLbs,
+  lbsToKg,
+  DEFAULT_DAILY_LOG_SETTINGS,
+  type DailyLogEntry,
+} from '@progress/shared';
+import { useUpsertDailyLogEntry, useDeleteDailyLogEntry, useUserSettings } from '../hooks';
 import { getErrorMessage, showSuccessToast } from '../utils';
 import { Button } from './Button';
 
@@ -45,10 +52,14 @@ export function LogDailyLogModal({
   const theme = useTheme();
   const upsertEntry = useUpsertDailyLogEntry();
   const deleteEntry = useDeleteDailyLogEntry();
+  const { data: settings } = useUserSettings();
   const [error, setError] = useState<string | null>(null);
 
   const loggedDate = date ?? getTodayISO();
   const isEditing = !!existingEntry;
+
+  // Get weight unit from settings
+  const weightUnit = settings?.module_settings.daily_log?.weight_unit ?? DEFAULT_DAILY_LOG_SETTINGS.weight_unit;
 
   const {
     control,
@@ -72,10 +83,16 @@ export function LogDailyLogModal({
       if (existingEntry) {
         const hours = existingEntry.sleep_hours ? Math.floor(existingEntry.sleep_hours) : undefined;
         const minutes = existingEntry.sleep_hours ? Math.round((existingEntry.sleep_hours % 1) * 60) : undefined;
+        // Convert stored kg to user's preferred unit for display
+        let displayWeight = '';
+        if (existingEntry.weight_kg !== null) {
+          const weight = weightUnit === 'lbs' ? kgToLbs(existingEntry.weight_kg) : existingEntry.weight_kg;
+          displayWeight = weight.toFixed(1);
+        }
         reset({
           sleepHours: hours?.toString() ?? '',
           sleepMinutes: minutes?.toString() ?? '',
-          weightKg: existingEntry.weight_kg?.toString() ?? '',
+          weightKg: displayWeight,
           bodyFatPercent: existingEntry.body_fat_percent?.toString() ?? '',
           notes: existingEntry.notes ?? '',
         });
@@ -90,7 +107,7 @@ export function LogDailyLogModal({
       }
       setError(null);
     }
-  }, [visible, existingEntry, reset]);
+  }, [visible, existingEntry, reset, weightUnit]);
 
   const onSubmit = async (data: DailyLogForm): Promise<void> => {
     setError(null);
@@ -100,11 +117,18 @@ export function LogDailyLogModal({
     const minutes = data.sleepMinutes ? parseFloat(data.sleepMinutes) : 0;
     const totalSleepHours = hours + (minutes / 60);
 
+    // Convert weight to kg if user entered in lbs
+    let weightKg: number | null = null;
+    if (data.weightKg) {
+      const inputWeight = parseFloat(data.weightKg);
+      weightKg = weightUnit === 'lbs' ? lbsToKg(inputWeight) : inputWeight;
+    }
+
     try {
       await upsertEntry.mutateAsync({
         logged_date: loggedDate,
         sleep_hours: totalSleepHours > 0 ? parseFloat(totalSleepHours.toFixed(2)) : null,
-        weight_kg: data.weightKg ? parseFloat(data.weightKg) : null,
+        weight_kg: weightKg !== null ? parseFloat(weightKg.toFixed(2)) : null,
         body_fat_percent: data.bodyFatPercent ? parseFloat(data.bodyFatPercent) : null,
         notes: data.notes || null,
       });
@@ -310,9 +334,9 @@ export function LogDailyLogModal({
                         keyboardType="decimal-pad"
                         onChangeText={onChange}
                         value={value}
-                        maxLength={5}
+                        maxLength={6}
                       />
-                      <Text fontSize={14} color="$textMuted">kg</Text>
+                      <Text fontSize={14} color="$textMuted">{weightUnit}</Text>
                     </XStack>
                   )}
                 />

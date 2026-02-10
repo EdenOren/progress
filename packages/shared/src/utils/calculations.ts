@@ -252,16 +252,36 @@ export function calculateEntryCompletion(entry: EntryWithItems): number {
 }
 
 // ============================================================================
+// WEIGHT CONVERSIONS
+// ============================================================================
+
+const KG_TO_LBS = 2.20462;
+
+/**
+ * Convert kilograms to pounds
+ */
+export function kgToLbs(kg: number): number {
+  return kg * KG_TO_LBS;
+}
+
+/**
+ * Convert pounds to kilograms
+ */
+export function lbsToKg(lbs: number): number {
+  return lbs / KG_TO_LBS;
+}
+
+// ============================================================================
 // FORMATTING
 // ============================================================================
 
 /**
  * Format weight with unit
  */
-export function formatWeight(kg: number, unit: 'kg' | 'lb' = 'kg'): string {
-  if (unit === 'lb') {
-    const lb = kg * 2.20462;
-    return `${lb.toFixed(1)} lb`;
+export function formatWeight(kg: number, unit: 'kg' | 'lbs' = 'kg'): string {
+  if (unit === 'lbs') {
+    const lbs = kgToLbs(kg);
+    return `${lbs.toFixed(1)} lbs`;
   }
   return `${kg.toFixed(1)} kg`;
 }

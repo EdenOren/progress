@@ -8,6 +8,7 @@ import {
   type UserSettingsUpdate,
   type ModuleKey,
   type WorkoutModuleSettings,
+  type DailyLogModuleSettings,
 } from '@progress/shared';
 import { useSupabaseContext } from '../providers';
 import { handleError } from '../utils';
@@ -139,6 +140,32 @@ export function useUpdateWorkoutSettings() {
       if (!user) throw new Error('Not authenticated');
 
       const result = await updateModuleSettings(user.id, 'workout', settings);
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(QUERY_KEYS.settings, data);
+    },
+    onError: (error) => {
+      handleError(error);
+    },
+  });
+}
+
+/**
+ * Hook to update daily log module settings specifically
+ */
+export function useUpdateDailyLogSettings() {
+  const queryClient = useQueryClient();
+  const { user } = useSupabaseContext();
+
+  return useMutation({
+    mutationFn: async (settings: Partial<DailyLogModuleSettings>): Promise<UserSettings> => {
+      if (!user) throw new Error('Not authenticated');
+
+      const result = await updateModuleSettings(user.id, 'daily_log', settings);
       if (!result.success) {
         throw result.error;
       }

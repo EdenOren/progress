@@ -16,6 +16,7 @@ export {
   distanceUnitSchema,
   weightUnitSchema,
   workoutModuleSettingsSchema,
+  dailyLogModuleSettingsSchema,
   moduleSettingsMapSchema,
   userSettingsSchema,
   userSettingsUpdateSchema,

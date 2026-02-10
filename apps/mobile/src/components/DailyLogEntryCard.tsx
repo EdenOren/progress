@@ -3,11 +3,19 @@ import { Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { formatRelativeDate, isToday, type DailyLogEntry } from '@progress/shared';
+import {
+  formatRelativeDate,
+  isToday,
+  kgToLbs,
+  DEFAULT_DAILY_LOG_SETTINGS,
+  type DailyLogEntry,
+  type WeightUnit,
+} from '@progress/shared';
 
 interface DailyLogEntryCardProps {
   entry: DailyLogEntry;
   onPress: () => void;
+  weightUnit?: WeightUnit;
 }
 
 function formatSleepHours(hours: number): string {
@@ -20,9 +28,18 @@ function formatSleepHours(hours: number): string {
 export function DailyLogEntryCard({
   entry,
   onPress,
+  weightUnit = DEFAULT_DAILY_LOG_SETTINGS.weight_unit,
 }: DailyLogEntryCardProps): React.ReactElement {
   const theme = useTheme();
   const isEntryToday = isToday(entry.logged_date);
+
+  // Format weight based on user's preferred unit
+  const formatWeightDisplay = (kg: number): string => {
+    if (weightUnit === 'lbs') {
+      return `${kgToLbs(kg).toFixed(1)} lbs`;
+    }
+    return `${kg.toFixed(1)} kg`;
+  };
 
   return (
     <Pressable
@@ -92,7 +109,7 @@ export function DailyLogEntryCard({
                 />
               </Stack>
               <Text fontSize={15} fontWeight="600" color="$color">
-                {entry.weight_kg} kg
+                {formatWeightDisplay(entry.weight_kg)}
               </Text>
             </XStack>
           )}

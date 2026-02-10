@@ -17,6 +17,7 @@ export type {
   DistanceUnit,
   WeightUnit,
   WorkoutModuleSettings,
+  DailyLogModuleSettings,
   ModuleSettingsMap,
   UserSettings,
   UserSettingsUpdate,
@@ -26,6 +27,7 @@ export type {
 export {
   MODULE_INFO,
   DEFAULT_WORKOUT_SETTINGS,
+  DEFAULT_DAILY_LOG_SETTINGS,
   DEFAULT_USER_SETTINGS,
 } from './settings';
 

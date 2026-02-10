@@ -54,6 +54,7 @@ export {
   useToggleModule,
   useUpdateModuleSettings,
   useUpdateWorkoutSettings,
+  useUpdateDailyLogSettings,
 } from './useSettings';
 export {
   useDailyLogEntries,

@@ -26,6 +26,10 @@ export {
   // Completion
   calculateEntryCompletion,
 
+  // Weight conversions
+  kgToLbs,
+  lbsToKg,
+
   // Formatting
   formatWeight,
   formatDuration,

@@ -6,7 +6,7 @@ import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { formatRelativeDate, getTodayISO, isToday, type DailyLogEntry } from '@progress/shared';
+import { formatRelativeDate, getTodayISO, isToday, DEFAULT_DAILY_LOG_SETTINGS, type DailyLogEntry } from '@progress/shared';
 import { EmptyState, DailyLogEntryCard, LogDailyLogModal } from '../../src/components';
 import {
   useSubjectsWithStats,
@@ -19,6 +19,7 @@ import {
   useDeleteEntry,
   useDailyLogEntries,
   useDailyLogEntryByDate,
+  useUserSettings,
 } from '../../src/hooks';
 import { useModule } from '../../src/providers';
 import { showSuccessToast } from '../../src/utils';
@@ -29,8 +30,12 @@ import type { SubjectWithStats, Entry } from '@progress/shared';
 function DailyLogModule(): React.ReactElement {
   const theme = useTheme();
   const { data: entries, isLoading, refetch, isRefetching } = useDailyLogEntries(30);
+  const { data: settings } = useUserSettings();
   const today = getTodayISO();
   const { data: todayEntry } = useDailyLogEntryByDate(today);
+
+  // Get weight unit from settings
+  const weightUnit = settings?.module_settings.daily_log?.weight_unit ?? DEFAULT_DAILY_LOG_SETTINGS.weight_unit;
 
   const [showLogModal, setShowLogModal] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<DailyLogEntry | null>(null);
@@ -121,6 +126,7 @@ function DailyLogModule(): React.ReactElement {
                     key={entry.id}
                     entry={entry}
                     onPress={() => handleEditEntry(entry)}
+                    weightUnit={weightUnit}
                   />
                 ))}
               </YStack>

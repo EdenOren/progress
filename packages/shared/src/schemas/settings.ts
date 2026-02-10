@@ -24,11 +24,16 @@ export const workoutModuleSettingsSchema = z.object({
   weight_unit: weightUnitSchema,
 });
 
+/** Daily log module settings schema */
+export const dailyLogModuleSettingsSchema = z.object({
+  weight_unit: weightUnitSchema,
+});
+
 /** Module settings map schema (JSONB content) */
 export const moduleSettingsMapSchema = z.object({
   workout: workoutModuleSettingsSchema.optional(),
+  daily_log: dailyLogModuleSettingsSchema.optional(),
   // Future modules:
-  // sleep: sleepModuleSettingsSchema.optional(),
   // nutrition: nutritionModuleSettingsSchema.optional(),
 });
 

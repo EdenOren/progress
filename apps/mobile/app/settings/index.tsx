@@ -23,6 +23,8 @@ export default function SettingsScreen(): React.ReactElement {
   const handleModulePress = (moduleKey: ModuleKey) => {
     if (moduleKey === 'workout') {
       router.push('./workout');
+    } else if (moduleKey === 'daily_log') {
+      router.push('./daily-log');
     }
   };
 

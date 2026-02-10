@@ -28,11 +28,16 @@ export interface WorkoutModuleSettings {
   weight_unit: WeightUnit;
 }
 
+/** Settings specific to the daily log module */
+export interface DailyLogModuleSettings {
+  weight_unit: WeightUnit;
+}
+
 /** Union type for all module settings */
 export interface ModuleSettingsMap {
   workout?: WorkoutModuleSettings;
+  daily_log?: DailyLogModuleSettings;
   // Future modules:
-  // sleep?: SleepModuleSettings;
   // nutrition?: NutritionModuleSettings;
 }
 
@@ -103,6 +108,11 @@ export const MODULE_INFO: ModuleInfo[] = [
 /** Default workout module settings */
 export const DEFAULT_WORKOUT_SETTINGS: WorkoutModuleSettings = {
   distance_unit: 'km',
+  weight_unit: 'kg',
+};
+
+/** Default daily log module settings */
+export const DEFAULT_DAILY_LOG_SETTINGS: DailyLogModuleSettings = {
   weight_unit: 'kg',
 };
 
