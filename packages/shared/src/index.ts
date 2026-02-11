@@ -416,6 +416,7 @@ export {
   // Date utilities
   getTodayISO,
   getNowISO,
+  getOrdinalSuffix,
   formatDate,
   formatRelativeDate,
   isToday,
