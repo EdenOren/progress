@@ -17,15 +17,29 @@ export function getNowISO(): string {
 }
 
 /**
- * Format a date string for display
+ * Get ordinal suffix for a day number (1st, 2nd, 3rd, 4th, etc.)
  */
-export function formatDate(dateString: string, options?: Intl.DateTimeFormatOptions): string {
+export function getOrdinalSuffix(day: number): string {
+  if (day >= 11 && day <= 13) return 'th';
+  switch (day % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+}
+
+/**
+ * Format a date string for display as "Monday, 15th Jan, 2026"
+ */
+export function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString(undefined, options ?? {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+  const day = date.getDate();
+  const suffix = getOrdinalSuffix(day);
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const year = date.getFullYear();
+  return `${dayName}, ${day}${suffix} ${month}, ${year}`;
 }
 
 /**

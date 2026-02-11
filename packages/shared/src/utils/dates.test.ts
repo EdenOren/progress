@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   getTodayISO,
+  getOrdinalSuffix,
+  formatDate,
   formatRelativeDate,
   isToday,
   isWithinDays,
@@ -13,6 +15,68 @@ describe('Date Utilities', () => {
     it('returns date in YYYY-MM-DD format', () => {
       const today = getTodayISO();
       expect(today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+  });
+
+  describe('getOrdinalSuffix', () => {
+    it('returns "st" for 1, 21, 31', () => {
+      expect(getOrdinalSuffix(1)).toBe('st');
+      expect(getOrdinalSuffix(21)).toBe('st');
+      expect(getOrdinalSuffix(31)).toBe('st');
+    });
+
+    it('returns "nd" for 2, 22', () => {
+      expect(getOrdinalSuffix(2)).toBe('nd');
+      expect(getOrdinalSuffix(22)).toBe('nd');
+    });
+
+    it('returns "rd" for 3, 23', () => {
+      expect(getOrdinalSuffix(3)).toBe('rd');
+      expect(getOrdinalSuffix(23)).toBe('rd');
+    });
+
+    it('returns "th" for 11, 12, 13 (special cases)', () => {
+      expect(getOrdinalSuffix(11)).toBe('th');
+      expect(getOrdinalSuffix(12)).toBe('th');
+      expect(getOrdinalSuffix(13)).toBe('th');
+    });
+
+    it('returns "th" for other numbers', () => {
+      expect(getOrdinalSuffix(4)).toBe('th');
+      expect(getOrdinalSuffix(15)).toBe('th');
+      expect(getOrdinalSuffix(20)).toBe('th');
+    });
+  });
+
+  describe('formatDate', () => {
+    it('formats date with day name, ordinal day, short month, and year', () => {
+      // 2024-01-15 is a Monday
+      const result = formatDate('2024-01-15');
+      expect(result).toMatch(/Monday,\s*15th\s*Jan,\s*2024/);
+    });
+
+    it('uses correct ordinal for 1st', () => {
+      // 2024-02-01 is a Thursday
+      const result = formatDate('2024-02-01');
+      expect(result).toMatch(/Thursday,\s*1st\s*Feb,\s*2024/);
+    });
+
+    it('uses correct ordinal for 2nd', () => {
+      // 2024-02-02 is a Friday
+      const result = formatDate('2024-02-02');
+      expect(result).toMatch(/Friday,\s*2nd\s*Feb,\s*2024/);
+    });
+
+    it('uses correct ordinal for 3rd', () => {
+      // 2024-02-03 is a Saturday
+      const result = formatDate('2024-02-03');
+      expect(result).toMatch(/Saturday,\s*3rd\s*Feb,\s*2024/);
+    });
+
+    it('uses "th" for 11th, 12th, 13th', () => {
+      // 2024-01-11 is a Thursday
+      const result = formatDate('2024-01-11');
+      expect(result).toMatch(/Thursday,\s*11th\s*Jan,\s*2024/);
     });
   });
 

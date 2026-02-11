@@ -43,6 +43,7 @@ export {
 export {
   getTodayISO,
   getNowISO,
+  getOrdinalSuffix,
   formatDate,
   formatRelativeDate,
   isToday,
