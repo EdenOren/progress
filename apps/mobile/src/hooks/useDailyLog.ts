@@ -96,7 +96,6 @@ export function useDeleteDailyLogEntry() {
   return useMutation({
     mutationFn: async ({
       entryId,
-      loggedDate,
     }: {
       entryId: string;
       loggedDate: string;

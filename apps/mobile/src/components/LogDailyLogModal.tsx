@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Pressable, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -54,8 +55,9 @@ export function LogDailyLogModal({
   const deleteEntry = useDeleteDailyLogEntry();
   const { data: settings } = useUserSettings();
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(date ?? getTodayISO());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const loggedDate = date ?? getTodayISO();
   const isEditing = !!existingEntry;
 
   // Get weight unit from settings
@@ -80,6 +82,10 @@ export function LogDailyLogModal({
   // Reset form when modal opens with existing entry data
   useEffect(() => {
     if (visible) {
+      // Reset date to prop value or today
+      setSelectedDate(date ?? getTodayISO());
+      setShowDatePicker(false);
+
       if (existingEntry) {
         const hours = existingEntry.sleep_hours ? Math.floor(existingEntry.sleep_hours) : undefined;
         const minutes = existingEntry.sleep_hours ? Math.round((existingEntry.sleep_hours % 1) * 60) : undefined;
@@ -107,7 +113,7 @@ export function LogDailyLogModal({
       }
       setError(null);
     }
-  }, [visible, existingEntry, reset, weightUnit]);
+  }, [visible, existingEntry, reset, weightUnit, date]);
 
   const onSubmit = async (data: DailyLogForm): Promise<void> => {
     setError(null);
@@ -126,7 +132,7 @@ export function LogDailyLogModal({
 
     try {
       await upsertEntry.mutateAsync({
-        logged_date: loggedDate,
+        logged_date: selectedDate,
         sleep_hours: totalSleepHours > 0 ? parseFloat(totalSleepHours.toFixed(2)) : null,
         weight_kg: weightKg !== null ? parseFloat(weightKg.toFixed(2)) : null,
         body_fat_percent: data.bodyFatPercent ? parseFloat(data.bodyFatPercent) : null,
@@ -158,7 +164,25 @@ export function LogDailyLogModal({
   const handleClose = (): void => {
     reset();
     setError(null);
+    setShowDatePicker(false);
     onClose();
+  };
+
+  const handleDateChange = (event: DateTimePickerEvent, pickedDate?: Date): void => {
+    // On Android, the picker auto-dismisses; on iOS, we keep it open until "Done"
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (event.type === 'set' && pickedDate) {
+      // Convert to ISO date string (YYYY-MM-DD)
+      const isoDateParts = pickedDate.toISOString().split('T');
+      const isoDate = isoDateParts[0] ?? getTodayISO();
+      setSelectedDate(isoDate);
+    }
+  };
+
+  const handleDatePickerDone = (): void => {
+    setShowDatePicker(false);
   };
 
   const inputStyle = {
@@ -211,24 +235,60 @@ export function LogDailyLogModal({
             contentContainerStyle={{ padding: 16 }}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Date Display */}
-            <XStack
-              backgroundColor="$backgroundHover"
-              padding="$3"
-              borderRadius="$3"
-              alignItems="center"
-              gap="$2"
-              marginBottom="$4"
+            {/* Date Display - Tappable */}
+            <Pressable
+              onPress={() => setShowDatePicker(true)}
+              style={{ cursor: 'pointer', userSelect: 'none' } as never}
             >
-              <MaterialCommunityIcons
-                name="calendar"
-                size={20}
-                color={theme.textMuted?.val ?? '#A1A1AA'}
-              />
-              <Text fontSize={15} fontWeight="600" color="$color">
-                {formatDate(loggedDate)}
-              </Text>
-            </XStack>
+              <XStack
+                backgroundColor="$backgroundHover"
+                padding="$3"
+                borderRadius="$3"
+                alignItems="center"
+                gap="$2"
+                marginBottom="$4"
+              >
+                <MaterialCommunityIcons
+                  name="calendar"
+                  size={20}
+                  color={theme.textMuted?.val ?? '#A1A1AA'}
+                />
+                <Text flex={1} fontSize={15} fontWeight="600" color="$color">
+                  {formatDate(selectedDate)}
+                </Text>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.textMuted?.val ?? '#A1A1AA'}
+                />
+              </XStack>
+            </Pressable>
+
+            {/* Date Picker */}
+            {showDatePicker && (
+              <YStack marginBottom="$4">
+                {Platform.OS === 'ios' && (
+                  <XStack justifyContent="flex-end" marginBottom="$2">
+                    <Pressable
+                      onPress={handleDatePickerDone}
+                      style={{ cursor: 'pointer', userSelect: 'none' } as never}
+                    >
+                      <Text fontSize={16} fontWeight="600" color="$primary">
+                        Done
+                      </Text>
+                    </Pressable>
+                  </XStack>
+                )}
+                <DateTimePicker
+                  value={new Date(selectedDate + 'T12:00:00')}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  maximumDate={new Date()}
+                  onChange={handleDateChange}
+                  themeVariant="dark"
+                />
+              </YStack>
+            )}
 
             {error && (
               <YStack
