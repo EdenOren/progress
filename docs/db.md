@@ -109,6 +109,9 @@ Performed instances of a subject on a specific date.
 | `performed_at` | DATE | NOT NULL | Date performed |
 | `notes` | TEXT | max 1000 chars | Session notes |
 | `is_completed` | BOOLEAN | NOT NULL, default FALSE | Completion status |
+| `duration_seconds` | INTEGER | - | Workout duration in seconds |
+| `started_at` | TIMESTAMPTZ | - | When user started the session |
+| `completed_at` | TIMESTAMPTZ | - | When user completed the session |
 | `created_at` | TIMESTAMPTZ | NOT NULL, default NOW() | Creation timestamp |
 | `updated_at` | TIMESTAMPTZ | NOT NULL, default NOW() | Last update timestamp |
 
@@ -129,6 +132,10 @@ Drills or exercises within an entry.
 | `user_id` | UUID | FK → auth.users, NOT NULL | Owner (for RLS) |
 | `name` | TEXT | NOT NULL, 1-100 chars | Exercise name |
 | `position` | INTEGER | NOT NULL, >= 0 | Order in entry |
+| `exercise_id` | UUID | FK → exercise_library | Library exercise reference |
+| `is_from_template` | BOOLEAN | NOT NULL, default FALSE | Created from template |
+| `tracking_type` | ENUM | default 'weight_reps' | 'weight_reps', 'duration', 'distance' |
+| `note` | TEXT | - | User note, visible in next session |
 | `created_at` | TIMESTAMPTZ | NOT NULL, default NOW() | Creation timestamp |
 
 **Examples**:
@@ -221,13 +228,13 @@ User preferences and module configuration.
 |--------|------|-------------|-------------|
 | `id` | UUID | PK | Settings ID |
 | `user_id` | UUID | FK → auth.users, UNIQUE, NOT NULL | Owner |
-| `enabled_modules` | TEXT[] | NOT NULL, default ['workout'] | Array of enabled module keys |
+| `enabled_modules` | TEXT[] | NOT NULL, default ['workout', 'daily_log'] | Array of enabled module keys |
 | `active_module` | TEXT | NOT NULL, default 'workout' | Currently selected module |
 | `module_settings` | JSONB | NOT NULL, default '{}' | Module-specific settings |
 | `created_at` | TIMESTAMPTZ | NOT NULL, default NOW() | Creation timestamp |
 | `updated_at` | TIMESTAMPTZ | NOT NULL, default NOW() | Last update timestamp |
 
-**Check constraint**: `active_module` must be one of 'workout', 'sleep', 'nutrition'.
+**Check constraint**: `active_module` must be one of 'workout', 'daily_log', 'sleep', 'nutrition'.
 
 **Auto-creation**: Settings are automatically created via trigger when a user signs up.
 
@@ -237,9 +244,34 @@ User preferences and module configuration.
   "workout": {
     "distance_unit": "km",
     "weight_unit": "kg"
+  },
+  "daily_log": {
+    "weight_unit": "kg"
   }
 }
 ```
+
+---
+
+### daily_log_entries
+
+Daily health metric tracking (sleep, weight, body fat).
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | UUID | PK | Entry ID |
+| `user_id` | UUID | FK → auth.users, NOT NULL | Owner |
+| `logged_date` | DATE | NOT NULL | Date of the log |
+| `sleep_hours` | NUMERIC(4,2) | 0-24 | Hours of sleep |
+| `weight_kg` | NUMERIC(5,2) | 20-500 | Body weight in kg |
+| `body_fat_percent` | NUMERIC(4,1) | 1-60 | Body fat percentage |
+| `notes` | TEXT | max 500 chars | Optional notes |
+| `created_at` | TIMESTAMPTZ | NOT NULL, default NOW() | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | NOT NULL, default NOW() | Last update timestamp |
+
+**Unique constraint**: `(user_id, logged_date)` - One entry per day per user.
+
+**Check constraint**: At least one of `sleep_hours` or `weight_kg` must be provided.
 
 ---
 
@@ -354,6 +386,9 @@ LIMIT 1;
 - `006_add_yoga_pilates_cardio_exercises.sql` - Adds more exercises
 - `007_user_settings.sql` - Adds user_settings table
 - `008_active_module.sql` - Adds active_module column for cross-device sync
+- `009_daily_log_entries.sql` - Adds daily_log_entries table
+- `010_daily_log_settings.sql` - Updates defaults and constraints to include daily_log
+- `20240130_add_duration_and_notes.sql` - Adds duration tracking to entries and notes to items
 
 ## Seed Files
 
