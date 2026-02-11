@@ -5,14 +5,15 @@ import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { formatDate } from '@progress/shared';
+import { useQueryClient } from '@tanstack/react-query';
+import { formatDate, formatDuration } from '@progress/shared';
 import type { ItemWithSets } from '@progress/shared';
 import { Card, Button, LoadingScreen, EmptyState, ExerciseInputCard } from '../../../src/components';
 import { AddItemModal } from '../../../src/components/AddItemModal';
 import {
   useEntryWithItems,
   useLastEntry,
-  useCompleteEntry,
+  useUpdateEntry,
   useDeleteEntry,
 } from '../../../src/hooks';
 import { showSuccessToast } from '../../../src/utils';
@@ -60,7 +61,8 @@ export default function EntryScreen(): React.ReactElement {
     entry?.subject_id ?? '',
     entry?.id  // Exclude current entry by ID
   );
-  const completeEntry = useCompleteEntry();
+  const queryClient = useQueryClient();
+  const updateEntry = useUpdateEntry();
   const deleteEntry = useDeleteEntry();
 
   // Reset delete mutation state on mount to prevent stale loader from previous screen
@@ -163,7 +165,7 @@ export default function EntryScreen(): React.ReactElement {
   }, [entry?.id, entry?.is_completed, entry?.started_at, entry?.created_at]);
 
   const handleComplete = (): void => {
-    if (!entryId || completeEntry.isPending || !entry) return;
+    if (!entryId || updateEntry.isPending || !entry) return;
 
     // Capture stats - combine server data with locally tracked feedback (handles stale data)
     let doneCount = 0;
@@ -178,8 +180,20 @@ export default function EntryScreen(): React.ReactElement {
       else if (rating === 'up') upCount++;
     });
 
-    completeEntry.mutate(entryId, {
+    const now = new Date().toISOString();
+
+    updateEntry.mutate({
+      entryId,
+      updates: {
+        is_completed: true,
+        completed_at: now,
+        duration_seconds: elapsedSeconds,
+      },
+    }, {
       onSuccess: () => {
+        // Invalidate recent entries and stats since completion changes them
+        queryClient.invalidateQueries({ queryKey: ['entries', 'recent'] });
+        queryClient.invalidateQueries({ queryKey: ['subjects', 'withStats'] });
         // Save final duration and stats, then show summary
         setFinalDuration(elapsedSeconds);
         setFinalStats({ done: doneCount, up: upCount, total: entry.items.length });
@@ -259,17 +273,17 @@ export default function EntryScreen(): React.ReactElement {
               {!entry.is_completed && (
                 <Pressable
                   onPress={handleComplete}
-                  disabled={completeEntry.isPending}
+                  disabled={updateEntry.isPending}
                   style={{
                     paddingHorizontal: 12,
                     paddingVertical: 6,
-                    backgroundColor: completeEntry.isPending ? 'rgba(139, 92, 246, 0.5)' : (theme.primary?.val ?? '#8B5CF6'),
+                    backgroundColor: updateEntry.isPending ? 'rgba(139, 92, 246, 0.5)' : (theme.primary?.val ?? '#8B5CF6'),
                     borderRadius: 16,
-                    cursor: completeEntry.isPending ? 'not-allowed' : 'pointer',
+                    cursor: updateEntry.isPending ? 'not-allowed' : 'pointer',
                     userSelect: 'none',
                   } as never}
                 >
-                  {completeEntry.isPending ? (
+                  {updateEntry.isPending ? (
                     <ActivityIndicator size="small" color="white" />
                   ) : (
                     <Text style={{ color: 'white', fontWeight: '600', fontSize: 13 }}>
@@ -325,9 +339,16 @@ export default function EntryScreen(): React.ReactElement {
           <Stack marginBottom={16}>
             <Card>
               <XStack justifyContent="space-between" alignItems="center">
-                <Text fontSize={14} color="$textSecondary">
-                  Status
-                </Text>
+                <XStack alignItems="center" gap="$2">
+                  <Text fontSize={14} color="$textSecondary">
+                    Status
+                  </Text>
+                  {entry.is_completed && entry.duration_seconds != null && (
+                    <Text fontSize={13} color="$textMuted">
+                      {formatDuration(entry.duration_seconds)}
+                    </Text>
+                  )}
+                </XStack>
                 {entry.is_completed ? (
                   <Stack
                     backgroundColor="rgba(16, 185, 129, 0.15)"

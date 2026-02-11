@@ -118,7 +118,7 @@ export const DEFAULT_DAILY_LOG_SETTINGS: DailyLogModuleSettings = {
 
 /** Default user settings for new users */
 export const DEFAULT_USER_SETTINGS: Omit<UserSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
-  enabled_modules: ['workout'],
+  enabled_modules: ['workout', 'daily_log'],
   active_module: 'workout',
   module_settings: {},
 };

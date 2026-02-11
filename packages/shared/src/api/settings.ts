@@ -5,11 +5,12 @@ import type {
   ModuleKey,
   ModuleSettingsMap,
   WorkoutModuleSettings,
+  DailyLogModuleSettings,
 } from '../types/settings';
 import { userSettingsSchema } from '../schemas/settings';
 import { type Result, ok, err } from '../types/result';
 import { mapSupabaseError, ValidationError } from '../errors/index';
-import { DEFAULT_USER_SETTINGS, DEFAULT_WORKOUT_SETTINGS } from '../types/settings';
+import { DEFAULT_USER_SETTINGS, DEFAULT_WORKOUT_SETTINGS, DEFAULT_DAILY_LOG_SETTINGS } from '../types/settings';
 
 /**
  * Get user settings, auto-creating with defaults if not exists
@@ -156,7 +157,7 @@ export async function toggleModule(
 export async function updateModuleSettings(
   userId: string,
   moduleKey: ModuleKey,
-  settings: Partial<WorkoutModuleSettings>
+  settings: Partial<WorkoutModuleSettings> | Partial<DailyLogModuleSettings>
 ): Promise<Result<UserSettings>> {
   // Get current settings
   const currentResult = await getUserSettings(userId);
@@ -166,22 +167,23 @@ export async function updateModuleSettings(
 
   const currentModuleSettings = currentResult.data.module_settings;
 
-  // Get existing settings for the module with defaults
-  let existingSettings: WorkoutModuleSettings | undefined;
-  if (moduleKey === 'workout') {
-    existingSettings = currentModuleSettings.workout ?? DEFAULT_WORKOUT_SETTINGS;
-  }
-
   // Build updated module settings
   const updatedModuleSettings: ModuleSettingsMap = {
     ...currentModuleSettings,
   };
 
   if (moduleKey === 'workout') {
+    const existingWorkout = currentModuleSettings.workout ?? DEFAULT_WORKOUT_SETTINGS;
     updatedModuleSettings.workout = {
-      ...existingSettings,
+      ...existingWorkout,
       ...settings,
     } as WorkoutModuleSettings;
+  } else if (moduleKey === 'daily_log') {
+    const existingDailyLog = currentModuleSettings.daily_log ?? DEFAULT_DAILY_LOG_SETTINGS;
+    updatedModuleSettings.daily_log = {
+      ...existingDailyLog,
+      ...settings,
+    } as DailyLogModuleSettings;
   }
 
   return updateUserSettings(userId, { module_settings: updatedModuleSettings });
@@ -193,16 +195,20 @@ export async function updateModuleSettings(
 export async function getModuleSettings(
   userId: string,
   moduleKey: ModuleKey
-): Promise<Result<WorkoutModuleSettings | undefined>> {
+): Promise<Result<WorkoutModuleSettings | DailyLogModuleSettings | undefined>> {
   const settingsResult = await getUserSettings(userId);
   if (!settingsResult.success) {
     return settingsResult;
   }
 
-  // Only workout module is supported currently
   if (moduleKey === 'workout') {
     const moduleSettings = settingsResult.data.module_settings.workout;
     return ok(moduleSettings ?? DEFAULT_WORKOUT_SETTINGS);
+  }
+
+  if (moduleKey === 'daily_log') {
+    const moduleSettings = settingsResult.data.module_settings.daily_log;
+    return ok(moduleSettings ?? DEFAULT_DAILY_LOG_SETTINGS);
   }
 
   return ok(undefined);
