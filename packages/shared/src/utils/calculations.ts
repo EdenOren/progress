@@ -302,6 +302,23 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
+ * Format duration in long human-readable format (e.g. "1h 30min")
+ */
+export function formatDurationLong(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  if (hours > 0 && minutes > 0) {
+    return `${hours}h ${minutes}min`;
+  } else if (hours > 0) {
+    return `${hours}h`;
+  } else if (minutes > 0) {
+    return `${minutes}min`;
+  }
+  return `${seconds}s`;
+}
+
+/**
  * Format distance with appropriate unit
  */
 export function formatDistance(meters: number): string {

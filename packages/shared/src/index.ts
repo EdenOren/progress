@@ -408,6 +408,7 @@ export {
   // Formatting
   formatWeight,
   formatDuration,
+  formatDurationLong,
   formatDistance,
   formatVolume,
   formatChange,

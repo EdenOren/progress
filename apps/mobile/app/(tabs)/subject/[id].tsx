@@ -6,7 +6,7 @@ import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { formatDate, formatRelativeDate, getTodayISO } from '@progress/shared';
+import { formatDate, formatRelativeDate, formatDurationLong, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
 import { Alert } from 'react-native';
 import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../../src/components';
@@ -131,6 +131,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
             </Text>
             <Text fontSize={14} color="$textMuted">
               {formatRelativeDate(item.performed_at)}
+              {item.is_completed && item.duration_seconds != null && ` · ${formatDurationLong(item.duration_seconds)}`}
             </Text>
           </YStack>
           <XStack alignItems="center" gap={8}>
