@@ -96,6 +96,7 @@ export default function EntryScreen(): React.ReactElement {
   const [showComparisonHint, setShowComparisonHint] = useState(true);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [finalDuration, setFinalDuration] = useState(0);
   const [finalStats, setFinalStats] = useState({ done: 0, up: 0, total: 0 });
@@ -125,6 +126,16 @@ export default function EntryScreen(): React.ReactElement {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedItemId(itemId);
   }, []);
+
+  // Toggle edit mode for completed sessions
+  const handleToggleEditMode = useCallback(() => {
+    if (isEditMode) {
+      // Exiting edit mode: collapse any expanded item
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setExpandedItemId(null);
+    }
+    setIsEditMode(prev => !prev);
+  }, [isEditMode]);
 
   // Handle feedback selection - collapse current item and auto-expand next item without feedback
   const handleFeedbackSelected = useCallback((itemId: string, rating: 'done' | 'up') => {
@@ -325,6 +336,20 @@ export default function EntryScreen(): React.ReactElement {
                   )}
                 </Pressable>
               )}
+              {/* Edit mode toggle - only show for completed sessions */}
+              {entry.is_completed && (
+                <Pressable
+                  onPress={handleToggleEditMode}
+                  style={{ padding: 8, cursor: 'pointer', userSelect: 'none' } as never}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <MaterialCommunityIcons
+                    name={isEditMode ? 'pencil-off' : 'pencil-outline'}
+                    size={22}
+                    color={isEditMode ? (theme.primary?.val ?? '#8B5CF6') : (theme.textMuted?.val ?? '#71717A')}
+                  />
+                </Pressable>
+              )}
               {/* Delete button - only show for completed sessions */}
               {entry.is_completed && (
                 deleteEntry.isPending ? (
@@ -445,13 +470,15 @@ export default function EntryScreen(): React.ReactElement {
               <Text fontSize={18} fontWeight="600" color="$color">
                 Exercises
               </Text>
-              <Button
-                variant="ghost"
-                size="small"
-                onPress={() => setShowAddItem(true)}
-              >
-                + Add
-              </Button>
+              {(!entry.is_completed || isEditMode) && (
+                <Button
+                  variant="ghost"
+                  size="small"
+                  onPress={() => setShowAddItem(true)}
+                >
+                  + Add
+                </Button>
+              )}
             </XStack>
 
             {entry.items.length === 0 ? (
@@ -477,6 +504,7 @@ export default function EntryScreen(): React.ReactElement {
                   entryId={entry.id}
                   lastSessionItem={showComparisonHint ? getLastSessionItem(item, lastEntry) : null}
                   isSessionInProgress={!entry.is_completed}
+                  isEditable={isEditMode}
                   isCollapsed={item.id !== expandedItemId}
                   onExpand={() => handleExpandItem(item.id)}
                   onFeedbackSelected={handleFeedbackSelected}
