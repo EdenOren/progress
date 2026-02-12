@@ -67,6 +67,7 @@ export interface Database {
           description: string | null;
           is_active: boolean;
           default_sets: Array<{ target_reps?: number; target_duration_seconds?: number }>;
+          ordinal: number;
           created_at: string;
           updated_at: string;
         };
@@ -78,6 +79,7 @@ export interface Database {
           description?: string | null;
           is_active?: boolean;
           default_sets?: Array<{ target_reps?: number; target_duration_seconds?: number }>;
+          ordinal?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -101,6 +103,7 @@ export interface Database {
           duration_seconds: number | null;
           started_at: string | null;
           completed_at: string | null;
+          ordinal: number;
           created_at: string;
           updated_at: string;
         };
@@ -114,6 +117,7 @@ export interface Database {
           duration_seconds?: number | null;
           started_at?: string | null;
           completed_at?: string | null;
+          ordinal?: number;
           created_at?: string;
           updated_at?: string;
         };

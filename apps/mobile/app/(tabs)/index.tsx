@@ -22,7 +22,7 @@ import {
   useUserSettings,
 } from '../../src/hooks';
 import { useModule } from '../../src/providers';
-import { showSuccessToast } from '../../src/utils';
+import { showSuccessToast, showErrorToast } from '../../src/utils';
 import { CreateSubjectModal } from '../../src/components/CreateSubjectModal';
 import type { SubjectWithStats, Entry } from '@progress/shared';
 
@@ -382,8 +382,8 @@ function WorkoutCardWithTemplate({
     // If this subject already has an in-progress entry, continue it
     if (hasInProgressEntry && inProgressEntry) {
       router.push({
-        pathname: '/entry/[id]',
-        params: { id: inProgressEntry.id },
+        pathname: '/subject/[id]/entry/[entryId]',
+        params: { id: String(subject.ordinal), entryId: String(inProgressEntry.ordinal) },
       });
       return;
     }
@@ -421,15 +421,15 @@ function WorkoutCardWithTemplate({
       });
 
       router.push({
-        pathname: '/entry/[id]',
-        params: { id: entry.id },
+        pathname: '/subject/[id]/entry/[entryId]',
+        params: { id: String(subject.ordinal), entryId: String(entry.ordinal) },
       });
     } catch {
       // Error shown by mutation's onError handler
     } finally {
       setStartingSubjectId(null);
     }
-  }, [template, createEntry, subject.id, exerciseCount, setStartingSubjectId, hasInProgressEntry, inProgressEntry, onCompleteEntry]);
+  }, [template, createEntry, subject.id, subject.ordinal, exerciseCount, setStartingSubjectId, hasInProgressEntry, inProgressEntry, onCompleteEntry]);
 
   return (
     <WorkoutCard
@@ -574,12 +574,17 @@ function WorkoutModule(): React.ReactElement {
   // Navigate to in-progress entry
   const handleContinueSession = useCallback(() => {
     if (inProgressEntry) {
-      router.push({
-        pathname: '/entry/[id]',
-        params: { id: inProgressEntry.id },
-      });
+      const subjectOrdinal = subjects?.find(s => s.id === inProgressEntry.subject_id)?.ordinal;
+      if (subjectOrdinal) {
+        router.push({
+          pathname: '/subject/[id]/entry/[entryId]',
+          params: { id: String(subjectOrdinal), entryId: String(inProgressEntry.ordinal) },
+        });
+      } else {
+        showErrorToast('Unable to open session. Please try again.');
+      }
     }
-  }, [inProgressEntry]);
+  }, [inProgressEntry, subjects]);
 
   // Map subject IDs to names for recent sessions
   const subjectMap = useMemo(() => {
@@ -630,10 +635,10 @@ function WorkoutModule(): React.ReactElement {
     if (isSelectionMode) {
       toggleSelection(subject.id);
     } else {
-      // Navigate to edit
+      // Navigate to edit using ordinal
       router.push({
         pathname: '/subject/[id]',
-        params: { id: subject.id },
+        params: { id: String(subject.ordinal) },
       });
     }
   }, [isSelectionMode, toggleSelection]);
@@ -666,11 +671,16 @@ function WorkoutModule(): React.ReactElement {
   }, [hardDelete, selectedIds, exitSelectionMode]);
 
   const handleViewSession = useCallback((entry: Entry): void => {
-    router.push({
-      pathname: '/entry/[id]',
-      params: { id: entry.id },
-    });
-  }, []);
+    const subjectOrdinal = subjects?.find(s => s.id === entry.subject_id)?.ordinal;
+    if (subjectOrdinal) {
+      router.push({
+        pathname: '/subject/[id]/entry/[entryId]',
+        params: { id: String(subjectOrdinal), entryId: String(entry.ordinal) },
+      });
+    } else {
+      showErrorToast('Unable to open session. Please try again.');
+    }
+  }, [subjects]);
 
   const handleDeleteSession = useCallback((entry: Entry): void => {
     if (deleteEntry.isPending) return;

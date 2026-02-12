@@ -3,6 +3,7 @@ export {
   useSubjects,
   useSubjectsWithStats,
   useSubject,
+  useSubjectByOrdinal,
   useCreateSubject,
   useUpdateSubject,
   useDeleteSubject,
@@ -11,6 +12,7 @@ export {
 export {
   useEntries,
   useEntryWithItems,
+  useEntryWithItemsByOrdinal,
   useLastEntry,
   useRecentEntries,
   useInProgressEntry,

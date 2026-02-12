@@ -236,6 +236,35 @@ export async function updateSubject(
 }
 
 /**
+ * Get a single subject by ordinal number (per-user)
+ */
+export async function getSubjectByOrdinal(
+  userId: string,
+  ordinal: number
+): Promise<Result<Subject>> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('subjects')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('ordinal', ordinal)
+    .eq('is_active', true)
+    .single();
+
+  if (error) {
+    return err(mapSupabaseError(error));
+  }
+
+  const parsed = subjectSchema.safeParse(data);
+  if (!parsed.success) {
+    return err(new ValidationError(parsed.error));
+  }
+
+  return ok(parsed.data);
+}
+
+/**
  * Soft delete a subject (set is_active to false)
  */
 export async function deleteSubject(

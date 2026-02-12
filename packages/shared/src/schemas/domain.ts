@@ -130,6 +130,7 @@ export const subjectSchema = z.object({
   description: z.string().max(500).nullable(),
   is_active: z.boolean(),
   default_sets: z.array(templateSetConfigSchema).default([{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }]),
+  ordinal: z.number().int().min(1),
   created_at: isoDateTimeSchema,
   updated_at: isoDateTimeSchema,
 });
@@ -171,6 +172,7 @@ export const entrySchema = z.object({
   duration_seconds: z.number().int().min(0).nullable(),
   started_at: isoDateTimeSchema.nullable(),
   completed_at: isoDateTimeSchema.nullable(),
+  ordinal: z.number().int().min(1),
   created_at: isoDateTimeSchema,
   updated_at: isoDateTimeSchema,
 });

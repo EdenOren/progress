@@ -122,6 +122,7 @@ export interface Subject {
   description: string | null;
   is_active: boolean;
   default_sets: TemplateSetConfig[];
+  ordinal: number;
   created_at: ISODateTime;
   updated_at: ISODateTime;
 }
@@ -165,6 +166,7 @@ export interface Entry {
   duration_seconds: number | null;
   started_at: ISODateTime | null;
   completed_at: ISODateTime | null;
+  ordinal: number;
   created_at: ISODateTime;
   updated_at: ISODateTime;
 }

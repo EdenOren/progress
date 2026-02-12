@@ -3,6 +3,7 @@ import {
   getSubjects,
   getSubjectsWithStats,
   getSubjectById,
+  getSubjectByOrdinal,
   createSubject,
   updateSubject,
   deleteSubject,
@@ -19,6 +20,7 @@ const QUERY_KEYS = {
   subjects: ['subjects'] as const,
   subjectsWithStats: ['subjects', 'withStats'] as const,
   subject: (id: string) => ['subjects', id] as const,
+  subjectByOrdinal: (ordinal: number) => ['subjects', 'byOrdinal', ordinal] as const,
 };
 
 /**
@@ -85,6 +87,27 @@ export function useSubject(subjectId: string) {
 }
 
 /**
+ * Hook to fetch a single subject by ordinal number
+ */
+export function useSubjectByOrdinal(ordinal: number) {
+  const { user } = useSupabaseContext();
+
+  return useQuery({
+    queryKey: QUERY_KEYS.subjectByOrdinal(ordinal),
+    queryFn: async (): Promise<Subject> => {
+      if (!user) throw new Error('Not authenticated');
+
+      const result = await getSubjectByOrdinal(user.id, ordinal);
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
+    },
+    enabled: !!user && ordinal > 0,
+  });
+}
+
+/**
  * Hook to create a new subject
  */
 export function useCreateSubject() {
@@ -109,6 +132,7 @@ export function useCreateSubject() {
       // Invalidate subjects queries
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjects });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjectsWithStats });
+      queryClient.invalidateQueries({ queryKey: ['subjects', 'byOrdinal'] });
     },
     onError: (error) => {
       handleError(error);
@@ -144,6 +168,7 @@ export function useUpdateSubject() {
       queryClient.setQueryData(QUERY_KEYS.subject(data.id), data);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjects });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjectsWithStats });
+      queryClient.invalidateQueries({ queryKey: ['subjects', 'byOrdinal'] });
     },
     onError: (error) => {
       handleError(error);
@@ -172,6 +197,7 @@ export function useDeleteSubject() {
       queryClient.removeQueries({ queryKey: QUERY_KEYS.subject(subjectId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjects });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjectsWithStats });
+      queryClient.invalidateQueries({ queryKey: ['subjects', 'byOrdinal'] });
     },
     onError: (error) => {
       handleError(error);
@@ -199,6 +225,7 @@ export function useHardDeleteSubject() {
       queryClient.removeQueries({ queryKey: QUERY_KEYS.subject(subjectId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjects });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subjectsWithStats });
+      queryClient.invalidateQueries({ queryKey: ['subjects', 'byOrdinal'] });
     },
     onError: (error) => {
       handleError(error);

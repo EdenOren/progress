@@ -9,15 +9,29 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, formatDurationLong, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
 import { Alert } from 'react-native';
-import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../../src/components';
-import { useSubject, useEntries, useCreateEntry, useCreateEntryWithTemplate, useWorkoutTemplate, useDeleteEntry, useHardDeleteSubject } from '../../../src/hooks';
-import { showSuccessToast } from '../../../src/utils';
+import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../../../src/components';
+import { useSubjectByOrdinal, useEntries, useCreateEntry, useCreateEntryWithTemplate, useWorkoutTemplate, useDeleteEntry, useHardDeleteSubject } from '../../../../src/hooks';
+import { showSuccessToast } from '../../../../src/utils';
 
 export default function SubjectDetailScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: subject, isLoading: subjectLoading } = useSubject(id);
-  const { data: entries, isLoading: entriesLoading, refetch, isRefetching } = useEntries(id);
-  const { data: template } = useWorkoutTemplate(id);
+  const ordinal = Number(id);
+
+  if (!Number.isInteger(ordinal) || ordinal < 1) {
+    return (
+      <EmptyState
+        title="Invalid URL"
+        message="This workout URL is not valid"
+        actionLabel="Go Back"
+        onAction={() => router.back()}
+      />
+    );
+  }
+
+  const { data: subject, isLoading: subjectLoading } = useSubjectByOrdinal(ordinal);
+  const subjectId = subject?.id ?? '';
+  const { data: entries, isLoading: entriesLoading, refetch, isRefetching } = useEntries(subjectId);
+  const { data: template } = useWorkoutTemplate(subjectId);
   const createEntry = useCreateEntry();
   const createEntryWithTemplate = useCreateEntryWithTemplate();
   const deleteEntry = useDeleteEntry();
@@ -51,7 +65,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
   };
 
   const handleStartEntry = async (): Promise<void> => {
-    if (!id || isCreatingEntry || !hasExercises) return;
+    if (!subjectId || isCreatingEntry || !hasExercises) return;
 
     try {
       const templateItems = template!.map((item) => ({
@@ -63,7 +77,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
       const entry = await createEntryWithTemplate.mutateAsync({
         input: {
-          subject_id: id,
+          subject_id: subjectId,
           performed_at: selectedDate,
         },
         templateItems,
@@ -73,8 +87,8 @@ export default function SubjectDetailScreen(): React.ReactElement {
       setSelectedDate(getTodayISO());
 
       router.push({
-        pathname: '/entry/[id]',
-        params: { id: entry.id },
+        pathname: '/subject/[id]/entry/[entryId]',
+        params: { id, entryId: String(entry.ordinal) },
       });
     } catch {
       // Error shown by mutation's onError handler
@@ -83,20 +97,20 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
   const handleEntryPress = (entry: Entry): void => {
     router.push({
-      pathname: '/entry/[id]',
-      params: { id: entry.id },
+      pathname: '/subject/[id]/entry/[entryId]',
+      params: { id, entryId: String(entry.ordinal) },
     });
   };
 
   const handleDeleteEntry = useCallback((entry: Entry): void => {
     if (deleteEntry.isPending) return;
     deleteEntry.mutate(
-      { entryId: entry.id, subjectId: id },
+      { entryId: entry.id, subjectId },
       {
         onSuccess: () => showSuccessToast('Session deleted successfully'),
       }
     );
-  }, [deleteEntry, id]);
+  }, [deleteEntry, subjectId]);
 
   const handleDeleteWorkout = useCallback((): void => {
     if (!subject || deleteSubject.isPending) return;
@@ -109,7 +123,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            deleteSubject.mutate(id, {
+            deleteSubject.mutate(subjectId, {
               onSuccess: () => {
                 showSuccessToast('Workout deleted successfully');
                 router.replace('/');
@@ -119,7 +133,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
         },
       ]
     );
-  }, [subject, deleteSubject, id]);
+  }, [subject, deleteSubject, subjectId]);
 
   const renderEntry = ({ item }: { item: Entry }): React.ReactElement => (
     <Stack marginHorizontal={16} marginBottom={12}>
@@ -192,7 +206,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
     </Stack>
   );
 
-  if (subjectLoading || entriesLoading) {
+  if (subjectLoading || (subject && entriesLoading)) {
     return <LoadingScreen />;
   }
 
@@ -245,7 +259,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
           {/* Template Section */}
           <YStack paddingTop={8} paddingBottom={16} borderBottomWidth={1} borderBottomColor="$borderColor">
-            <TemplateSection subjectId={id} hasInProgressSession={hasInProgressSession} defaultSets={subject.default_sets} />
+            <TemplateSection subjectId={subjectId} hasInProgressSession={hasInProgressSession} defaultSets={subject.default_sets} />
           </YStack>
 
           {/* Date Picker for New Session */}

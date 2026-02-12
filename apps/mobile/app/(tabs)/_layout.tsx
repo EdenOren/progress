@@ -136,14 +136,7 @@ export default function TabsLayout(): React.ReactElement {
         name="subject/[id]"
         options={{
           href: null,
-          headerShown: true,
-        }}
-      />
-      <Tabs.Screen
-        name="entry/[id]"
-        options={{
-          href: null,
-          headerShown: true,
+          headerShown: false,
         }}
       />
     </Tabs>

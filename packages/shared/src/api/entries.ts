@@ -214,6 +214,53 @@ export async function getLastEntryForSubject(
 }
 
 /**
+ * Get a single entry by ordinal number (per-subject)
+ */
+export async function getEntryByOrdinal(
+  userId: string,
+  subjectId: string,
+  ordinal: number
+): Promise<Result<Entry>> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('entries')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('subject_id', subjectId)
+    .eq('ordinal', ordinal)
+    .single();
+
+  if (error) {
+    return err(mapSupabaseError(error));
+  }
+
+  const parsed = entrySchema.safeParse(data);
+  if (!parsed.success) {
+    return err(new ValidationError(parsed.error));
+  }
+
+  return ok(parsed.data);
+}
+
+/**
+ * Get entry with items by ordinal number (per-subject)
+ * Resolves ordinal to UUID, then fetches full entry with items
+ */
+export async function getEntryWithItemsByOrdinal(
+  userId: string,
+  subjectId: string,
+  ordinal: number
+): Promise<Result<EntryWithItems>> {
+  const entryResult = await getEntryByOrdinal(userId, subjectId, ordinal);
+  if (!entryResult.success) {
+    return entryResult;
+  }
+
+  return getEntryWithItems(userId, entryResult.data.id);
+}
+
+/**
  * Create a new entry
  */
 export async function createEntry(input: EntryInsert): Promise<Result<Entry>> {

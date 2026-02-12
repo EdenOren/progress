@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getEntriesBySubject,
   getEntryWithItems,
+  getEntryWithItemsByOrdinal,
   getLastEntryForSubject,
   getRecentEntries,
   createEntry,
@@ -20,6 +21,7 @@ import { handleError } from '../utils';
 const QUERY_KEYS = {
   entries: (subjectId: string) => ['entries', subjectId] as const,
   entry: (entryId: string) => ['entries', 'detail', entryId] as const,
+  entryByOrdinal: (subjectId: string, ordinal: number) => ['entries', 'detail', 'byOrdinal', subjectId, ordinal] as const,
   lastEntry: (subjectId: string) => ['entries', 'last', subjectId] as const,
   recent: ['entries', 'recent'] as const,
 };
@@ -63,6 +65,30 @@ export function useEntryWithItems(entryId: string) {
       return result.data;
     },
     enabled: !!user && !!entryId,
+    staleTime: 0,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(500 * (attemptIndex + 1), 2000),
+  });
+}
+
+/**
+ * Hook to fetch an entry with items by ordinal number (per-subject)
+ */
+export function useEntryWithItemsByOrdinal(subjectId: string, ordinal: number) {
+  const { user } = useSupabaseContext();
+
+  return useQuery({
+    queryKey: QUERY_KEYS.entryByOrdinal(subjectId, ordinal),
+    queryFn: async (): Promise<EntryWithItems> => {
+      if (!user) throw new Error('Not authenticated');
+
+      const result = await getEntryWithItemsByOrdinal(user.id, subjectId, ordinal);
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
+    },
+    enabled: !!user && !!subjectId && ordinal > 0,
     staleTime: 0,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(500 * (attemptIndex + 1), 2000),
@@ -151,6 +177,7 @@ export function useCreateEntry() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries(data.subject_id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lastEntry(data.subject_id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.recent });
+      queryClient.invalidateQueries({ queryKey: ['entries', 'detail', 'byOrdinal'] });
       // Also invalidate subjects stats
       queryClient.invalidateQueries({ queryKey: ['subjects', 'withStats'] });
     },
@@ -186,6 +213,7 @@ export function useUpdateEntry() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entry(data.id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries(data.subject_id) });
+      queryClient.invalidateQueries({ queryKey: ['entries', 'detail', 'byOrdinal'] });
     },
     onError: (error) => {
       handleError(error);
@@ -214,6 +242,7 @@ export function useCompleteEntry() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entry(data.id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries(data.subject_id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.recent });
+      queryClient.invalidateQueries({ queryKey: ['entries', 'detail', 'byOrdinal'] });
     },
     onError: (error) => {
       handleError(error);
@@ -249,6 +278,7 @@ export function useDeleteEntry() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lastEntry(subjectId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.recent });
       queryClient.invalidateQueries({ queryKey: ['subjects', 'withStats'] });
+      queryClient.invalidateQueries({ queryKey: ['entries', 'detail', 'byOrdinal'] });
     },
     onError: (error) => {
       handleError(error);
@@ -301,6 +331,7 @@ export function useCreateEntryWithTemplate() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lastEntry(data.subject_id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.recent });
       queryClient.invalidateQueries({ queryKey: ['subjects', 'withStats'] });
+      queryClient.invalidateQueries({ queryKey: ['entries', 'detail', 'byOrdinal'] });
     },
     onError: (error) => {
       handleError(error);

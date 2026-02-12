@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TextInput, Pressable, ActivityIndicator, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
@@ -12,6 +12,7 @@ import {
   formatDuration,
   formatDistance,
   type ItemWithSets,
+  type ItemSet,
   type FeedbackRating,
 } from '@progress/shared';
 import { useSupabaseContext } from '../providers';
@@ -71,6 +72,47 @@ function parseTimeInput(input: string): number | null {
   // Handle plain number (treat as seconds)
   const num = parseInt(trimmed, 10);
   return isNaN(num) ? null : num;
+}
+
+// Helper: Format an item's sets into a readable summary string
+function formatSetsSummary(sets: ItemSet[], trackingType: string): string | null {
+  if (sets.length === 0) return null;
+
+  if (trackingType === 'duration') {
+    const durations = sets
+      .filter((s) => s.duration_sec !== null)
+      .map((s) => formatDuration(s.duration_sec!));
+    return durations.length > 0 ? durations.join(' · ') : null;
+  }
+
+  if (trackingType === 'distance') {
+    const distances = sets
+      .filter((s) => s.distance_m !== null)
+      .map((s) => {
+        const distStr = formatDistance(s.distance_m!);
+        if (s.duration_sec !== null) {
+          return `${distStr} in ${formatDuration(s.duration_sec)}`;
+        }
+        return distStr;
+      });
+    return distances.length > 0 ? distances.join(' · ') : null;
+  }
+
+  const setStrings = sets
+    .filter((s) => s.weight_kg !== null || s.reps !== null)
+    .map((s) => {
+      if (s.weight_kg !== null && s.reps !== null) {
+        return `${s.weight_kg}kg×${s.reps}`;
+      } else if (s.weight_kg !== null) {
+        return `${s.weight_kg}kg`;
+      } else if (s.reps !== null) {
+        return `${s.reps} reps`;
+      }
+      return '';
+    })
+    .filter(Boolean);
+
+  return setStrings.length > 0 ? setStrings.join(' · ') : null;
 }
 
 export function ExerciseInputCard({
@@ -157,47 +199,9 @@ export function ExerciseInputCard({
   const deleteItemMutation = useDeleteItem(entryId);
 
   // Format last session's sets as reference text
-  const formatLastSessionRef = useCallback((): string | null => {
-    if (!lastSessionItem || lastSessionItem.sets.length === 0) return null;
-
-    if (trackingType === 'duration') {
-      const durations = lastSessionItem.sets
-        .filter((s) => s.duration_sec !== null)
-        .map((s) => formatDuration(s.duration_sec!));
-      return durations.length > 0 ? durations.join(' · ') : null;
-    }
-
-    if (trackingType === 'distance') {
-      const distances = lastSessionItem.sets
-        .filter((s) => s.distance_m !== null)
-        .map((s) => {
-          const distStr = formatDistance(s.distance_m!);
-          if (s.duration_sec !== null) {
-            return `${distStr} in ${formatDuration(s.duration_sec)}`;
-          }
-          return distStr;
-        });
-      return distances.length > 0 ? distances.join(' · ') : null;
-    }
-
-    const setStrings = lastSessionItem.sets
-      .filter((s) => s.weight_kg !== null || s.reps !== null)
-      .map((s) => {
-        if (s.weight_kg !== null && s.reps !== null) {
-          return `${s.weight_kg}kg×${s.reps}`;
-        } else if (s.weight_kg !== null) {
-          return `${s.weight_kg}kg`;
-        } else if (s.reps !== null) {
-          return `${s.reps} reps`;
-        }
-        return '';
-      })
-      .filter(Boolean);
-
-    return setStrings.length > 0 ? setStrings.join(' · ') : null;
-  }, [lastSessionItem, trackingType]);
-
-  const lastRef = formatLastSessionRef();
+  const lastRef = lastSessionItem
+    ? formatSetsSummary(lastSessionItem.sets, trackingType)
+    : null;
 
   // Update set mutation (auto-save on blur)
   const updateSetMutation = useMutation({
@@ -484,13 +488,16 @@ export function ExerciseInputCard({
 
   // Collapsed view - shown when isCollapsed is true
   if (isCollapsed) {
-    const completedSets = item.sets.filter(s => (s.weight_kg !== null || s.duration_sec !== null || s.distance_m !== null)).length;
+    const completedSets = item.sets.filter(s => (s.weight_kg !== null || s.reps !== null || s.duration_sec !== null || s.distance_m !== null)).length;
     const totalSets = item.sets.length;
     // Use optimistic feedback if server data hasn't caught up yet
     const feedbackRating = item.feedback?.rating ?? optimisticFeedback;
     const hasFeedback = !!feedbackRating;
     // Last session info for collapsed view
     const lastFeedback = lastSessionItem?.feedback?.rating;
+    // Set summary for completed sessions
+    const currentSetSummary = !isSessionInProgress ? formatSetsSummary(item.sets, trackingType) : null;
+    const lastSetSummary = lastSessionItem ? formatSetsSummary(lastSessionItem.sets, trackingType) : null;
 
     return (
       <Pressable
@@ -529,37 +536,68 @@ export function ExerciseInputCard({
               <Text fontSize={14} fontWeight="600" color="$color">
                 {item.name}
               </Text>
-              <XStack alignItems="center" gap="$2">
-                {hasFeedback ? (
-                  <Text fontSize={12} color="$textMuted">
-                    {completedSets}/{totalSets} sets completed
+              {/* Subtitle area - different content based on session state */}
+              {!isSessionInProgress && currentSetSummary ? (
+                /* Completed session: show set details and optional note */
+                <YStack>
+                  <Text fontSize={11} color="$textMuted" numberOfLines={1}>
+                    {currentSetSummary}
                   </Text>
-                ) : lastFeedback ? (
+                  {item.note && (
+                    <Text fontSize={11} color="$textMuted" numberOfLines={1} fontStyle="italic">
+                      "{item.note}"
+                    </Text>
+                  )}
+                </YStack>
+              ) : hasFeedback && isSessionInProgress ? (
+                /* Active session with feedback: show sets completed */
+                <Text fontSize={12} color="$textMuted">
+                  {completedSets}/{totalSets} sets completed
+                </Text>
+              ) : !hasFeedback && isSessionInProgress && lastFeedback ? (
+                /* Active session, no feedback yet, has last session data */
+                <YStack>
                   <XStack alignItems="center" gap="$1">
-                    <Text fontSize={12} color="$textMuted">
+                    <Text fontSize={11} color="$textMuted">
                       Last:
                     </Text>
                     <MaterialCommunityIcons
                       name={lastFeedback === 'done' ? 'check-circle' : 'arrow-up-circle'}
-                      size={12}
+                      size={11}
                       color={lastFeedback === 'done'
                         ? (theme.success?.val ?? '#10B981')
                         : (theme.primary?.val ?? '#8B5CF6')}
                     />
                     <Text
-                      fontSize={12}
+                      fontSize={11}
                       color={lastFeedback === 'done' ? '$success' : '$primary'}
                       fontWeight="500"
                     >
                       {lastFeedback === 'done' ? 'Done' : 'Up'}
                     </Text>
+                    {lastSetSummary && (
+                      <Text fontSize={11} color="$textMuted" numberOfLines={1} flex={1}>
+                        · {lastSetSummary}
+                      </Text>
+                    )}
                   </XStack>
-                ) : (
-                  <Text fontSize={12} color="$primary">
-                    {isSessionInProgress ? 'Tap to start' : `${totalSets} sets`}
-                  </Text>
-                )}
-              </XStack>
+                  {lastSessionItem?.note && (
+                    <Text fontSize={11} color="$textMuted" numberOfLines={1} fontStyle="italic">
+                      "{lastSessionItem.note}"
+                    </Text>
+                  )}
+                </YStack>
+              ) : !hasFeedback && isSessionInProgress && !lastFeedback && lastSetSummary ? (
+                /* Active session, no feedback, no last feedback but has last sets */
+                <Text fontSize={11} color="$textMuted" numberOfLines={1}>
+                  Last: {lastSetSummary}
+                </Text>
+              ) : (
+                /* Default: tap to start or set count */
+                <Text fontSize={12} color={isSessionInProgress ? '$primary' : '$textMuted'}>
+                  {isSessionInProgress ? 'Tap to start' : `${totalSets} sets`}
+                </Text>
+              )}
             </YStack>
 
             {/* Feedback badge or chevron indicator */}
@@ -575,7 +613,7 @@ export function ExerciseInputCard({
                   fontWeight="600"
                   color={feedbackRating === 'done' ? '$success' : '$primary'}
                 >
-                  {feedbackRating === 'done' ? 'Done' : 'Up ↑'}
+                  {feedbackRating === 'done' ? 'Done' : 'Up \u2191'}
                 </Text>
               </Stack>
             ) : isSessionInProgress ? (
@@ -693,53 +731,67 @@ export function ExerciseInputCard({
           <YStack
             backgroundColor="$blue5"
             paddingHorizontal="$3"
-            paddingVertical="$2"
+            paddingVertical="$2.5"
             borderRadius="$2"
-            gap="$1"
+            borderLeftWidth={3}
+            borderLeftColor={
+              lastSessionItem.feedback?.rating === 'up'
+                ? '$primary'
+                : lastSessionItem.feedback?.rating === 'done'
+                  ? '$success'
+                  : '$blue10'
+            }
+            gap="$1.5"
           >
-            {/* Sets from last session */}
-            {lastRef && (
-              <XStack alignItems="center">
-                <MaterialCommunityIcons
-                  name="history"
-                  size={14}
-                  color={theme.blue10?.val ?? '#3B82F6'}
-                />
-                <Text fontSize={13} color="$secondary" marginLeft="$2">
-                  Last: {lastRef}
-                </Text>
-              </XStack>
-            )}
-            {/* Feedback from last session */}
+            {/* Feedback from last session - shown FIRST as most important */}
             {lastSessionItem.feedback?.rating && (
-              <XStack alignItems="center">
+              <XStack alignItems="center" gap="$2">
                 <MaterialCommunityIcons
                   name={lastSessionItem.feedback.rating === 'done' ? 'check-circle' : 'arrow-up-circle'}
-                  size={14}
+                  size={16}
                   color={lastSessionItem.feedback.rating === 'done'
                     ? (theme.success?.val ?? '#10B981')
                     : (theme.primary?.val ?? '#8B5CF6')}
                 />
                 <Text
-                  fontSize={13}
+                  fontSize={14}
                   color={lastSessionItem.feedback.rating === 'done' ? '$success' : '$primary'}
-                  marginLeft="$2"
-                  fontWeight="500"
+                  fontWeight="600"
                 >
-                  Last: {lastSessionItem.feedback.rating === 'done' ? 'Done' : 'Up'}
+                  Last session: {lastSessionItem.feedback.rating === 'done' ? 'Done' : 'Up \u2191'}
+                </Text>
+              </XStack>
+            )}
+            {/* Sets from last session */}
+            {lastRef && (
+              <XStack alignItems="center" gap="$2">
+                <MaterialCommunityIcons
+                  name="history"
+                  size={14}
+                  color={theme.blue10?.val ?? '#3B82F6'}
+                />
+                <Text fontSize={13} color="$secondary">
+                  {lastRef}
                 </Text>
               </XStack>
             )}
             {/* Note from last session */}
             {lastSessionItem.note && (
-              <XStack alignItems="flex-start">
+              <XStack
+                alignItems="flex-start"
+                gap="$2"
+                backgroundColor="rgba(59, 130, 246, 0.08)"
+                paddingHorizontal="$2"
+                paddingVertical="$1.5"
+                borderRadius="$1"
+              >
                 <MaterialCommunityIcons
                   name="note-text-outline"
                   size={14}
                   color={theme.blue10?.val ?? '#3B82F6'}
                   style={{ marginTop: 2 }}
                 />
-                <Text fontSize={13} color="$secondary" marginLeft="$2" fontStyle="italic" flex={1}>
+                <Text fontSize={13} color="$secondary" fontStyle="italic" flex={1}>
                   "{lastSessionItem.note}"
                 </Text>
               </XStack>

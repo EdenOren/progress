@@ -8,15 +8,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatDate, formatDuration } from '@progress/shared';
 import type { ItemWithSets } from '@progress/shared';
-import { Card, Button, LoadingScreen, EmptyState, ExerciseInputCard } from '../../../src/components';
-import { AddItemModal } from '../../../src/components/AddItemModal';
+import { Card, Button, LoadingScreen, EmptyState, ExerciseInputCard } from '../../../../../src/components';
+import { AddItemModal } from '../../../../../src/components/AddItemModal';
 import {
-  useEntryWithItems,
+  useSubjectByOrdinal,
+  useEntryWithItemsByOrdinal,
   useLastEntry,
   useUpdateEntry,
   useDeleteEntry,
-} from '../../../src/hooks';
-import { showSuccessToast } from '../../../src/utils';
+} from '../../../../../src/hooks';
+import { showSuccessToast } from '../../../../../src/utils';
 import type { EntryWithItems } from '@progress/shared';
 
 /** Format seconds to MM:SS or HH:MM:SS */
@@ -53,9 +54,30 @@ function getLastSessionItem(
 }
 
 export default function EntryScreen(): React.ReactElement {
-  const params = useLocalSearchParams<{ id: string }>();
-  const entryId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { data: entry, isPending, isError } = useEntryWithItems(entryId ?? '');
+  const params = useLocalSearchParams<{ id: string; entryId: string }>();
+  const subjectOrdinal = Number(params.id);
+  const entryOrdinal = Number(params.entryId);
+
+  if (!Number.isInteger(subjectOrdinal) || subjectOrdinal < 1 ||
+      !Number.isInteger(entryOrdinal) || entryOrdinal < 1) {
+    return (
+      <EmptyState
+        title="Invalid URL"
+        message="This session URL is not valid"
+        actionLabel="Go Back"
+        onAction={() => router.back()}
+      />
+    );
+  }
+
+  // Resolve subject ordinal to UUID
+  const { data: subject, isLoading: subjectLoading, isError: subjectError } = useSubjectByOrdinal(subjectOrdinal);
+  const subjectId = subject?.id ?? '';
+
+  // Resolve entry ordinal to full entry with items
+  const { data: entry, isPending, isError } = useEntryWithItemsByOrdinal(subjectId, entryOrdinal);
+
+  const entryId = entry?.id ?? '';
 
   const { data: lastEntry } = useLastEntry(
     entry?.subject_id ?? '',
@@ -220,9 +242,20 @@ export default function EntryScreen(): React.ReactElement {
     );
   };
 
-  // Show loading while we don't have data yet
-  // isPending = no cached data (React Query v5)
-  if (!entryId || isPending) {
+  // Show error if subject resolution failed
+  if (subjectError) {
+    return (
+      <EmptyState
+        title="Not Found"
+        message="This workout could not be found"
+        actionLabel="Go Back"
+        onAction={() => router.back()}
+      />
+    );
+  }
+
+  // Show loading while resolving subject or entry
+  if (subjectLoading || !subjectId || isPending) {
     return (
       <>
         <RouterStack.Screen options={{ title: 'Loading...' }} />
