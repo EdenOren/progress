@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { FlatList, RefreshControl, ActivityIndicator, Pressable, Platform } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { FlatList, RefreshControl, ActivityIndicator, Pressable } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, formatDurationLong, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
 import { Alert } from 'react-native';
-import { Card, EmptyState, LoadingScreen, TemplateSection } from '../../../../src/components';
+import { Card, EmptyState, LoadingScreen, TemplateSection, DatePickerField } from '../../../../src/components';
 import { useSubjectByOrdinal, useEntries, useCreateEntry, useCreateEntryWithTemplate, useWorkoutTemplate, useDeleteEntry, useHardDeleteSubject } from '../../../../src/hooks';
 import { showSuccessToast } from '../../../../src/utils';
 
@@ -43,26 +42,10 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
   // Date picker state
   const [selectedDate, setSelectedDate] = useState(getTodayISO());
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Check if there's an in-progress session for this workout
   const inProgressEntry = entries?.find(entry => !entry.is_completed);
   const hasInProgressSession = !!inProgressEntry;
-
-  const handleDateChange = (event: DateTimePickerEvent, pickedDate?: Date): void => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-    if (event.type === 'set' && pickedDate) {
-      const isoDateParts = pickedDate.toISOString().split('T');
-      const isoDate = isoDateParts[0] ?? getTodayISO();
-      setSelectedDate(isoDate);
-    }
-  };
-
-  const handleDatePickerDone = (): void => {
-    setShowDatePicker(false);
-  };
 
   const handleStartEntry = async (): Promise<void> => {
     if (!subjectId || isCreatingEntry || !hasExercises) return;
@@ -265,57 +248,11 @@ export default function SubjectDetailScreen(): React.ReactElement {
           {/* Date Picker for New Session */}
           {hasExercises && !hasInProgressSession && (
             <YStack paddingHorizontal={16} paddingTop={16}>
-              <Pressable
-                onPress={() => setShowDatePicker(true)}
-                style={{ cursor: 'pointer', userSelect: 'none' } as never}
-              >
-                <XStack
-                  backgroundColor="$backgroundHover"
-                  padding="$3"
-                  borderRadius="$3"
-                  alignItems="center"
-                  gap="$2"
-                >
-                  <MaterialCommunityIcons
-                    name="calendar"
-                    size={20}
-                    color={theme.textMuted?.val ?? '#A1A1AA'}
-                  />
-                  <Text flex={1} fontSize={15} fontWeight="600" color="$color">
-                    {formatDate(selectedDate)}
-                  </Text>
-                  <MaterialCommunityIcons
-                    name="chevron-right"
-                    size={20}
-                    color={theme.textMuted?.val ?? '#A1A1AA'}
-                  />
-                </XStack>
-              </Pressable>
-
-              {showDatePicker && (
-                <YStack marginTop="$2">
-                  {Platform.OS === 'ios' && (
-                    <XStack justifyContent="flex-end" marginBottom="$2">
-                      <Pressable
-                        onPress={handleDatePickerDone}
-                        style={{ cursor: 'pointer', userSelect: 'none' } as never}
-                      >
-                        <Text fontSize={16} fontWeight="600" color="$primary">
-                          Done
-                        </Text>
-                      </Pressable>
-                    </XStack>
-                  )}
-                  <DateTimePicker
-                    value={new Date(selectedDate + 'T12:00:00')}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    maximumDate={new Date()}
-                    onChange={handleDateChange}
-                    themeVariant="dark"
-                  />
-                </YStack>
-              )}
+              <DatePickerField
+                value={selectedDate}
+                onChange={setSelectedDate}
+                maximumDate={new Date()}
+              />
             </YStack>
           )}
 

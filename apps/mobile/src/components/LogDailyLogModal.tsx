@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Pressable, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { DatePickerField } from './DatePickerField';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
   getTodayISO,
-  formatDate,
   kgToLbs,
   lbsToKg,
   DEFAULT_DAILY_LOG_SETTINGS,
@@ -56,7 +55,6 @@ export function LogDailyLogModal({
   const { data: settings } = useUserSettings();
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(date ?? getTodayISO());
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const isEditing = !!existingEntry;
 
@@ -84,7 +82,6 @@ export function LogDailyLogModal({
     if (visible) {
       // Reset date to prop value or today
       setSelectedDate(date ?? getTodayISO());
-      setShowDatePicker(false);
 
       if (existingEntry) {
         const hours = existingEntry.sleep_hours ? Math.floor(existingEntry.sleep_hours) : undefined;
@@ -164,25 +161,7 @@ export function LogDailyLogModal({
   const handleClose = (): void => {
     reset();
     setError(null);
-    setShowDatePicker(false);
     onClose();
-  };
-
-  const handleDateChange = (event: DateTimePickerEvent, pickedDate?: Date): void => {
-    // On Android, the picker auto-dismisses; on iOS, we keep it open until "Done"
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-    if (event.type === 'set' && pickedDate) {
-      // Convert to ISO date string (YYYY-MM-DD)
-      const isoDateParts = pickedDate.toISOString().split('T');
-      const isoDate = isoDateParts[0] ?? getTodayISO();
-      setSelectedDate(isoDate);
-    }
-  };
-
-  const handleDatePickerDone = (): void => {
-    setShowDatePicker(false);
   };
 
   const inputStyle = {
@@ -235,60 +214,14 @@ export function LogDailyLogModal({
             contentContainerStyle={{ padding: 16 }}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Date Display - Tappable */}
-            <Pressable
-              onPress={() => setShowDatePicker(true)}
-              style={{ cursor: 'pointer', userSelect: 'none' } as never}
-            >
-              <XStack
-                backgroundColor="$backgroundHover"
-                padding="$3"
-                borderRadius="$3"
-                alignItems="center"
-                gap="$2"
-                marginBottom="$4"
-              >
-                <MaterialCommunityIcons
-                  name="calendar"
-                  size={20}
-                  color={theme.textMuted?.val ?? '#A1A1AA'}
-                />
-                <Text flex={1} fontSize={15} fontWeight="600" color="$color">
-                  {formatDate(selectedDate)}
-                </Text>
-                <MaterialCommunityIcons
-                  name="chevron-right"
-                  size={20}
-                  color={theme.textMuted?.val ?? '#A1A1AA'}
-                />
-              </XStack>
-            </Pressable>
-
             {/* Date Picker */}
-            {showDatePicker && (
-              <YStack marginBottom="$4">
-                {Platform.OS === 'ios' && (
-                  <XStack justifyContent="flex-end" marginBottom="$2">
-                    <Pressable
-                      onPress={handleDatePickerDone}
-                      style={{ cursor: 'pointer', userSelect: 'none' } as never}
-                    >
-                      <Text fontSize={16} fontWeight="600" color="$primary">
-                        Done
-                      </Text>
-                    </Pressable>
-                  </XStack>
-                )}
-                <DateTimePicker
-                  value={new Date(selectedDate + 'T12:00:00')}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  maximumDate={new Date()}
-                  onChange={handleDateChange}
-                  themeVariant="dark"
-                />
-              </YStack>
-            )}
+            <Stack marginBottom="$4">
+              <DatePickerField
+                value={selectedDate}
+                onChange={setSelectedDate}
+                maximumDate={new Date()}
+              />
+            </Stack>
 
             {error && (
               <YStack
