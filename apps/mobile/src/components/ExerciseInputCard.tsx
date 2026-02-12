@@ -31,6 +31,7 @@ interface ExerciseInputCardProps {
   entryId: string;
   lastSessionItem?: ItemWithSets | null;
   isSessionInProgress?: boolean;
+  isEditable?: boolean;
   isCollapsed?: boolean;
   onExpand?: () => void;
   onFeedbackSelected?: (itemId: string, rating: FeedbackRating) => void;
@@ -120,6 +121,7 @@ export function ExerciseInputCard({
   entryId,
   lastSessionItem,
   isSessionInProgress = false,
+  isEditable = false,
   isCollapsed = false,
   onExpand,
   onFeedbackSelected,
@@ -127,6 +129,9 @@ export function ExerciseInputCard({
   const { user } = useSupabaseContext();
   const queryClient = useQueryClient();
   const theme = useTheme();
+
+  // canEdit: true when session is in-progress OR edit mode is active on a completed session
+  const canEdit = isSessionInProgress || isEditable;
 
   const trackingType = (item as ItemWithSets & { tracking_type?: string }).tracking_type ?? 'weight_reps';
 
@@ -502,8 +507,8 @@ export function ExerciseInputCard({
     return (
       <Pressable
         onPress={onExpand}
-        disabled={!isSessionInProgress}
-        style={{ cursor: isSessionInProgress ? 'pointer' : 'default', userSelect: 'none' } as never}
+        disabled={!onExpand}
+        style={{ cursor: onExpand ? 'pointer' : 'default', userSelect: 'none' } as never}
       >
         <Card>
           <XStack alignItems="center" gap="$3" paddingVertical="$1">
@@ -538,11 +543,25 @@ export function ExerciseInputCard({
               </Text>
               {/* Subtitle area - different content based on session state */}
               {!isSessionInProgress && currentSetSummary ? (
-                /* Completed session: show set details and optional note */
+                /* Completed session: show feedback label + set details and optional note */
                 <YStack>
-                  <Text fontSize={11} color="$textMuted" numberOfLines={1}>
-                    {currentSetSummary}
-                  </Text>
+                  <XStack alignItems="center" gap="$1">
+                    {feedbackRating && (
+                      <>
+                        <Text
+                          fontSize={11}
+                          fontWeight="600"
+                          color={feedbackRating === 'done' ? '$success' : '$primary'}
+                        >
+                          {feedbackRating === 'done' ? 'Done' : 'Up'}
+                        </Text>
+                        <Text fontSize={11} color="$textMuted">·</Text>
+                      </>
+                    )}
+                    <Text fontSize={11} color="$textMuted" numberOfLines={1} flex={1}>
+                      {currentSetSummary}
+                    </Text>
+                  </XStack>
                   {item.note && (
                     <Text fontSize={11} color="$textMuted" numberOfLines={1} fontStyle="italic">
                       "{item.note}"
@@ -616,7 +635,7 @@ export function ExerciseInputCard({
                   {feedbackRating === 'done' ? 'Done' : 'Up \u2191'}
                 </Text>
               </Stack>
-            ) : isSessionInProgress ? (
+            ) : onExpand ? (
               <MaterialCommunityIcons
                 name="chevron-right"
                 size={20}
@@ -671,8 +690,8 @@ export function ExerciseInputCard({
               </Stack>
             </Pressable>
 
-            {/* Delete exercise button - hidden during in-progress session */}
-            {!isSessionInProgress && (
+            {/* Delete exercise button - show only in edit mode for completed sessions */}
+            {isEditable && (
               <Pressable
                 onPress={handleDeleteExercise}
                 disabled={deleteItemMutation.isPending}
@@ -808,7 +827,7 @@ export function ExerciseInputCard({
             const isDeleting = serverSet && deletingSets.has(serverSet.id);
             const isCopied = copiedSetIndex === index;
             const hasLastSetData = lastSet && (lastSet.weight_kg !== null || lastSet.reps !== null || lastSet.duration_sec !== null || lastSet.distance_m !== null);
-            const canDeleteSet = isSessionInProgress && localSets.length > 1;
+            const canDeleteSet = canEdit && localSets.length > 1;
 
             return (
               <XStack
@@ -842,7 +861,7 @@ export function ExerciseInputCard({
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
-                        opacity: isSessionInProgress ? 1 : 0.6,
+                        opacity: canEdit ? 1 : 0.6,
                       }}
                       placeholder="kg"
                       placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
@@ -850,7 +869,7 @@ export function ExerciseInputCard({
                       value={localSet.weight}
                       onChangeText={(v) => handleInputChange(index, 'weight', v)}
                       onBlur={() => handleBlur(index)}
-                      editable={isSessionInProgress}
+                      editable={canEdit}
                     />
                     <Text color="$textMuted" fontSize={16}>×</Text>
                     <TextInput
@@ -865,7 +884,7 @@ export function ExerciseInputCard({
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
-                        opacity: isSessionInProgress ? 1 : 0.6,
+                        opacity: canEdit ? 1 : 0.6,
                       }}
                       placeholder="reps"
                       placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
@@ -873,7 +892,7 @@ export function ExerciseInputCard({
                       value={localSet.reps}
                       onChangeText={(v) => handleInputChange(index, 'reps', v)}
                       onBlur={() => handleBlur(index)}
-                      editable={isSessionInProgress}
+                      editable={canEdit}
                     />
                   </XStack>
                 )}
@@ -891,7 +910,7 @@ export function ExerciseInputCard({
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
-                        opacity: isSessionInProgress ? 1 : 0.6,
+                        opacity: canEdit ? 1 : 0.6,
                       }}
                       placeholder="seconds"
                       placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
@@ -899,7 +918,7 @@ export function ExerciseInputCard({
                       value={localSet.duration}
                       onChangeText={(v) => handleInputChange(index, 'duration', v)}
                       onBlur={() => handleBlur(index)}
-                      editable={isSessionInProgress}
+                      editable={canEdit}
                     />
                     <Text fontSize={12} color="$textMuted">sec</Text>
                   </XStack>
@@ -918,7 +937,7 @@ export function ExerciseInputCard({
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
-                        opacity: isSessionInProgress ? 1 : 0.6,
+                        opacity: canEdit ? 1 : 0.6,
                       }}
                       placeholder="0.0"
                       placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
@@ -926,7 +945,7 @@ export function ExerciseInputCard({
                       value={localSet.distance}
                       onChangeText={(v) => handleInputChange(index, 'distance', v)}
                       onBlur={() => handleBlur(index)}
-                      editable={isSessionInProgress}
+                      editable={canEdit}
                     />
                     <Text fontSize={12} color="$textMuted">km</Text>
                     <Text color="$textMuted" fontSize={12}>in</Text>
@@ -942,7 +961,7 @@ export function ExerciseInputCard({
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
-                        opacity: isSessionInProgress ? 1 : 0.6,
+                        opacity: canEdit ? 1 : 0.6,
                       }}
                       placeholder="m:ss"
                       placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
@@ -950,7 +969,7 @@ export function ExerciseInputCard({
                       value={localSet.duration}
                       onChangeText={(v) => handleInputChange(index, 'duration', v)}
                       onBlur={() => handleBlur(index)}
-                      editable={isSessionInProgress}
+                      editable={canEdit}
                     />
                   </XStack>
                 )}
@@ -958,8 +977,8 @@ export function ExerciseInputCard({
 
                 {/* Action buttons - aligned to right */}
                 <XStack alignItems="center" gap="$1">
-                {/* Copy button - only show when session is in progress */}
-                {hasLastSetData && isSessionInProgress && (
+                {/* Copy button - show when editing is allowed */}
+                {hasLastSetData && canEdit && (
                   <Pressable
                     onPress={() => handleCopySet(index)}
                     disabled={isSaving}
@@ -1037,8 +1056,8 @@ export function ExerciseInputCard({
           })}
         </YStack>
 
-        {/* Add set button - only show when session is in progress */}
-        {isSessionInProgress && (
+        {/* Add set button - only show when editing is allowed */}
+        {canEdit && (
           <Button
             variant="ghost"
             size="small"
@@ -1084,12 +1103,12 @@ export function ExerciseInputCard({
                 <Pressable
                   key={rating}
                   onPress={() => feedbackMutation.mutate(rating)}
-                  disabled={feedbackMutation.isPending || !isSessionInProgress}
+                  disabled={feedbackMutation.isPending || !canEdit}
                   style={{
                     flex: 1,
-                    cursor: isSessionInProgress ? 'pointer' : 'default',
+                    cursor: canEdit ? 'pointer' : 'default',
                     userSelect: 'none',
-                    opacity: !isSessionInProgress ? 0.7 : (feedbackMutation.isPending && !isPendingThis ? 0.5 : 1),
+                    opacity: !canEdit ? 0.7 : (feedbackMutation.isPending && !isPendingThis ? 0.5 : 1),
                   } as never}
                 >
                   <Stack
