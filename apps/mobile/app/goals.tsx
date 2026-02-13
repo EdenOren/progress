@@ -48,13 +48,14 @@ export default function GoalsScreen(): React.ReactElement {
   };
 
   const inputStyle = {
-    flex: 1,
+    width: 100,
     backgroundColor: theme.backgroundHover?.val ?? '#27272A',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
     color: theme.color?.val ?? '#FAFAFA',
+    textAlign: 'right' as const,
   };
 
   return (
@@ -99,10 +100,10 @@ export default function GoalsScreen(): React.ReactElement {
               </XStack>
 
               <Card>
-                <YStack gap={24}>
+                <YStack gap={20}>
                   {/* Sleep Target */}
-                  <YStack gap={8}>
-                    <XStack alignItems="center" gap={8}>
+                  <XStack alignItems="center" justifyContent="space-between">
+                    <XStack alignItems="center" gap={8} flex={1}>
                       <MaterialCommunityIcons
                         name="sleep"
                         size={20}
@@ -112,7 +113,7 @@ export default function GoalsScreen(): React.ReactElement {
                         Sleep Target
                       </Text>
                     </XStack>
-                    <XStack alignItems="center" gap={8}>
+                    <XStack alignItems="center" gap={6}>
                       <TextInput
                         style={inputStyle as never}
                         placeholder="8.0"
@@ -122,13 +123,13 @@ export default function GoalsScreen(): React.ReactElement {
                         value={sleepTarget}
                         maxLength={4}
                       />
-                      <Text fontSize={14} color="$textMuted">hrs/night</Text>
+                      <Text fontSize={13} color="$textMuted" width={55}>hrs/night</Text>
                     </XStack>
-                  </YStack>
+                  </XStack>
 
                   {/* Water Target */}
-                  <YStack gap={8}>
-                    <XStack alignItems="center" gap={8}>
+                  <XStack alignItems="center" justifyContent="space-between">
+                    <XStack alignItems="center" gap={8} flex={1}>
                       <MaterialCommunityIcons
                         name="water"
                         size={20}
@@ -138,7 +139,7 @@ export default function GoalsScreen(): React.ReactElement {
                         Water Target
                       </Text>
                     </XStack>
-                    <XStack alignItems="center" gap={8}>
+                    <XStack alignItems="center" gap={6}>
                       <TextInput
                         style={inputStyle as never}
                         placeholder="2.5"
@@ -148,23 +149,23 @@ export default function GoalsScreen(): React.ReactElement {
                         value={waterTarget}
                         maxLength={4}
                       />
-                      <Text fontSize={14} color="$textMuted">L/day</Text>
+                      <Text fontSize={13} color="$textMuted" width={55}>L/day</Text>
                     </XStack>
-                  </YStack>
+                  </XStack>
 
                   {/* Weight Target */}
-                  <YStack gap={8}>
-                    <XStack alignItems="center" gap={8}>
+                  <XStack alignItems="center" justifyContent="space-between">
+                    <XStack alignItems="center" gap={8} flex={1}>
                       <MaterialCommunityIcons
                         name="scale-bathroom"
                         size={20}
                         color={theme.primary?.val ?? '#8B5CF6'}
                       />
                       <Text fontSize={14} fontWeight="600" color="$color">
-                        Weight Target (optional)
+                        Weight Target
                       </Text>
                     </XStack>
-                    <XStack alignItems="center" gap={8}>
+                    <XStack alignItems="center" gap={6}>
                       <TextInput
                         style={inputStyle as never}
                         placeholder="75.0"
@@ -174,23 +175,23 @@ export default function GoalsScreen(): React.ReactElement {
                         value={weightTarget}
                         maxLength={5}
                       />
-                      <Text fontSize={14} color="$textMuted">kg</Text>
+                      <Text fontSize={13} color="$textMuted" width={55}>kg</Text>
                     </XStack>
-                  </YStack>
+                  </XStack>
 
                   {/* Waist Target */}
-                  <YStack gap={8}>
-                    <XStack alignItems="center" gap={8}>
+                  <XStack alignItems="center" justifyContent="space-between">
+                    <XStack alignItems="center" gap={8} flex={1}>
                       <MaterialCommunityIcons
                         name="tape-measure"
                         size={20}
                         color={theme.primary?.val ?? '#8B5CF6'}
                       />
                       <Text fontSize={14} fontWeight="600" color="$color">
-                        Waist Target (optional)
+                        Waist Target
                       </Text>
                     </XStack>
-                    <XStack alignItems="center" gap={8}>
+                    <XStack alignItems="center" gap={6}>
                       <TextInput
                         style={inputStyle as never}
                         placeholder="80.0"
@@ -200,9 +201,9 @@ export default function GoalsScreen(): React.ReactElement {
                         value={waistTarget}
                         maxLength={5}
                       />
-                      <Text fontSize={14} color="$textMuted">cm</Text>
+                      <Text fontSize={13} color="$textMuted" width={55}>cm</Text>
                     </XStack>
-                  </YStack>
+                  </XStack>
                 </YStack>
               </Card>
 

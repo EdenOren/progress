@@ -40,6 +40,7 @@ export function UnitToggle<T extends string>({
         borderRadius={8}
         padding={4}
         gap={4}
+        width={140}
       >
         {options.map((option) => {
           const isSelected = value === option.value;
@@ -49,21 +50,24 @@ export function UnitToggle<T extends string>({
               onPress={() => !disabled && onChange(option.value)}
               disabled={disabled}
               style={({ pressed }) => ({
+                flex: 1,
                 opacity: pressed && !disabled ? 0.7 : 1,
               })}
             >
               <XStack
-                paddingHorizontal={16}
                 paddingVertical={8}
                 borderRadius={6}
                 backgroundColor={
                   isSelected ? theme.primary?.val ?? '#8B5CF6' : 'transparent'
                 }
+                justifyContent="center"
+                alignItems="center"
               >
                 <Text
                   fontSize={14}
                   fontWeight={isSelected ? '600' : '500'}
                   color={isSelected ? '#FFFFFF' : '$textMuted'}
+                  textAlign="center"
                 >
                   {option.label}
                 </Text>

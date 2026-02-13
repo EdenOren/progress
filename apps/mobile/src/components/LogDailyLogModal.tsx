@@ -172,13 +172,14 @@ export function LogDailyLogModal({
   };
 
   const inputStyle = {
-    flex: 1,
+    width: 80,
     backgroundColor: theme.backgroundHover?.val ?? '#27272A',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
     color: theme.color?.val ?? '#FAFAFA',
+    textAlign: 'right' as const,
   };
 
   return (
@@ -259,23 +260,23 @@ export function LogDailyLogModal({
 
             <YStack gap="$5">
               {/* Sleep Duration */}
-              <YStack gap="$2">
-                <XStack alignItems="center" gap="$2">
+              <XStack alignItems="center" justifyContent="space-between">
+                <XStack alignItems="center" gap="$2" flex={1}>
                   <MaterialCommunityIcons
                     name="sleep"
                     size={20}
                     color={theme.primary?.val ?? '#8B5CF6'}
                   />
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Sleep Duration
+                    Sleep
                   </Text>
                 </XStack>
-                <XStack gap="$3" alignItems="center">
+                <XStack alignItems="center" gap="$2">
                   <Controller
                     control={control}
                     name="sleepHours"
                     render={({ field: { onChange, value } }) => (
-                      <XStack flex={1} alignItems="center" gap="$2">
+                      <XStack alignItems="center" gap={4}>
                         <TextInput
                           style={inputStyle as never}
                           placeholder="0"
@@ -285,7 +286,7 @@ export function LogDailyLogModal({
                           value={value}
                           maxLength={2}
                         />
-                        <Text fontSize={14} color="$textMuted">hrs</Text>
+                        <Text fontSize={13} color="$textMuted">h</Text>
                       </XStack>
                     )}
                   />
@@ -293,7 +294,7 @@ export function LogDailyLogModal({
                     control={control}
                     name="sleepMinutes"
                     render={({ field: { onChange, value } }) => (
-                      <XStack flex={1} alignItems="center" gap="$2">
+                      <XStack alignItems="center" gap={4}>
                         <TextInput
                           style={inputStyle as never}
                           placeholder="0"
@@ -303,32 +304,32 @@ export function LogDailyLogModal({
                           value={value}
                           maxLength={2}
                         />
-                        <Text fontSize={14} color="$textMuted">min</Text>
+                        <Text fontSize={13} color="$textMuted">m</Text>
                       </XStack>
                     )}
                   />
                 </XStack>
-              </YStack>
+              </XStack>
 
               {/* Weight */}
-              <YStack gap="$2">
-                <XStack alignItems="center" gap="$2">
+              <XStack alignItems="center" justifyContent="space-between">
+                <XStack alignItems="center" gap="$2" flex={1}>
                   <MaterialCommunityIcons
                     name="scale-bathroom"
                     size={20}
                     color={theme.primary?.val ?? '#8B5CF6'}
                   />
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Weight (optional)
+                    Weight
                   </Text>
                 </XStack>
                 <Controller
                   control={control}
                   name="weightKg"
                   render={({ field: { onChange, value } }) => (
-                    <XStack alignItems="center" gap="$2">
+                    <XStack alignItems="center" gap={6}>
                       <TextInput
-                        style={{ ...inputStyle, flex: 1 } as never}
+                        style={inputStyle as never}
                         placeholder="0.0"
                         placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
                         keyboardType="decimal-pad"
@@ -336,31 +337,31 @@ export function LogDailyLogModal({
                         value={value}
                         maxLength={6}
                       />
-                      <Text fontSize={14} color="$textMuted">{weightUnit}</Text>
+                      <Text fontSize={13} color="$textMuted" width={24}>{weightUnit}</Text>
                     </XStack>
                   )}
                 />
-              </YStack>
+              </XStack>
 
               {/* Water Intake */}
-              <YStack gap="$2">
-                <XStack alignItems="center" gap="$2">
+              <XStack alignItems="center" justifyContent="space-between">
+                <XStack alignItems="center" gap="$2" flex={1}>
                   <MaterialCommunityIcons
                     name="water"
                     size={20}
                     color={theme.primary?.val ?? '#8B5CF6'}
                   />
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Water Intake (optional)
+                    Water
                   </Text>
                 </XStack>
                 <Controller
                   control={control}
                   name="waterIntakeLiters"
                   render={({ field: { onChange, value } }) => (
-                    <XStack alignItems="center" gap="$2">
+                    <XStack alignItems="center" gap={6}>
                       <TextInput
-                        style={{ ...inputStyle, flex: 1 } as never}
+                        style={inputStyle as never}
                         placeholder="0.0"
                         placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
                         keyboardType="decimal-pad"
@@ -368,31 +369,31 @@ export function LogDailyLogModal({
                         value={value}
                         maxLength={5}
                       />
-                      <Text fontSize={14} color="$textMuted">L</Text>
+                      <Text fontSize={13} color="$textMuted" width={24}>L</Text>
                     </XStack>
                   )}
                 />
-              </YStack>
+              </XStack>
 
               {/* Waist Circumference */}
-              <YStack gap="$2">
-                <XStack alignItems="center" gap="$2">
+              <XStack alignItems="center" justifyContent="space-between">
+                <XStack alignItems="center" gap="$2" flex={1}>
                   <MaterialCommunityIcons
                     name="tape-measure"
                     size={20}
                     color={theme.primary?.val ?? '#8B5CF6'}
                   />
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Waist Circumference (optional)
+                    Waist
                   </Text>
                 </XStack>
                 <Controller
                   control={control}
                   name="waistCm"
                   render={({ field: { onChange, value } }) => (
-                    <XStack alignItems="center" gap="$2">
+                    <XStack alignItems="center" gap={6}>
                       <TextInput
-                        style={{ ...inputStyle, flex: 1 } as never}
+                        style={inputStyle as never}
                         placeholder="0.0"
                         placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
                         keyboardType="decimal-pad"
@@ -400,11 +401,11 @@ export function LogDailyLogModal({
                         value={value}
                         maxLength={5}
                       />
-                      <Text fontSize={14} color="$textMuted">cm</Text>
+                      <Text fontSize={13} color="$textMuted" width={24}>cm</Text>
                     </XStack>
                   )}
                 />
-              </YStack>
+              </XStack>
 
               {/* Notes */}
               <YStack gap="$2">
@@ -415,7 +416,7 @@ export function LogDailyLogModal({
                     color={theme.primary?.val ?? '#8B5CF6'}
                   />
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Notes (optional)
+                    Notes
                   </Text>
                 </XStack>
                 <Controller
@@ -424,10 +425,15 @@ export function LogDailyLogModal({
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={{
-                        ...inputStyle,
+                        width: '100%',
+                        backgroundColor: theme.backgroundHover?.val ?? '#27272A',
+                        borderRadius: 8,
+                        paddingHorizontal: 12,
+                        paddingVertical: 12,
+                        fontSize: 16,
+                        color: theme.color?.val ?? '#FAFAFA',
                         minHeight: 80,
                         textAlignVertical: 'top',
-                        paddingTop: 12,
                       } as never}
                       placeholder="How did you feel? Any notes..."
                       placeholderTextColor={theme.textMuted?.val ?? '#71717A'}

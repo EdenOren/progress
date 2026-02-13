@@ -7,7 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useNavigation } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppColorScheme } from '../../src/hooks/useAppColorScheme';
-import { formatRelativeDate, getTodayISO, isToday, DEFAULT_DAILY_LOG_SETTINGS, type DailyLogEntry } from '@progress/shared';
+import { formatRelativeDate, getTodayISO, DEFAULT_DAILY_LOG_SETTINGS, type DailyLogEntry } from '@progress/shared';
 import { EmptyState, DailyLogEntryCard, LogDailyLogModal } from '../../src/components';
 import {
   useSubjectsWithStats,
@@ -47,6 +47,12 @@ function DailyLogModule(): React.ReactElement {
     setShowLogModal(true);
   }, [todayEntry, today]);
 
+  const handleAddNew = useCallback(() => {
+    setSelectedEntry(null);
+    setSelectedDate(today);
+    setShowLogModal(true);
+  }, [today]);
+
   const handleEditEntry = useCallback((entry: DailyLogEntry) => {
     setSelectedEntry(entry);
     setSelectedDate(entry.logged_date);
@@ -68,14 +74,13 @@ function DailyLogModule(): React.ReactElement {
   }
 
   const hasEntries = (entries?.length ?? 0) > 0;
-  const hasTodayEntry = entries?.some(e => isToday(e.logged_date)) ?? false;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
       <YStack flex={1}>
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
@@ -100,23 +105,21 @@ function DailyLogModule(): React.ReactElement {
                 <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
                   Recent Entries
                 </Text>
-                {!hasTodayEntry && (
-                  <Pressable
-                    onPress={handleLogToday}
-                    style={{ cursor: 'pointer', userSelect: 'none' } as never}
-                  >
-                    <XStack alignItems="center" gap="$1">
-                      <MaterialCommunityIcons
-                        name="plus"
-                        size={18}
-                        color={theme.primary?.val ?? '#8B5CF6'}
-                      />
-                      <Text fontSize={14} fontWeight="600" color="$primary">
-                        Log Today
-                      </Text>
-                    </XStack>
-                  </Pressable>
-                )}
+                <Pressable
+                  onPress={handleAddNew}
+                  style={{ cursor: 'pointer', userSelect: 'none' } as never}
+                >
+                  <XStack alignItems="center" gap="$1">
+                    <MaterialCommunityIcons
+                      name="plus"
+                      size={18}
+                      color={theme.primary?.val ?? '#8B5CF6'}
+                    />
+                    <Text fontSize={14} fontWeight="600" color="$primary">
+                      Add
+                    </Text>
+                  </XStack>
+                </Pressable>
               </XStack>
 
               {/* Entry cards */}
@@ -134,80 +137,6 @@ function DailyLogModule(): React.ReactElement {
           )}
         </ScrollView>
 
-        {/* Floating Log Today button (when there are entries but no today entry) */}
-        {hasEntries && !hasTodayEntry && (
-          <Stack
-            position="absolute"
-            bottom={24}
-            left={0}
-            right={0}
-            alignItems="center"
-          >
-            <Pressable
-              onPress={handleLogToday}
-              style={{ cursor: 'pointer', userSelect: 'none' } as never}
-            >
-              <XStack
-                backgroundColor="$primary"
-                paddingHorizontal={24}
-                paddingVertical={14}
-                borderRadius={28}
-                alignItems="center"
-                gap="$2"
-                shadowColor="black"
-                shadowOffset={{ width: 0, height: 4 }}
-                shadowOpacity={0.3}
-                shadowRadius={8}
-                elevation={8}
-              >
-                <MaterialCommunityIcons
-                  name="plus"
-                  size={20}
-                  color="white"
-                />
-                <Text color="white" fontSize={16} fontWeight="700">
-                  Log Today
-                </Text>
-              </XStack>
-            </Pressable>
-          </Stack>
-        )}
-
-        {/* Edit button when today entry exists */}
-        {hasTodayEntry && (
-          <Stack
-            position="absolute"
-            bottom={24}
-            left={0}
-            right={0}
-            alignItems="center"
-          >
-            <Pressable
-              onPress={handleLogToday}
-              style={{ cursor: 'pointer', userSelect: 'none' } as never}
-            >
-              <XStack
-                backgroundColor="$backgroundHover"
-                paddingHorizontal={24}
-                paddingVertical={14}
-                borderRadius={28}
-                alignItems="center"
-                gap="$2"
-                borderWidth={1}
-                borderColor="$borderColor"
-              >
-                <MaterialCommunityIcons
-                  name="pencil"
-                  size={20}
-                  color={theme.primary?.val ?? '#8B5CF6'}
-                />
-                <Text color="$primary" fontSize={16} fontWeight="700">
-                  Edit Today
-                </Text>
-              </XStack>
-            </Pressable>
-          </Stack>
-        )}
       </YStack>
 
       <LogDailyLogModal
@@ -983,12 +912,12 @@ function WorkoutModule(): React.ReactElement {
 
 type ActiveView = 'progress' | 'daily_log';
 
-interface SegmentedToggleProps {
+interface ViewSwitcherProps {
   activeView: ActiveView;
   onToggle: (view: ActiveView) => void;
 }
 
-function SegmentedToggle({ activeView, onToggle }: SegmentedToggleProps): React.ReactElement {
+function ViewSwitcher({ activeView, onToggle }: ViewSwitcherProps): React.ReactElement {
   const colorScheme = useAppColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -997,53 +926,46 @@ function SegmentedToggle({ activeView, onToggle }: SegmentedToggleProps): React.
   const textColor = isDark ? '#FAFAFA' : '#18181B';
   const mutedColor = isDark ? '#71717A' : '#A1A1AA';
 
+  const options: { key: ActiveView; icon: 'dumbbell' | 'notebook-outline'; label: string }[] = [
+    { key: 'progress', icon: 'dumbbell', label: 'Progress view' },
+    { key: 'daily_log', icon: 'notebook-outline', label: 'Daily Log view' },
+  ];
+
   return (
     <XStack
       backgroundColor={bgColor}
       borderRadius={8}
       padding={3}
       gap={2}
+      marginRight={8}
     >
-      <Pressable
-        onPress={() => onToggle('progress')}
-        style={{ flex: 1 }}
-      >
-        <Stack
-          backgroundColor={activeView === 'progress' ? activeColor : 'transparent'}
-          borderRadius={6}
-          paddingVertical={6}
-          paddingHorizontal={14}
-          alignItems="center"
-        >
-          <Text
-            fontSize={14}
-            fontWeight={activeView === 'progress' ? '600' : '500'}
-            color={activeView === 'progress' ? textColor : mutedColor}
+      {options.map(({ key, icon, label }) => {
+        const isActive = activeView === key;
+        return (
+          <Pressable
+            key={key}
+            onPress={() => onToggle(key)}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityState={{ selected: isActive }}
           >
-            Progress
-          </Text>
-        </Stack>
-      </Pressable>
-      <Pressable
-        onPress={() => onToggle('daily_log')}
-        style={{ flex: 1 }}
-      >
-        <Stack
-          backgroundColor={activeView === 'daily_log' ? activeColor : 'transparent'}
-          borderRadius={6}
-          paddingVertical={6}
-          paddingHorizontal={14}
-          alignItems="center"
-        >
-          <Text
-            fontSize={14}
-            fontWeight={activeView === 'daily_log' ? '600' : '500'}
-            color={activeView === 'daily_log' ? textColor : mutedColor}
-          >
-            Daily Log
-          </Text>
-        </Stack>
-      </Pressable>
+            <Stack
+              backgroundColor={isActive ? activeColor : 'transparent'}
+              borderRadius={6}
+              paddingVertical={5}
+              paddingHorizontal={12}
+              alignItems="center"
+              justifyContent="center"
+            >
+              <MaterialCommunityIcons
+                name={icon}
+                size={18}
+                color={isActive ? textColor : mutedColor}
+              />
+            </Stack>
+          </Pressable>
+        );
+      })}
     </XStack>
   );
 }
@@ -1055,8 +977,9 @@ export default function HomeScreen(): React.ReactElement {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTitle: () => (
-        <SegmentedToggle activeView={activeView} onToggle={setActiveView} />
+      headerTitle: activeView === 'progress' ? 'Progress' : 'Daily Log',
+      headerRight: () => (
+        <ViewSwitcher activeView={activeView} onToggle={setActiveView} />
       ),
     });
   }, [navigation, activeView]);
