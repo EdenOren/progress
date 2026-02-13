@@ -63,3 +63,13 @@ export {
   logWarn,
   logError,
 } from './logger';
+
+// KPI utilities
+export {
+  waistToHeightRatio,
+  averageOfValues,
+  goalPercentage,
+  getKpiStatus,
+  getWaistToHeightStatus,
+  type KpiStatus,
+} from './kpi';

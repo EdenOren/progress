@@ -109,11 +109,8 @@ export {
 export {
   getUserSettings,
   updateUserSettings,
-  toggleModule,
   updateModuleSettings,
   getModuleSettings,
-  isModuleEnabled,
-  updateActiveModule,
 } from './settings';
 
 // Daily Log API
@@ -125,3 +122,9 @@ export {
   updateDailyLogEntry,
   deleteDailyLogEntry,
 } from './dailyLog';
+
+// Health Goals API
+export {
+  getHealthGoals,
+  upsertHealthGoals,
+} from './healthGoals';

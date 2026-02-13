@@ -76,6 +76,7 @@ export interface Profile {
   avatar_url: string | null;
   height_cm: number | null;
   weight_kg: number | null;
+  date_of_birth: ISODate | null;
   created_at: ISODateTime;
   updated_at: ISODateTime;
 }
@@ -87,6 +88,7 @@ export interface ProfileInsert {
   avatar_url?: string | null;
   height_cm?: number | null;
   weight_kg?: number | null;
+  date_of_birth?: ISODate | null;
 }
 
 export interface ProfileUpdate {
@@ -94,6 +96,7 @@ export interface ProfileUpdate {
   avatar_url?: string | null;
   height_cm?: number | null;
   weight_kg?: number | null;
+  date_of_birth?: ISODate | null;
 }
 
 // ============================================================================

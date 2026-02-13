@@ -121,6 +121,8 @@ export async function upsertDailyLogEntry(
         sleep_hours: validatedInput.data.sleep_hours ?? null,
         weight_kg: validatedInput.data.weight_kg ?? null,
         body_fat_percent: validatedInput.data.body_fat_percent ?? null,
+        water_intake_liters: validatedInput.data.water_intake_liters ?? null,
+        waist_cm: validatedInput.data.waist_cm ?? null,
         notes: validatedInput.data.notes ?? null,
         updated_at: new Date().toISOString(),
       },

@@ -53,8 +53,6 @@ export { useAppColorScheme } from './useAppColorScheme';
 export {
   useUserSettings,
   useUpdateSettings,
-  useToggleModule,
-  useUpdateModuleSettings,
   useUpdateWorkoutSettings,
   useUpdateDailyLogSettings,
 } from './useSettings';
@@ -64,3 +62,6 @@ export {
   useUpsertDailyLogEntry,
   useDeleteDailyLogEntry,
 } from './useDailyLog';
+export { useProfile, useUpdateProfile } from './useProfile';
+export { useHealthGoals, useUpsertHealthGoals } from './useHealthGoals';
+export { useKpi, type KpiCardData, type KpiData } from './useKpi';

@@ -113,6 +113,8 @@ describe('Subject Schemas', () => {
     name: 'Monday Practice',
     description: 'Weekly strength training',
     is_active: true,
+    default_sets: [{ target_reps: 10 }, { target_reps: 10 }, { target_reps: 10 }],
+    ordinal: 1,
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
   };
@@ -182,6 +184,7 @@ describe('Entry Schema', () => {
     duration_seconds: null,
     started_at: null,
     completed_at: null,
+    ordinal: 1,
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T11:00:00Z',
   };

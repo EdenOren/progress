@@ -2,7 +2,6 @@ import { getSupabase } from '../supabase/client';
 import type {
   UserSettings,
   UserSettingsUpdate,
-  ModuleKey,
   ModuleSettingsMap,
   WorkoutModuleSettings,
   DailyLogModuleSettings,
@@ -10,7 +9,7 @@ import type {
 import { userSettingsSchema } from '../schemas/settings';
 import { type Result, ok, err } from '../types/result';
 import { mapSupabaseError, ValidationError } from '../errors/index';
-import { DEFAULT_USER_SETTINGS, DEFAULT_WORKOUT_SETTINGS, DEFAULT_DAILY_LOG_SETTINGS } from '../types/settings';
+import { DEFAULT_WORKOUT_SETTINGS, DEFAULT_DAILY_LOG_SETTINGS } from '../types/settings';
 
 /**
  * Get user settings, auto-creating with defaults if not exists
@@ -52,9 +51,7 @@ async function createUserSettings(userId: string): Promise<Result<UserSettings>>
     .from('user_settings')
     .insert({
       user_id: userId,
-      enabled_modules: DEFAULT_USER_SETTINGS.enabled_modules as string[],
-      active_module: DEFAULT_USER_SETTINGS.active_module,
-      module_settings: DEFAULT_USER_SETTINGS.module_settings as Record<string, unknown>,
+      module_settings: {} as Record<string, unknown>,
     })
     .select()
     .single();
@@ -80,23 +77,12 @@ export async function updateUserSettings(
 ): Promise<Result<UserSettings>> {
   const supabase = getSupabase();
 
-  // Build update object with proper types
   const updatePayload: {
-    enabled_modules?: string[];
-    active_module?: string;
     module_settings?: Record<string, unknown>;
     updated_at: string;
   } = {
     updated_at: new Date().toISOString(),
   };
-
-  if (updates.enabled_modules !== undefined) {
-    updatePayload.enabled_modules = updates.enabled_modules as string[];
-  }
-
-  if (updates.active_module !== undefined) {
-    updatePayload.active_module = updates.active_module;
-  }
 
   if (updates.module_settings !== undefined) {
     updatePayload.module_settings = updates.module_settings as Record<string, unknown>;
@@ -122,41 +108,11 @@ export async function updateUserSettings(
 }
 
 /**
- * Toggle a module on or off
- */
-export async function toggleModule(
-  userId: string,
-  moduleKey: ModuleKey,
-  enabled: boolean
-): Promise<Result<UserSettings>> {
-  // Get current settings
-  const currentResult = await getUserSettings(userId);
-  if (!currentResult.success) {
-    return currentResult;
-  }
-
-  const currentModules = currentResult.data.enabled_modules;
-
-  let newModules: ModuleKey[];
-  if (enabled) {
-    // Add module if not already enabled
-    newModules = currentModules.includes(moduleKey)
-      ? currentModules
-      : [...currentModules, moduleKey];
-  } else {
-    // Remove module
-    newModules = currentModules.filter((m) => m !== moduleKey);
-  }
-
-  return updateUserSettings(userId, { enabled_modules: newModules });
-}
-
-/**
- * Update settings for a specific module
+ * Update settings for a specific feature area (workout or daily_log)
  */
 export async function updateModuleSettings(
   userId: string,
-  moduleKey: ModuleKey,
+  moduleKey: 'workout' | 'daily_log',
   settings: Partial<WorkoutModuleSettings> | Partial<DailyLogModuleSettings>
 ): Promise<Result<UserSettings>> {
   // Get current settings
@@ -190,12 +146,12 @@ export async function updateModuleSettings(
 }
 
 /**
- * Get settings for a specific module, with defaults applied
+ * Get settings for a specific feature area, with defaults applied
  */
 export async function getModuleSettings(
   userId: string,
-  moduleKey: ModuleKey
-): Promise<Result<WorkoutModuleSettings | DailyLogModuleSettings | undefined>> {
+  moduleKey: 'workout' | 'daily_log'
+): Promise<Result<WorkoutModuleSettings | DailyLogModuleSettings>> {
   const settingsResult = await getUserSettings(userId);
   if (!settingsResult.success) {
     return settingsResult;
@@ -206,35 +162,6 @@ export async function getModuleSettings(
     return ok(moduleSettings ?? DEFAULT_WORKOUT_SETTINGS);
   }
 
-  if (moduleKey === 'daily_log') {
-    const moduleSettings = settingsResult.data.module_settings.daily_log;
-    return ok(moduleSettings ?? DEFAULT_DAILY_LOG_SETTINGS);
-  }
-
-  return ok(undefined);
-}
-
-/**
- * Check if a module is enabled
- */
-export async function isModuleEnabled(
-  userId: string,
-  moduleKey: ModuleKey
-): Promise<Result<boolean>> {
-  const settingsResult = await getUserSettings(userId);
-  if (!settingsResult.success) {
-    return settingsResult;
-  }
-
-  return ok(settingsResult.data.enabled_modules.includes(moduleKey));
-}
-
-/**
- * Update the active module (for cross-device sync)
- */
-export async function updateActiveModule(
-  userId: string,
-  moduleKey: ModuleKey
-): Promise<Result<UserSettings>> {
-  return updateUserSettings(userId, { active_module: moduleKey });
+  const moduleSettings = settingsResult.data.module_settings.daily_log;
+  return ok(moduleSettings ?? DEFAULT_DAILY_LOG_SETTINGS);
 }

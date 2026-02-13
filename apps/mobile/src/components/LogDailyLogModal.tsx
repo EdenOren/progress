@@ -18,20 +18,23 @@ import { useUpsertDailyLogEntry, useDeleteDailyLogEntry, useUserSettings } from 
 import { getErrorMessage, showSuccessToast } from '../utils';
 import { Button } from './Button';
 
-// Form schema - at least sleep or weight required
+// Form schema - at least one metric required
 const dailyLogFormSchema = z.object({
   sleepHours: z.string().optional(),
   sleepMinutes: z.string().optional(),
   weightKg: z.string().optional(),
-  bodyFatPercent: z.string().optional(),
+  waterIntakeLiters: z.string().optional(),
+  waistCm: z.string().optional(),
   notes: z.string().max(500).optional(),
 }).refine(
   (data) => {
     const hasSleep = data.sleepHours && parseFloat(data.sleepHours) > 0;
     const hasWeight = data.weightKg && parseFloat(data.weightKg) > 0;
-    return hasSleep || hasWeight;
+    const hasWater = data.waterIntakeLiters && parseFloat(data.waterIntakeLiters) > 0;
+    const hasWaist = data.waistCm && parseFloat(data.waistCm) > 0;
+    return hasSleep || hasWeight || hasWater || hasWaist;
   },
-  { message: 'At least sleep hours or weight must be provided' }
+  { message: 'At least one metric must be provided' }
 );
 
 type DailyLogForm = z.infer<typeof dailyLogFormSchema>;
@@ -72,7 +75,8 @@ export function LogDailyLogModal({
       sleepHours: '',
       sleepMinutes: '',
       weightKg: '',
-      bodyFatPercent: '',
+      waterIntakeLiters: '',
+      waistCm: '',
       notes: '',
     },
   });
@@ -96,7 +100,8 @@ export function LogDailyLogModal({
           sleepHours: hours?.toString() ?? '',
           sleepMinutes: minutes?.toString() ?? '',
           weightKg: displayWeight,
-          bodyFatPercent: existingEntry.body_fat_percent?.toString() ?? '',
+          waterIntakeLiters: existingEntry.water_intake_liters?.toString() ?? '',
+          waistCm: existingEntry.waist_cm?.toString() ?? '',
           notes: existingEntry.notes ?? '',
         });
       } else {
@@ -104,7 +109,8 @@ export function LogDailyLogModal({
           sleepHours: '',
           sleepMinutes: '',
           weightKg: '',
-          bodyFatPercent: '',
+          waterIntakeLiters: '',
+          waistCm: '',
           notes: '',
         });
       }
@@ -132,7 +138,8 @@ export function LogDailyLogModal({
         logged_date: selectedDate,
         sleep_hours: totalSleepHours > 0 ? parseFloat(totalSleepHours.toFixed(2)) : null,
         weight_kg: weightKg !== null ? parseFloat(weightKg.toFixed(2)) : null,
-        body_fat_percent: data.bodyFatPercent ? parseFloat(data.bodyFatPercent) : null,
+        water_intake_liters: data.waterIntakeLiters ? parseFloat(parseFloat(data.waterIntakeLiters).toFixed(2)) : null,
+        waist_cm: data.waistCm ? parseFloat(parseFloat(data.waistCm).toFixed(1)) : null,
         notes: data.notes || null,
       });
 
@@ -335,21 +342,21 @@ export function LogDailyLogModal({
                 />
               </YStack>
 
-              {/* Body Fat % */}
+              {/* Water Intake */}
               <YStack gap="$2">
                 <XStack alignItems="center" gap="$2">
                   <MaterialCommunityIcons
-                    name="percent"
+                    name="water"
                     size={20}
                     color={theme.primary?.val ?? '#8B5CF6'}
                   />
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Body Fat % (optional)
+                    Water Intake (optional)
                   </Text>
                 </XStack>
                 <Controller
                   control={control}
-                  name="bodyFatPercent"
+                  name="waterIntakeLiters"
                   render={({ field: { onChange, value } }) => (
                     <XStack alignItems="center" gap="$2">
                       <TextInput
@@ -359,9 +366,41 @@ export function LogDailyLogModal({
                         keyboardType="decimal-pad"
                         onChangeText={onChange}
                         value={value}
-                        maxLength={4}
+                        maxLength={5}
                       />
-                      <Text fontSize={14} color="$textMuted">%</Text>
+                      <Text fontSize={14} color="$textMuted">L</Text>
+                    </XStack>
+                  )}
+                />
+              </YStack>
+
+              {/* Waist Circumference */}
+              <YStack gap="$2">
+                <XStack alignItems="center" gap="$2">
+                  <MaterialCommunityIcons
+                    name="tape-measure"
+                    size={20}
+                    color={theme.primary?.val ?? '#8B5CF6'}
+                  />
+                  <Text fontSize={14} fontWeight="600" color="$color">
+                    Waist Circumference (optional)
+                  </Text>
+                </XStack>
+                <Controller
+                  control={control}
+                  name="waistCm"
+                  render={({ field: { onChange, value } }) => (
+                    <XStack alignItems="center" gap="$2">
+                      <TextInput
+                        style={{ ...inputStyle, flex: 1 } as never}
+                        placeholder="0.0"
+                        placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
+                        keyboardType="decimal-pad"
+                        onChangeText={onChange}
+                        value={value}
+                        maxLength={5}
+                      />
+                      <Text fontSize={14} color="$textMuted">cm</Text>
                     </XStack>
                   )}
                 />

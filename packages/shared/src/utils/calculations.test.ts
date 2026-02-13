@@ -294,8 +294,8 @@ describe('Formatting', () => {
       expect(formatWeight(100.5)).toBe('100.5 kg');
     });
 
-    it('formats weight in lb', () => {
-      expect(formatWeight(100, 'lb')).toBe('220.5 lb');
+    it('formats weight in lbs', () => {
+      expect(formatWeight(100, 'lbs')).toBe('220.5 lbs');
     });
   });
 

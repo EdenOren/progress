@@ -2,7 +2,6 @@ import React from 'react';
 import { TamaguiProvider, Theme } from '@tamagui/core';
 import { SupabaseProvider } from './supabase';
 import { QueryProvider } from './query';
-import { ModuleProvider } from './module';
 import { useAppColorScheme } from '../hooks/useAppColorScheme';
 import config from '../../tamagui.config';
 
@@ -18,9 +17,7 @@ export function AppProviders({ children }: AppProvidersProps): React.ReactElemen
       <Theme name={colorScheme}>
         <QueryProvider>
           <SupabaseProvider>
-            <ModuleProvider>
-              {children}
-            </ModuleProvider>
+            {children}
           </SupabaseProvider>
         </QueryProvider>
       </Theme>
@@ -30,4 +27,3 @@ export function AppProviders({ children }: AppProvidersProps): React.ReactElemen
 
 export { useSupabaseContext } from './supabase';
 export { queryClient } from './query';
-export { useModule, type ModuleType } from './module';

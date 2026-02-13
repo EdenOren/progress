@@ -130,6 +130,12 @@ export default function MenuScreen(): React.ReactElement {
           </Text>
           <YStack gap="$2">
             <MenuRow
+              icon="target"
+              label="Goals"
+              onPress={() => router.push('/goals')}
+              color="#8B5CF6"
+            />
+            <MenuRow
               icon="cog-outline"
               label="Settings"
               onPress={() => router.push('/settings')}

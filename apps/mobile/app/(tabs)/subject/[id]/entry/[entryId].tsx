@@ -304,7 +304,6 @@ export default function EntryScreen(): React.ReactElement {
         options={{
           title: formatDate(entry.performed_at),
           headerBackTitle: 'Back',
-          headerRightContainerStyle: { paddingRight: 16 },
           headerRight: () => (
             <XStack alignItems="center" gap="$3">
               {/* Timer - only show for in-progress sessions */}

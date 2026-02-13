@@ -13,7 +13,6 @@ export {
 
 // Settings types
 export type {
-  ModuleKey,
   DistanceUnit,
   WeightUnit,
   WorkoutModuleSettings,
@@ -21,14 +20,11 @@ export type {
   ModuleSettingsMap,
   UserSettings,
   UserSettingsUpdate,
-  ModuleInfo,
 } from './settings';
 
 export {
-  MODULE_INFO,
   DEFAULT_WORKOUT_SETTINGS,
   DEFAULT_DAILY_LOG_SETTINGS,
-  DEFAULT_USER_SETTINGS,
 } from './settings';
 
 // Domain types
@@ -109,3 +105,9 @@ export type {
   DailyLogEntryInsert,
   DailyLogEntryUpdate,
 } from './dailyLog';
+
+// Health Goals types
+export type {
+  HealthGoals,
+  HealthGoalsUpsert,
+} from './healthGoals';

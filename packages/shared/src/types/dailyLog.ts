@@ -17,6 +17,8 @@ export interface DailyLogEntry {
   sleep_hours: number | null;
   weight_kg: number | null;
   body_fat_percent: number | null;
+  water_intake_liters: number | null;
+  waist_cm: number | null;
   notes: string | null;
   created_at: ISODateTime;
   updated_at: ISODateTime;
@@ -28,6 +30,8 @@ export interface DailyLogEntryInsert {
   sleep_hours?: number | null;
   weight_kg?: number | null;
   body_fat_percent?: number | null;
+  water_intake_liters?: number | null;
+  waist_cm?: number | null;
   notes?: string | null;
 }
 
@@ -36,5 +40,7 @@ export interface DailyLogEntryUpdate {
   sleep_hours?: number | null;
   weight_kg?: number | null;
   body_fat_percent?: number | null;
+  water_intake_liters?: number | null;
+  waist_cm?: number | null;
   notes?: string | null;
 }

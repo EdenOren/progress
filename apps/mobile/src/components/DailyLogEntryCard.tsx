@@ -114,8 +114,8 @@ export function DailyLogEntryCard({
             </XStack>
           )}
 
-          {/* Body Fat */}
-          {entry.body_fat_percent !== null && (
+          {/* Water Intake */}
+          {entry.water_intake_liters !== null && (
             <XStack alignItems="center" gap="$1.5">
               <Stack
                 width={28}
@@ -126,13 +126,36 @@ export function DailyLogEntryCard({
                 alignItems="center"
               >
                 <MaterialCommunityIcons
-                  name="percent"
+                  name="water"
                   size={14}
                   color="#3B82F6"
                 />
               </Stack>
               <Text fontSize={15} fontWeight="600" color="$color">
-                {entry.body_fat_percent}%
+                {entry.water_intake_liters} L
+              </Text>
+            </XStack>
+          )}
+
+          {/* Waist */}
+          {entry.waist_cm !== null && (
+            <XStack alignItems="center" gap="$1.5">
+              <Stack
+                width={28}
+                height={28}
+                borderRadius={14}
+                backgroundColor="$orange5"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <MaterialCommunityIcons
+                  name="tape-measure"
+                  size={14}
+                  color="#F97316"
+                />
+              </Stack>
+              <Text fontSize={15} fontWeight="600" color="$color">
+                {entry.waist_cm} cm
               </Text>
             </XStack>
           )}

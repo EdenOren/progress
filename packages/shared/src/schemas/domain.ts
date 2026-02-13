@@ -76,6 +76,7 @@ export const profileSchema = z.object({
   avatar_url: z.string().url().nullable(),
   height_cm: z.number().int().min(50).max(300).nullable(),
   weight_kg: z.number().min(20).max(500).nullable(),
+  date_of_birth: isoDateSchema.nullable(),
   created_at: isoDateTimeSchema,
   updated_at: isoDateTimeSchema,
 });
@@ -86,6 +87,7 @@ export const profileInsertSchema = z.object({
   avatar_url: z.string().url().nullable().optional(),
   height_cm: z.number().int().min(50).max(300).nullable().optional(),
   weight_kg: z.number().min(20).max(500).nullable().optional(),
+  date_of_birth: isoDateSchema.nullable().optional(),
 });
 
 export const profileUpdateSchema = z.object({
@@ -93,6 +95,7 @@ export const profileUpdateSchema = z.object({
   avatar_url: z.string().url().nullable().optional(),
   height_cm: z.number().int().min(50).max(300).nullable().optional(),
   weight_kg: z.number().min(20).max(500).nullable().optional(),
+  date_of_birth: isoDateSchema.nullable().optional(),
 });
 
 // ============================================================================

@@ -2,11 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getUserSettings,
   updateUserSettings,
-  toggleModule,
   updateModuleSettings,
   type UserSettings,
   type UserSettingsUpdate,
-  type ModuleKey,
   type WorkoutModuleSettings,
   type DailyLogModuleSettings,
 } from '@progress/shared';
@@ -65,71 +63,7 @@ export function useUpdateSettings() {
 }
 
 /**
- * Hook to toggle a module on or off
- */
-export function useToggleModule() {
-  const queryClient = useQueryClient();
-  const { user } = useSupabaseContext();
-
-  return useMutation({
-    mutationFn: async ({
-      moduleKey,
-      enabled,
-    }: {
-      moduleKey: ModuleKey;
-      enabled: boolean;
-    }): Promise<UserSettings> => {
-      if (!user) throw new Error('Not authenticated');
-
-      const result = await toggleModule(user.id, moduleKey, enabled);
-      if (!result.success) {
-        throw result.error;
-      }
-      return result.data;
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(QUERY_KEYS.settings, data);
-    },
-    onError: (error) => {
-      handleError(error);
-    },
-  });
-}
-
-/**
- * Hook to update settings for a specific module
- */
-export function useUpdateModuleSettings() {
-  const queryClient = useQueryClient();
-  const { user } = useSupabaseContext();
-
-  return useMutation({
-    mutationFn: async ({
-      moduleKey,
-      settings,
-    }: {
-      moduleKey: ModuleKey;
-      settings: Partial<WorkoutModuleSettings>;
-    }): Promise<UserSettings> => {
-      if (!user) throw new Error('Not authenticated');
-
-      const result = await updateModuleSettings(user.id, moduleKey, settings);
-      if (!result.success) {
-        throw result.error;
-      }
-      return result.data;
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(QUERY_KEYS.settings, data);
-    },
-    onError: (error) => {
-      handleError(error);
-    },
-  });
-}
-
-/**
- * Hook to update workout module settings specifically
+ * Hook to update workout settings specifically
  */
 export function useUpdateWorkoutSettings() {
   const queryClient = useQueryClient();
@@ -155,7 +89,7 @@ export function useUpdateWorkoutSettings() {
 }
 
 /**
- * Hook to update daily log module settings specifically
+ * Hook to update daily log settings specifically
  */
 export function useUpdateDailyLogSettings() {
   const queryClient = useQueryClient();

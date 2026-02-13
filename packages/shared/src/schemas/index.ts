@@ -12,7 +12,6 @@ export {
 
 // Settings schemas
 export {
-  moduleKeySchema,
   distanceUnitSchema,
   weightUnitSchema,
   workoutModuleSettingsSchema,
@@ -20,8 +19,6 @@ export {
   moduleSettingsMapSchema,
   userSettingsSchema,
   userSettingsUpdateSchema,
-  toggleModuleInputSchema,
-  updateModuleSettingsInputSchema,
 } from './settings';
 
 // Profile schemas
@@ -119,3 +116,9 @@ export {
   dailyLogEntryInsertSchema,
   dailyLogEntryUpdateSchema,
 } from './dailyLog';
+
+// Health Goals schemas
+export {
+  healthGoalsSchema,
+  healthGoalsUpsertSchema,
+} from './healthGoals';

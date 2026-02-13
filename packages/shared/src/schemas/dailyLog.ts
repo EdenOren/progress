@@ -13,6 +13,8 @@ export const dailyLogEntrySchema = z.object({
   sleep_hours: z.number().min(0).max(24).nullable(),
   weight_kg: z.number().min(20).max(500).nullable(),
   body_fat_percent: z.number().min(1).max(60).nullable(),
+  water_intake_liters: z.number().min(0).max(20).nullable(),
+  waist_cm: z.number().min(30).max(300).nullable(),
   notes: z.string().max(500).nullable(),
   created_at: isoDateTimeSchema,
   updated_at: isoDateTimeSchema,
@@ -21,21 +23,24 @@ export const dailyLogEntrySchema = z.object({
 /** Daily log entry array schema */
 export const dailyLogEntryArraySchema = z.array(dailyLogEntrySchema);
 
-/** Daily log entry insert schema with validation that at least sleep or weight is provided */
+/** Daily log entry insert schema with validation that at least one metric is provided */
 export const dailyLogEntryInsertSchema = z.object({
   logged_date: isoDateSchema,
   sleep_hours: z.number().min(0).max(24).nullable().optional(),
   weight_kg: z.number().min(20).max(500).nullable().optional(),
   body_fat_percent: z.number().min(1).max(60).nullable().optional(),
+  water_intake_liters: z.number().min(0).max(20).nullable().optional(),
+  waist_cm: z.number().min(30).max(300).nullable().optional(),
   notes: z.string().max(500).nullable().optional(),
 }).refine(
   (data) => {
-    // At least one of sleep_hours or weight_kg must be provided and not null
     const hasSleep = data.sleep_hours !== undefined && data.sleep_hours !== null;
     const hasWeight = data.weight_kg !== undefined && data.weight_kg !== null;
-    return hasSleep || hasWeight;
+    const hasWater = data.water_intake_liters !== undefined && data.water_intake_liters !== null;
+    const hasWaist = data.waist_cm !== undefined && data.waist_cm !== null;
+    return hasSleep || hasWeight || hasWater || hasWaist;
   },
-  { message: 'At least sleep hours or weight must be provided' }
+  { message: 'At least one metric (sleep, weight, water, or waist) must be provided' }
 );
 
 /** Daily log entry update schema */
@@ -43,5 +48,7 @@ export const dailyLogEntryUpdateSchema = z.object({
   sleep_hours: z.number().min(0).max(24).nullable().optional(),
   weight_kg: z.number().min(20).max(500).nullable().optional(),
   body_fat_percent: z.number().min(1).max(60).nullable().optional(),
+  water_intake_liters: z.number().min(0).max(20).nullable().optional(),
+  waist_cm: z.number().min(30).max(300).nullable().optional(),
   notes: z.string().max(500).nullable().optional(),
 });

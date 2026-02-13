@@ -76,7 +76,6 @@ export type {
   WorkoutTemplateUpdate,
 
   // Settings
-  ModuleKey,
   DistanceUnit,
   WeightUnit,
   WorkoutModuleSettings,
@@ -84,12 +83,15 @@ export type {
   ModuleSettingsMap,
   UserSettings,
   UserSettingsUpdate,
-  ModuleInfo,
 
   // Daily Log
   DailyLogEntry,
   DailyLogEntryInsert,
   DailyLogEntryUpdate,
+
+  // Health Goals
+  HealthGoals,
+  HealthGoalsUpsert,
 
   // Utility types
   BaseRow,
@@ -100,10 +102,8 @@ export type {
 
 // Settings constants
 export {
-  MODULE_INFO,
   DEFAULT_WORKOUT_SETTINGS,
   DEFAULT_DAILY_LOG_SETTINGS,
-  DEFAULT_USER_SETTINGS,
 } from './types/index';
 
 // Result helpers
@@ -191,7 +191,6 @@ export {
   createPaginatedResponseSchema,
 
   // Settings
-  moduleKeySchema,
   distanceUnitSchema,
   weightUnitSchema,
   workoutModuleSettingsSchema,
@@ -199,14 +198,16 @@ export {
   moduleSettingsMapSchema,
   userSettingsSchema,
   userSettingsUpdateSchema,
-  toggleModuleInputSchema,
-  updateModuleSettingsInputSchema,
 
   // Daily Log
   dailyLogEntrySchema,
   dailyLogEntryArraySchema,
   dailyLogEntryInsertSchema,
   dailyLogEntryUpdateSchema,
+
+  // Health Goals
+  healthGoalsSchema,
+  healthGoalsUpsertSchema,
 } from './schemas/index';
 
 // ============================================================================
@@ -348,11 +349,8 @@ export {
   // Settings
   getUserSettings,
   updateUserSettings,
-  toggleModule,
   updateModuleSettings,
   getModuleSettings,
-  isModuleEnabled,
-  updateActiveModule,
 
   // Daily Log
   getDailyLogEntries,
@@ -361,6 +359,10 @@ export {
   upsertDailyLogEntry,
   updateDailyLogEntry,
   deleteDailyLogEntry,
+
+  // Health Goals
+  getHealthGoals,
+  upsertHealthGoals,
 } from './api/index';
 
 // ============================================================================
@@ -370,7 +372,6 @@ export {
 export {
   WORKOUT_DOMAIN_ID,
   DAILY_LOG_DOMAIN_ID,
-  NUTRITION_DOMAIN_ID,
 } from './constants/index';
 
 // ============================================================================
@@ -436,4 +437,12 @@ export {
   logInfo,
   logWarn,
   logError,
+
+  // KPI utilities
+  waistToHeightRatio,
+  averageOfValues,
+  goalPercentage,
+  getKpiStatus,
+  getWaistToHeightStatus,
+  type KpiStatus,
 } from './utils/index';

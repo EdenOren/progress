@@ -210,7 +210,6 @@ export default function SubjectDetailScreen(): React.ReactElement {
         options={{
           title: subject.name,
           headerBackTitle: 'Back',
-          headerRightContainerStyle: { paddingRight: 16 },
           headerRight: () => (
             deleteSubject.isPending ? (
               <ActivityIndicator size="small" color={theme.error?.val} />

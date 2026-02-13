@@ -15,6 +15,7 @@ export interface Database {
           avatar_url: string | null;
           height_cm: number | null;
           weight_kg: number | null;
+          date_of_birth: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -24,6 +25,7 @@ export interface Database {
           avatar_url?: string | null;
           height_cm?: number | null;
           weight_kg?: number | null;
+          date_of_birth?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -32,6 +34,7 @@ export interface Database {
           avatar_url?: string | null;
           height_cm?: number | null;
           weight_kg?: number | null;
+          date_of_birth?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -360,6 +363,8 @@ export interface Database {
           sleep_hours: number | null;
           weight_kg: number | null;
           body_fat_percent: number | null;
+          water_intake_liters: number | null;
+          waist_cm: number | null;
           notes: string | null;
           created_at: string;
           updated_at: string;
@@ -371,6 +376,8 @@ export interface Database {
           sleep_hours?: number | null;
           weight_kg?: number | null;
           body_fat_percent?: number | null;
+          water_intake_liters?: number | null;
+          waist_cm?: number | null;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -380,7 +387,39 @@ export interface Database {
           sleep_hours?: number | null;
           weight_kg?: number | null;
           body_fat_percent?: number | null;
+          water_intake_liters?: number | null;
+          waist_cm?: number | null;
           notes?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      health_goals: {
+        Row: {
+          id: string;
+          user_id: string;
+          sleep_target_hours: number | null;
+          water_target_liters: number | null;
+          weight_target_kg: number | null;
+          waist_target_cm: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          sleep_target_hours?: number | null;
+          water_target_liters?: number | null;
+          weight_target_kg?: number | null;
+          waist_target_cm?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          sleep_target_hours?: number | null;
+          water_target_liters?: number | null;
+          weight_target_kg?: number | null;
+          waist_target_cm?: number | null;
           updated_at?: string;
         };
         Relationships: [];

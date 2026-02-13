@@ -64,8 +64,8 @@ function parseTimeInput(input: string): number | null {
   if (trimmed.includes(':')) {
     const parts = trimmed.split(':');
     if (parts.length === 2) {
-      const mins = parseInt(parts[0], 10) || 0;
-      const secs = parseInt(parts[1], 10) || 0;
+      const mins = parseInt(parts[0] ?? '0', 10) || 0;
+      const secs = parseInt(parts[1] ?? '0', 10) || 0;
       return mins * 60 + secs;
     }
   }

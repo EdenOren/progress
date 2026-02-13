@@ -6,6 +6,12 @@ interface AlertButton {
   onPress?: () => void;
 }
 
+// Type-safe access to window for web platform
+const webWindow = globalThis as unknown as {
+  confirm: (message: string) => boolean;
+  alert: (message: string) => void;
+};
+
 /**
  * Cross-platform alert that works on both native and web.
  * On web, uses window.confirm for simple yes/no dialogs.
@@ -22,7 +28,7 @@ export function showAlert(
     const cancelButton = buttons.find(b => b.style === 'cancel' || b.text === 'Cancel');
 
     if (confirmButton) {
-      const confirmed = window.confirm(`${title}\n\n${message}`);
+      const confirmed = webWindow.confirm(`${title}\n\n${message}`);
       if (confirmed) {
         confirmButton.onPress?.();
       } else {
@@ -30,7 +36,7 @@ export function showAlert(
       }
     } else {
       // Just an informational alert
-      window.alert(`${title}\n\n${message}`);
+      webWindow.alert(`${title}\n\n${message}`);
       buttons[0]?.onPress?.();
     }
   } else {
@@ -46,7 +52,7 @@ export function showAlert(
 export function confirmAction(title: string, message: string): Promise<boolean> {
   return new Promise((resolve) => {
     if (Platform.OS === 'web') {
-      resolve(window.confirm(`${title}\n\n${message}`));
+      resolve(webWindow.confirm(`${title}\n\n${message}`));
     } else {
       Alert.alert(title, message, [
         { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },

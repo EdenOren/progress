@@ -1,16 +1,13 @@
 /**
  * Settings types for the Progress app.
- * These interfaces represent user preferences and module configuration.
+ * These interfaces represent user preferences and unit configuration.
  */
 
 import type { UUID, ISODateTime } from './domain';
 
 // ============================================================================
-// Module Types
+// Unit Types
 // ============================================================================
-
-/** Available tracking modules */
-export type ModuleKey = 'workout' | 'daily_log' | 'nutrition';
 
 /** Distance unit preference */
 export type DistanceUnit = 'km' | 'miles';
@@ -19,26 +16,24 @@ export type DistanceUnit = 'km' | 'miles';
 export type WeightUnit = 'kg' | 'lbs';
 
 // ============================================================================
-// Module Settings
+// Module Settings (unit preferences per feature area)
 // ============================================================================
 
-/** Settings specific to the workout module */
+/** Settings specific to the workout feature */
 export interface WorkoutModuleSettings {
   distance_unit: DistanceUnit;
   weight_unit: WeightUnit;
 }
 
-/** Settings specific to the daily log module */
+/** Settings specific to the daily log feature */
 export interface DailyLogModuleSettings {
   weight_unit: WeightUnit;
 }
 
-/** Union type for all module settings */
+/** Map of per-feature settings */
 export interface ModuleSettingsMap {
   workout?: WorkoutModuleSettings;
   daily_log?: DailyLogModuleSettings;
-  // Future modules:
-  // nutrition?: NutritionModuleSettings;
 }
 
 // ============================================================================
@@ -49,8 +44,10 @@ export interface ModuleSettingsMap {
 export interface UserSettings {
   id: UUID;
   user_id: UUID;
-  enabled_modules: ModuleKey[];
-  active_module: ModuleKey;
+  /** @deprecated Module system removed. Field kept for DB compatibility. */
+  enabled_modules: string[];
+  /** @deprecated Module system removed. Field kept for DB compatibility. */
+  active_module: string;
   module_settings: ModuleSettingsMap;
   created_at: ISODateTime;
   updated_at: ISODateTime;
@@ -58,48 +55,8 @@ export interface UserSettings {
 
 /** User settings update input */
 export interface UserSettingsUpdate {
-  enabled_modules?: ModuleKey[];
-  active_module?: ModuleKey;
   module_settings?: ModuleSettingsMap;
 }
-
-// ============================================================================
-// Module Metadata
-// ============================================================================
-
-/** Module display information */
-export interface ModuleInfo {
-  key: ModuleKey;
-  name: string;
-  icon: string;
-  description: string;
-  isAvailable: boolean;
-}
-
-/** Static module metadata for UI */
-export const MODULE_INFO: ModuleInfo[] = [
-  {
-    key: 'workout',
-    name: 'Workout',
-    icon: 'dumbbell',
-    description: 'Track exercises, sets, and progress',
-    isAvailable: true,
-  },
-  {
-    key: 'daily_log',
-    name: 'Daily Log',
-    icon: 'calendar-check',
-    description: 'Track sleep, weight, and body metrics',
-    isAvailable: true,
-  },
-  {
-    key: 'nutrition',
-    name: 'Nutrition',
-    icon: 'food-apple',
-    description: 'Track meals and nutrition',
-    isAvailable: false,
-  },
-];
 
 // ============================================================================
 // Default Settings
@@ -114,11 +71,4 @@ export const DEFAULT_WORKOUT_SETTINGS: WorkoutModuleSettings = {
 /** Default daily log module settings */
 export const DEFAULT_DAILY_LOG_SETTINGS: DailyLogModuleSettings = {
   weight_unit: 'kg',
-};
-
-/** Default user settings for new users */
-export const DEFAULT_USER_SETTINGS: Omit<UserSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
-  enabled_modules: ['workout', 'daily_log'],
-  active_module: 'workout',
-  module_settings: {},
 };

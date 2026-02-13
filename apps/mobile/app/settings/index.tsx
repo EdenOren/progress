@@ -2,45 +2,48 @@ import React from 'react';
 import { YStack } from '@tamagui/stacks';
 import { Text, useTheme } from '@tamagui/core';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack as RouterStack, useRouter } from 'expo-router';
+import { Stack as RouterStack } from 'expo-router';
 import { ActivityIndicator, ScrollView } from 'react-native';
-import { MODULE_INFO, type ModuleKey } from '@progress/shared';
-import { useUserSettings, useToggleModule } from '../../src/hooks';
-import { ModuleSelector } from '../../src/components/ModuleSelector';
-import { SettingsRow } from '../../src/components/SettingsRow';
+import {
+  DEFAULT_WORKOUT_SETTINGS,
+  DEFAULT_DAILY_LOG_SETTINGS,
+  type DistanceUnit,
+  type WeightUnit,
+} from '@progress/shared';
+import {
+  useUserSettings,
+  useUpdateWorkoutSettings,
+  useUpdateDailyLogSettings,
+} from '../../src/hooks';
+import { UnitToggle } from '../../src/components/UnitToggle';
+
+const DISTANCE_OPTIONS: { value: DistanceUnit; label: string }[] = [
+  { value: 'km', label: 'km' },
+  { value: 'miles', label: 'miles' },
+];
+
+const WEIGHT_OPTIONS: { value: WeightUnit; label: string }[] = [
+  { value: 'kg', label: 'kg' },
+  { value: 'lbs', label: 'lbs' },
+];
 
 export default function SettingsScreen(): React.ReactElement {
   const theme = useTheme();
-  const router = useRouter();
 
   const { data: settings, isLoading, error } = useUserSettings();
-  const toggleModuleMutation = useToggleModule();
+  const updateWorkoutSettings = useUpdateWorkoutSettings();
+  const updateDailyLogSettings = useUpdateDailyLogSettings();
 
-  const handleToggleModule = (moduleKey: ModuleKey, enabled: boolean) => {
-    toggleModuleMutation.mutate({ moduleKey, enabled });
-  };
+  const workoutSettings = settings?.module_settings.workout ?? DEFAULT_WORKOUT_SETTINGS;
+  const dailyLogSettings = settings?.module_settings.daily_log ?? DEFAULT_DAILY_LOG_SETTINGS;
 
-  const handleModulePress = (moduleKey: ModuleKey) => {
-    if (moduleKey === 'workout') {
-      router.push('./workout');
-    } else if (moduleKey === 'daily_log') {
-      router.push('./daily-log');
-    }
-  };
-
-  // Get enabled modules that are available
-  const enabledAvailableModules = MODULE_INFO.filter(
-    (m) => m.isAvailable && settings?.enabled_modules.includes(m.key)
-  );
+  const isPending = updateWorkoutSettings.isPending || updateDailyLogSettings.isPending;
 
   if (isLoading) {
     return (
       <>
         <RouterStack.Screen
-          options={{
-            title: 'Settings',
-            headerBackTitle: 'Menu',
-          }}
+          options={{ title: 'Settings', headerBackTitle: 'Menu' }}
         />
         <SafeAreaView
           style={{ flex: 1, backgroundColor: theme.background?.val }}
@@ -58,10 +61,7 @@ export default function SettingsScreen(): React.ReactElement {
     return (
       <>
         <RouterStack.Screen
-          options={{
-            title: 'Settings',
-            headerBackTitle: 'Menu',
-          }}
+          options={{ title: 'Settings', headerBackTitle: 'Menu' }}
         />
         <SafeAreaView
           style={{ flex: 1, backgroundColor: theme.background?.val }}
@@ -80,10 +80,7 @@ export default function SettingsScreen(): React.ReactElement {
   return (
     <>
       <RouterStack.Screen
-        options={{
-          title: 'Settings',
-          headerBackTitle: 'Menu',
-        }}
+        options={{ title: 'Settings', headerBackTitle: 'Menu' }}
       />
       <SafeAreaView
         style={{ flex: 1, backgroundColor: theme.background?.val }}
@@ -94,37 +91,50 @@ export default function SettingsScreen(): React.ReactElement {
           contentContainerStyle={{ padding: 16, gap: 24 }}
           showsVerticalScrollIndicator={false}
         >
-          {/* Module Selection Section */}
+          {/* Workout Section */}
           <YStack gap={12}>
             <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
-              Select Modules
+              Workout
             </Text>
-            <ModuleSelector
-              modules={MODULE_INFO}
-              enabledModules={settings?.enabled_modules ?? []}
-              onToggle={handleToggleModule}
-              disabled={toggleModuleMutation.isPending}
-            />
+            <YStack gap={8}>
+              <UnitToggle
+                label="Weight Unit"
+                options={WEIGHT_OPTIONS}
+                value={workoutSettings.weight_unit}
+                onChange={(value: WeightUnit) =>
+                  updateWorkoutSettings.mutate({ weight_unit: value })
+                }
+                disabled={isPending}
+              />
+              <UnitToggle
+                label="Distance Unit"
+                options={DISTANCE_OPTIONS}
+                value={workoutSettings.distance_unit}
+                onChange={(value: DistanceUnit) =>
+                  updateWorkoutSettings.mutate({ distance_unit: value })
+                }
+                disabled={isPending}
+              />
+            </YStack>
           </YStack>
 
-          {/* Enabled Modules Section */}
-          {enabledAvailableModules.length > 0 && (
-            <YStack gap={12}>
-              <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
-                Your Modules
-              </Text>
-              <YStack gap={8}>
-                {enabledAvailableModules.map((module) => (
-                  <SettingsRow
-                    key={module.key}
-                    icon={module.icon as 'dumbbell'}
-                    label={module.name}
-                    onPress={() => handleModulePress(module.key)}
-                  />
-                ))}
-              </YStack>
+          {/* Daily Log Section */}
+          <YStack gap={12}>
+            <Text fontSize={13} fontWeight="600" color="$textMuted" textTransform="uppercase">
+              Daily Log
+            </Text>
+            <YStack gap={8}>
+              <UnitToggle
+                label="Weight Unit"
+                options={WEIGHT_OPTIONS}
+                value={dailyLogSettings.weight_unit}
+                onChange={(value: WeightUnit) =>
+                  updateDailyLogSettings.mutate({ weight_unit: value })
+                }
+                disabled={isPending}
+              />
             </YStack>
-          )}
+          </YStack>
         </ScrollView>
       </SafeAreaView>
     </>

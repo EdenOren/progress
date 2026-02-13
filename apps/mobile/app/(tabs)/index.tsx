@@ -1,11 +1,12 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useLayoutEffect } from 'react';
 import { ScrollView, RefreshControl, ActivityIndicator, Pressable, Modal, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppColorScheme } from '../../src/hooks/useAppColorScheme';
 import { formatRelativeDate, getTodayISO, isToday, DEFAULT_DAILY_LOG_SETTINGS, type DailyLogEntry } from '@progress/shared';
 import { EmptyState, DailyLogEntryCard, LogDailyLogModal } from '../../src/components';
 import {
@@ -21,7 +22,6 @@ import {
   useDailyLogEntryByDate,
   useUserSettings,
 } from '../../src/hooks';
-import { useModule } from '../../src/providers';
 import { showSuccessToast, showErrorToast } from '../../src/utils';
 import { CreateSubjectModal } from '../../src/components/CreateSubjectModal';
 import type { SubjectWithStats, Entry } from '@progress/shared';
@@ -981,11 +981,87 @@ function WorkoutModule(): React.ReactElement {
   );
 }
 
-// Main export - switches between modules
-export default function HomeScreen(): React.ReactElement {
-  const { currentModule } = useModule();
+type ActiveView = 'progress' | 'daily_log';
 
-  if (currentModule === 'daily_log') {
+interface SegmentedToggleProps {
+  activeView: ActiveView;
+  onToggle: (view: ActiveView) => void;
+}
+
+function SegmentedToggle({ activeView, onToggle }: SegmentedToggleProps): React.ReactElement {
+  const colorScheme = useAppColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const bgColor = isDark ? '#27272A' : '#E4E4E7';
+  const activeColor = isDark ? '#3F3F46' : '#FFFFFF';
+  const textColor = isDark ? '#FAFAFA' : '#18181B';
+  const mutedColor = isDark ? '#71717A' : '#A1A1AA';
+
+  return (
+    <XStack
+      backgroundColor={bgColor}
+      borderRadius={8}
+      padding={3}
+      gap={2}
+    >
+      <Pressable
+        onPress={() => onToggle('progress')}
+        style={{ flex: 1 }}
+      >
+        <Stack
+          backgroundColor={activeView === 'progress' ? activeColor : 'transparent'}
+          borderRadius={6}
+          paddingVertical={6}
+          paddingHorizontal={14}
+          alignItems="center"
+        >
+          <Text
+            fontSize={14}
+            fontWeight={activeView === 'progress' ? '600' : '500'}
+            color={activeView === 'progress' ? textColor : mutedColor}
+          >
+            Progress
+          </Text>
+        </Stack>
+      </Pressable>
+      <Pressable
+        onPress={() => onToggle('daily_log')}
+        style={{ flex: 1 }}
+      >
+        <Stack
+          backgroundColor={activeView === 'daily_log' ? activeColor : 'transparent'}
+          borderRadius={6}
+          paddingVertical={6}
+          paddingHorizontal={14}
+          alignItems="center"
+        >
+          <Text
+            fontSize={14}
+            fontWeight={activeView === 'daily_log' ? '600' : '500'}
+            color={activeView === 'daily_log' ? textColor : mutedColor}
+          >
+            Daily Log
+          </Text>
+        </Stack>
+      </Pressable>
+    </XStack>
+  );
+}
+
+// Main export - switches between views via local state
+export default function HomeScreen(): React.ReactElement {
+  const [activeView, setActiveView] = useState<ActiveView>('progress');
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: () => (
+        <SegmentedToggle activeView={activeView} onToggle={setActiveView} />
+      ),
+    });
+  }, [navigation, activeView]);
+
+  if (activeView === 'daily_log') {
     return <DailyLogModule />;
   }
 

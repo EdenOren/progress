@@ -2,11 +2,8 @@ import { z } from 'zod';
 import { uuidSchema, isoDateTimeSchema } from './domain';
 
 // ============================================================================
-// Module Schemas
+// Unit Schemas
 // ============================================================================
-
-/** Module key validation */
-export const moduleKeySchema = z.enum(['workout', 'daily_log', 'nutrition']);
 
 /** Distance unit validation */
 export const distanceUnitSchema = z.enum(['km', 'miles']);
@@ -33,8 +30,6 @@ export const dailyLogModuleSettingsSchema = z.object({
 export const moduleSettingsMapSchema = z.object({
   workout: workoutModuleSettingsSchema.optional(),
   daily_log: dailyLogModuleSettingsSchema.optional(),
-  // Future modules:
-  // nutrition: nutritionModuleSettingsSchema.optional(),
 });
 
 // ============================================================================
@@ -45,8 +40,10 @@ export const moduleSettingsMapSchema = z.object({
 export const userSettingsSchema = z.object({
   id: uuidSchema,
   user_id: uuidSchema,
-  enabled_modules: z.array(moduleKeySchema),
-  active_module: moduleKeySchema,
+  /** @deprecated Module system removed. Kept for DB parse compatibility. */
+  enabled_modules: z.array(z.string()),
+  /** @deprecated Module system removed. Kept for DB parse compatibility. */
+  active_module: z.string(),
   module_settings: moduleSettingsMapSchema,
   created_at: isoDateTimeSchema,
   updated_at: isoDateTimeSchema,
@@ -54,19 +51,5 @@ export const userSettingsSchema = z.object({
 
 /** User settings update schema */
 export const userSettingsUpdateSchema = z.object({
-  enabled_modules: z.array(moduleKeySchema).optional(),
-  active_module: moduleKeySchema.optional(),
   module_settings: moduleSettingsMapSchema.optional(),
-});
-
-/** Schema for toggling a module */
-export const toggleModuleInputSchema = z.object({
-  moduleKey: moduleKeySchema,
-  enabled: z.boolean(),
-});
-
-/** Schema for updating module-specific settings */
-export const updateModuleSettingsInputSchema = z.object({
-  moduleKey: moduleKeySchema,
-  settings: workoutModuleSettingsSchema.partial(),
 });
