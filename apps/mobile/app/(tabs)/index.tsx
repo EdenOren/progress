@@ -926,20 +926,20 @@ function ViewSwitcher({ activeView, onToggle }: ViewSwitcherProps): React.ReactE
   const textColor = isDark ? '#FAFAFA' : '#18181B';
   const mutedColor = isDark ? '#71717A' : '#A1A1AA';
 
-  const options: { key: ActiveView; icon: 'dumbbell' | 'notebook-outline'; label: string }[] = [
-    { key: 'progress', icon: 'dumbbell', label: 'Progress view' },
-    { key: 'daily_log', icon: 'notebook-outline', label: 'Daily Log view' },
+  const options: { key: ActiveView; icon: 'dumbbell' | 'notebook-outline'; label: string; shortLabel: string }[] = [
+    { key: 'progress', icon: 'dumbbell', label: 'Progress view', shortLabel: 'Workouts' },
+    { key: 'daily_log', icon: 'notebook-outline', label: 'Daily Log view', shortLabel: 'Log' },
   ];
 
   return (
     <XStack
       backgroundColor={bgColor}
       borderRadius={8}
-      padding={3}
-      gap={2}
+      padding={4}
+      gap={4}
       marginRight={8}
     >
-      {options.map(({ key, icon, label }) => {
+      {options.map(({ key, icon, label, shortLabel }) => {
         const isActive = activeView === key;
         return (
           <Pressable
@@ -949,20 +949,28 @@ function ViewSwitcher({ activeView, onToggle }: ViewSwitcherProps): React.ReactE
             accessibilityLabel={label}
             accessibilityState={{ selected: isActive }}
           >
-            <Stack
+            <XStack
               backgroundColor={isActive ? activeColor : 'transparent'}
               borderRadius={6}
-              paddingVertical={5}
-              paddingHorizontal={12}
+              paddingVertical={6}
+              paddingHorizontal={14}
               alignItems="center"
               justifyContent="center"
+              gap={6}
             >
               <MaterialCommunityIcons
                 name={icon}
-                size={18}
+                size={16}
                 color={isActive ? textColor : mutedColor}
               />
-            </Stack>
+              <Text
+                fontSize={13}
+                fontWeight={isActive ? '600' : '400'}
+                color={isActive ? textColor : mutedColor}
+              >
+                {shortLabel}
+              </Text>
+            </XStack>
           </Pressable>
         );
       })}

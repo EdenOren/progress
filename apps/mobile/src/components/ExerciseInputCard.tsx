@@ -858,9 +858,11 @@ export function ExerciseInputCard({
                         borderWidth: 1,
                         borderColor: theme.borderColor?.val ?? '#27272A',
                         paddingHorizontal: 8,
+                        paddingVertical: 0,
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
+                        textAlignVertical: 'center',
                         opacity: canEdit ? 1 : 0.6,
                       }}
                       placeholder="kg"
@@ -881,9 +883,11 @@ export function ExerciseInputCard({
                         borderWidth: 1,
                         borderColor: theme.borderColor?.val ?? '#27272A',
                         paddingHorizontal: 8,
+                        paddingVertical: 0,
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
+                        textAlignVertical: 'center',
                         opacity: canEdit ? 1 : 0.6,
                       }}
                       placeholder="reps"
@@ -907,9 +911,11 @@ export function ExerciseInputCard({
                         borderWidth: 1,
                         borderColor: theme.borderColor?.val ?? '#27272A',
                         paddingHorizontal: 8,
+                        paddingVertical: 0,
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
+                        textAlignVertical: 'center',
                         opacity: canEdit ? 1 : 0.6,
                       }}
                       placeholder="seconds"
@@ -934,9 +940,11 @@ export function ExerciseInputCard({
                         borderWidth: 1,
                         borderColor: theme.borderColor?.val ?? '#27272A',
                         paddingHorizontal: 8,
+                        paddingVertical: 0,
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
+                        textAlignVertical: 'center',
                         opacity: canEdit ? 1 : 0.6,
                       }}
                       placeholder="0.0"
@@ -958,9 +966,11 @@ export function ExerciseInputCard({
                         borderWidth: 1,
                         borderColor: theme.borderColor?.val ?? '#27272A',
                         paddingHorizontal: 8,
+                        paddingVertical: 0,
                         fontSize: 14,
                         color: theme.color?.val ?? '#FAFAFA',
                         textAlign: 'center',
+                        textAlignVertical: 'center',
                         opacity: canEdit ? 1 : 0.6,
                       }}
                       placeholder="m:ss"

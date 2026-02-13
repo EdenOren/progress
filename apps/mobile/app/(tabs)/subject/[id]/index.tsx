@@ -269,7 +269,7 @@ export default function SubjectDetailScreen(): React.ReactElement {
             contentContainerStyle={{
               flexGrow: 1,
               paddingTop: 8,
-              paddingBottom: 120,
+              paddingBottom: 80,
             }}
             refreshControl={
               <RefreshControl refreshing={isRefetching} onRefresh={refetch} />

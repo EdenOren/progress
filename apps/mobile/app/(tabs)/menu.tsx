@@ -22,7 +22,7 @@ function MenuRow({ icon, label, onPress, rightElement, color }: MenuRowProps): R
   return (
     <Pressable
       onPress={onPress}
-      style={{ cursor: 'pointer', userSelect: 'none' } as never}
+      style={({ pressed }) => ({ cursor: 'pointer', userSelect: 'none', opacity: pressed ? 0.7 : 1 } as never)}
     >
       <XStack
         backgroundColor="$backgroundHover"
@@ -31,8 +31,6 @@ function MenuRow({ icon, label, onPress, rightElement, color }: MenuRowProps): R
         borderRadius="$3"
         alignItems="center"
         gap="$3"
-        hoverStyle={{ opacity: 0.8 }}
-        pressStyle={{ opacity: 0.7 }}
       >
         <Stack
           width={36}
@@ -84,7 +82,7 @@ export default function MenuScreen(): React.ReactElement {
         {/* Profile Section */}
         <Pressable
           onPress={() => router.push('/profile')}
-          style={{ cursor: 'pointer', userSelect: 'none' } as never}
+          style={({ pressed }) => ({ cursor: 'pointer', userSelect: 'none', opacity: pressed ? 0.7 : 1 } as never)}
         >
           <XStack
             backgroundColor="$backgroundHover"
@@ -92,8 +90,6 @@ export default function MenuScreen(): React.ReactElement {
             borderRadius="$3"
             alignItems="center"
             gap="$3"
-            hoverStyle={{ opacity: 0.8 }}
-            pressStyle={{ opacity: 0.7 }}
           >
             <Stack
               width={56}
@@ -147,7 +143,7 @@ export default function MenuScreen(): React.ReactElement {
         <YStack paddingTop="$4">
           <Pressable
             onPress={handleSignOut}
-            style={{ cursor: 'pointer', userSelect: 'none' } as never}
+            style={({ pressed }) => ({ cursor: 'pointer', userSelect: 'none', opacity: pressed ? 0.7 : 1 } as never)}
           >
             <XStack
               backgroundColor="rgba(239, 68, 68, 0.1)"
@@ -157,8 +153,6 @@ export default function MenuScreen(): React.ReactElement {
               alignItems="center"
               justifyContent="center"
               gap="$2"
-              hoverStyle={{ opacity: 0.8 }}
-              pressStyle={{ opacity: 0.7 }}
             >
               <MaterialCommunityIcons
                 name="logout"
