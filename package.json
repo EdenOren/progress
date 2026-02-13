@@ -8,6 +8,7 @@
     "lint": "npm run lint --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"
   },
+  "packageManager": "pnpm@10.29.3",
   "engines": {
     "node": ">=18.0.0"
   },
