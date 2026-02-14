@@ -442,7 +442,7 @@ function SessionCard({ entry, subjectName, onPress, onDelete }: SessionCardProps
         <MaterialCommunityIcons
           name="chevron-right"
           size={20}
-          color="#666"
+          color={theme.textMuted?.val ?? '#71717A'}
         />
       </Pressable>
 
@@ -635,7 +635,7 @@ function WorkoutModule(): React.ReactElement {
   const hasRecentSessions = (recentEntries?.length ?? 0) > 0;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={[]}>
       <YStack flex={1}>
         {/* Continue session banner */}
         {inProgressEntry && !isSelectionMode && (
@@ -855,7 +855,7 @@ function WorkoutModule(): React.ReactElement {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowRecentSessions(false)}
       >
-        <YStack flex={1} backgroundColor="$background">
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }}>
           {/* Header */}
           <XStack
             paddingHorizontal="$4"
@@ -899,7 +899,7 @@ function WorkoutModule(): React.ReactElement {
               ))}
             </YStack>
           </ScrollView>
-        </YStack>
+        </SafeAreaView>
       </Modal>
 
       <CreateSubjectModal

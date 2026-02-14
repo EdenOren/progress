@@ -42,7 +42,7 @@ export const Input = forwardRef<TextInput, InputProps>(
           ref={ref}
           style={[
             {
-              height: 48,
+              ...(props.multiline ? { minHeight: 48 } : { height: 48 }),
               borderRadius: 8,
               borderWidth: focused ? 2 : 1,
               borderColor: currentBorder,

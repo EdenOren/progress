@@ -36,7 +36,7 @@ export function KpiCard({ title, value, subtitle, status, icon }: KpiCardProps):
         width={36}
         height={36}
         borderRadius={10}
-        backgroundColor={`${statusColor}20`}
+        backgroundColor={`rgba(${parseInt(statusColor.slice(1, 3), 16)}, ${parseInt(statusColor.slice(3, 5), 16)}, ${parseInt(statusColor.slice(5, 7), 16)}, 0.12)`}
         alignItems="center"
         justifyContent="center"
       >

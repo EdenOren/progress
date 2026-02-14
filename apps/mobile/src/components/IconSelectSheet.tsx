@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { Modal, Pressable, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -90,6 +91,7 @@ export function IconSelectSheet({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <YStack flex={1} backgroundColor="$background">
         {/* Header */}
         <XStack
@@ -228,6 +230,7 @@ export function IconSelectSheet({
           </Button>
         </YStack>
       </YStack>
+      </SafeAreaView>
     </Modal>
   );
 }

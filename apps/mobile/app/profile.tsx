@@ -9,7 +9,7 @@ import { formatDate } from '@progress/shared';
 import { Card, DatePickerField, Button } from '../src/components';
 import { useProfile, useUpdateProfile } from '../src/hooks';
 import { useSupabaseContext } from '../src/providers';
-import { showSuccessToast } from '../src/utils';
+import { showSuccessToast, showErrorToast, getErrorMessage } from '../src/utils';
 
 export default function ProfileScreen(): React.ReactElement {
   const { user } = useSupabaseContext();
@@ -41,12 +41,16 @@ export default function ProfileScreen(): React.ReactElement {
   };
 
   const handleSave = async (): Promise<void> => {
-    await updateProfile.mutateAsync({
-      date_of_birth: dateOfBirth || null,
-      height_cm: heightCm ? parseFloat(heightCm) : null,
-    });
-    showSuccessToast('Profile updated');
-    setHasChanges(false);
+    try {
+      await updateProfile.mutateAsync({
+        date_of_birth: dateOfBirth || null,
+        height_cm: heightCm ? parseFloat(heightCm) : null,
+      });
+      showSuccessToast('Profile updated');
+      setHasChanges(false);
+    } catch (e) {
+      showErrorToast(getErrorMessage(e));
+    }
   };
 
   const needsProfileData = profile && (!profile.date_of_birth || !profile.height_cm);
@@ -66,7 +70,11 @@ export default function ProfileScreen(): React.ReactElement {
       <RouterStack.Screen
         options={{
           title: 'Profile',
+          headerShown: true,
           headerBackTitle: 'Menu',
+          headerStyle: { backgroundColor: theme.background?.val },
+          headerTintColor: theme.color?.val,
+          headerTitleStyle: { color: theme.color?.val },
         }}
       />
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>

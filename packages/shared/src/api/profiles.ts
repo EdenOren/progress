@@ -41,13 +41,30 @@ export async function updateProfile(
   }
 
   const supabase = getSupabase();
+  const now = new Date().toISOString();
 
-  const { data, error } = await supabase
+  // Try update first
+  const { data: updateData, error: updateError } = await supabase
     .from('profiles')
-    .update({ ...validatedUpdates.data, updated_at: new Date().toISOString() })
+    .update({ ...validatedUpdates.data, updated_at: now })
     .eq('id', userId)
     .select()
     .single();
+
+  // If update succeeded, use that data
+  let data = updateData;
+  let error = updateError;
+
+  // If no row found (PGRST116), insert a new profile row
+  if (updateError && updateError.code === 'PGRST116') {
+    const { data: insertData, error: insertError } = await supabase
+      .from('profiles')
+      .insert({ id: userId, display_name: 'User', ...validatedUpdates.data, updated_at: now })
+      .select()
+      .single();
+    data = insertData;
+    error = insertError;
+  }
 
   if (error) {
     return err(mapSupabaseError(error));

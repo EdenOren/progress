@@ -7,16 +7,26 @@ import { useLocalSearchParams, Stack as RouterStack, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatDate, formatRelativeDate, formatDurationLong, getTodayISO } from '@progress/shared';
 import type { Entry } from '@progress/shared';
-import { Alert } from 'react-native';
 import { Card, EmptyState, LoadingScreen, TemplateSection, DatePickerField } from '../../../../src/components';
 import { useSubjectByOrdinal, useEntries, useCreateEntry, useCreateEntryWithTemplate, useWorkoutTemplate, useDeleteEntry, useHardDeleteSubject } from '../../../../src/hooks';
-import { showSuccessToast } from '../../../../src/utils';
+import { showSuccessToast, showAlert } from '../../../../src/utils';
 
 export default function SubjectDetailScreen(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
   const ordinal = Number(id);
+  const isValidOrdinal = Number.isInteger(ordinal) && ordinal >= 1;
 
-  if (!Number.isInteger(ordinal) || ordinal < 1) {
+  const { data: subject, isLoading: subjectLoading } = useSubjectByOrdinal(isValidOrdinal ? ordinal : -1);
+  const subjectId = subject?.id ?? '';
+  const { data: entries, isLoading: entriesLoading, refetch, isRefetching } = useEntries(subjectId);
+  const { data: template } = useWorkoutTemplate(subjectId);
+  const createEntry = useCreateEntry();
+  const createEntryWithTemplate = useCreateEntryWithTemplate();
+  const deleteEntry = useDeleteEntry();
+  const deleteSubject = useHardDeleteSubject();
+  const theme = useTheme();
+
+  if (!isValidOrdinal) {
     return (
       <EmptyState
         title="Invalid URL"
@@ -26,16 +36,6 @@ export default function SubjectDetailScreen(): React.ReactElement {
       />
     );
   }
-
-  const { data: subject, isLoading: subjectLoading } = useSubjectByOrdinal(ordinal);
-  const subjectId = subject?.id ?? '';
-  const { data: entries, isLoading: entriesLoading, refetch, isRefetching } = useEntries(subjectId);
-  const { data: template } = useWorkoutTemplate(subjectId);
-  const createEntry = useCreateEntry();
-  const createEntryWithTemplate = useCreateEntryWithTemplate();
-  const deleteEntry = useDeleteEntry();
-  const deleteSubject = useHardDeleteSubject();
-  const theme = useTheme();
 
   const isCreatingEntry = createEntry.isPending || createEntryWithTemplate.isPending;
   const hasExercises = (template?.length ?? 0) > 0;
@@ -87,17 +87,26 @@ export default function SubjectDetailScreen(): React.ReactElement {
 
   const handleDeleteEntry = useCallback((entry: Entry): void => {
     if (deleteEntry.isPending) return;
-    deleteEntry.mutate(
-      { entryId: entry.id, subjectId },
+    showAlert('Delete Session', 'Are you sure you want to delete this session? This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        onSuccess: () => showSuccessToast('Session deleted successfully'),
-      }
-    );
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          deleteEntry.mutate(
+            { entryId: entry.id, subjectId },
+            {
+              onSuccess: () => showSuccessToast('Session deleted successfully'),
+            }
+          );
+        },
+      },
+    ]);
   }, [deleteEntry, subjectId]);
 
   const handleDeleteWorkout = useCallback((): void => {
     if (!subject || deleteSubject.isPending) return;
-    Alert.alert(
+    showAlert(
       'Delete Workout',
       `Are you sure you want to delete "${subject.name}"? This will permanently delete all sessions and data.`,
       [

@@ -3,7 +3,7 @@ import { YStack } from '@tamagui/stacks';
 import { Text, useTheme } from '@tamagui/core';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack as RouterStack } from 'expo-router';
-import { ActivityIndicator, ScrollView } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView } from 'react-native';
 import {
   DEFAULT_WORKOUT_SETTINGS,
   DEFAULT_DAILY_LOG_SETTINGS,
@@ -30,7 +30,7 @@ const WEIGHT_OPTIONS: { value: WeightUnit; label: string }[] = [
 export default function SettingsScreen(): React.ReactElement {
   const theme = useTheme();
 
-  const { data: settings, isLoading, error } = useUserSettings();
+  const { data: settings, isLoading, error, refetch } = useUserSettings();
   const updateWorkoutSettings = useUpdateWorkoutSettings();
   const updateDailyLogSettings = useUpdateDailyLogSettings();
 
@@ -43,7 +43,7 @@ export default function SettingsScreen(): React.ReactElement {
     return (
       <>
         <RouterStack.Screen
-          options={{ title: 'Settings', headerBackTitle: 'Menu' }}
+          options={{ title: 'Settings', headerShown: true, headerBackTitle: 'Menu', headerStyle: { backgroundColor: theme.background?.val }, headerTintColor: theme.color?.val, headerTitleStyle: { color: theme.color?.val } }}
         />
         <SafeAreaView
           style={{ flex: 1, backgroundColor: theme.background?.val }}
@@ -61,16 +61,30 @@ export default function SettingsScreen(): React.ReactElement {
     return (
       <>
         <RouterStack.Screen
-          options={{ title: 'Settings', headerBackTitle: 'Menu' }}
+          options={{ title: 'Settings', headerShown: true, headerBackTitle: 'Menu', headerStyle: { backgroundColor: theme.background?.val }, headerTintColor: theme.color?.val, headerTitleStyle: { color: theme.color?.val } }}
         />
         <SafeAreaView
           style={{ flex: 1, backgroundColor: theme.background?.val }}
           edges={['bottom']}
         >
-          <YStack flex={1} justifyContent="center" alignItems="center" padding={16}>
+          <YStack flex={1} justifyContent="center" alignItems="center" padding={16} gap={16}>
             <Text color="$error" textAlign="center">
               Failed to load settings
             </Text>
+            <Pressable
+              onPress={() => refetch()}
+              style={({ pressed }) => ({
+                paddingHorizontal: 24,
+                paddingVertical: 10,
+                backgroundColor: theme.primary?.val ?? '#8B5CF6',
+                borderRadius: 8,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 14 }}>
+                Try Again
+              </Text>
+            </Pressable>
           </YStack>
         </SafeAreaView>
       </>
@@ -80,7 +94,7 @@ export default function SettingsScreen(): React.ReactElement {
   return (
     <>
       <RouterStack.Screen
-        options={{ title: 'Settings', headerBackTitle: 'Menu' }}
+        options={{ title: 'Settings', headerShown: true, headerBackTitle: 'Menu', headerStyle: { backgroundColor: theme.background?.val }, headerTintColor: theme.color?.val, headerTitleStyle: { color: theme.color?.val } }}
       />
       <SafeAreaView
         style={{ flex: 1, backgroundColor: theme.background?.val }}

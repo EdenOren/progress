@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text } from '@tamagui/core';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -96,6 +97,7 @@ export function AddItemModal({
       presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <YStack flex={1} backgroundColor="$background" padding="$4">
         <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
           <Text fontSize="$6" fontWeight="700" color="$color">
@@ -158,6 +160,7 @@ export function AddItemModal({
           </Button>
         </YStack>
       </YStack>
+      </SafeAreaView>
     </Modal>
   );
 }

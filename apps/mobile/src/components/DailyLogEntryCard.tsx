@@ -44,7 +44,7 @@ export function DailyLogEntryCard({
   return (
     <Pressable
       onPress={onPress}
-      style={{ cursor: 'pointer', userSelect: 'none' } as never}
+      style={({ pressed }) => ({ cursor: 'pointer', userSelect: 'none', opacity: pressed ? 0.7 : 1 }) as never}
     >
       <YStack
         backgroundColor="$backgroundHover"

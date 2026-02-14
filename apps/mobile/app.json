@@ -7,6 +7,15 @@
     "icon": "./assets/icon.png",
     "scheme": "progress",
     "userInterfaceStyle": "automatic",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/<PROJECT_ID>",
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD"
+    },
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -34,11 +43,19 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-updates"
     ],
     "experiments": {
       "typedRoutes": true,
       "baseUrl": "/progress"
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ed4213ee-7a39-40a1-8573-cc47aa5152cf"
+      }
+    },
+    "owner": "edenoren"
   }
 }

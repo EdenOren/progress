@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useMemo } from 'react';
 import { Pressable, Modal, ScrollView, Linking } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -324,6 +325,7 @@ export function TemplateSection({ subjectId, hasInProgressSession = false, defau
         presentationStyle="pageSheet"
         onRequestClose={() => setShowExerciseList(false)}
       >
+        <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <YStack flex={1} backgroundColor="$background">
           {/* Header */}
           <XStack
@@ -373,6 +375,7 @@ export function TemplateSection({ subjectId, hasInProgressSession = false, defau
             </YStack>
           </ScrollView>
         </YStack>
+        </SafeAreaView>
       </Modal>
 
       {/* Add Exercise Sheet */}

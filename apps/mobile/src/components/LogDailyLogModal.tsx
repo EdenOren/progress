@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Pressable, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -189,11 +190,11 @@ export function LogDailyLogModal({
       presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <YStack flex={1} backgroundColor="$background">
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           {/* Header */}
           <XStack
             paddingHorizontal="$4"
@@ -337,7 +338,7 @@ export function LogDailyLogModal({
                         value={value}
                         maxLength={6}
                       />
-                      <Text fontSize={13} color="$textMuted" width={24}>{weightUnit}</Text>
+                      <Text fontSize={13} color="$textMuted" minWidth={24}>{weightUnit}</Text>
                     </XStack>
                   )}
                 />
@@ -461,22 +462,20 @@ export function LogDailyLogModal({
 
                 {isEditing && (
                   <Button
-                    variant="ghost"
+                    variant="danger"
                     fullWidth
                     size="large"
                     loading={deleteEntry.isPending}
                     onPress={handleDelete}
                   >
-                    <Text color="$error" fontWeight="600">
-                      Delete Entry
-                    </Text>
+                    Delete Entry
                   </Button>
                 )}
               </YStack>
             </YStack>
           </ScrollView>
-        </YStack>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </Modal>
   );
 }

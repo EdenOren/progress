@@ -65,3 +65,4 @@ export {
 export { useProfile, useUpdateProfile } from './useProfile';
 export { useHealthGoals, useUpsertHealthGoals } from './useHealthGoals';
 export { useKpi, type KpiCardData, type KpiData } from './useKpi';
+export { useOTAUpdates } from './useOTAUpdates';

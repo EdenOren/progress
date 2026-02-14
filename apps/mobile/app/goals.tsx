@@ -6,13 +6,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack as RouterStack } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card, Button } from '../src/components';
-import { useHealthGoals, useUpsertHealthGoals } from '../src/hooks';
-import { showSuccessToast } from '../src/utils';
+import { useHealthGoals, useUpsertHealthGoals, useUserSettings } from '../src/hooks';
+import { DEFAULT_DAILY_LOG_SETTINGS } from '@progress/shared';
+import { showSuccessToast, showErrorToast, getErrorMessage } from '../src/utils';
 
 export default function GoalsScreen(): React.ReactElement {
   const theme = useTheme();
   const { data: goals, isLoading } = useHealthGoals();
   const upsertGoals = useUpsertHealthGoals();
+  const { data: settings } = useUserSettings();
+  const weightUnit = settings?.module_settings.daily_log?.weight_unit ?? DEFAULT_DAILY_LOG_SETTINGS.weight_unit;
 
   const [sleepTarget, setSleepTarget] = useState('');
   const [waterTarget, setWaterTarget] = useState('');
@@ -37,14 +40,18 @@ export default function GoalsScreen(): React.ReactElement {
   };
 
   const handleSave = async (): Promise<void> => {
-    await upsertGoals.mutateAsync({
-      sleep_target_hours: sleepTarget ? parseFloat(sleepTarget) : null,
-      water_target_liters: waterTarget ? parseFloat(waterTarget) : null,
-      weight_target_kg: weightTarget ? parseFloat(weightTarget) : null,
-      waist_target_cm: waistTarget ? parseFloat(waistTarget) : null,
-    });
-    showSuccessToast('Goals saved');
-    setHasChanges(false);
+    try {
+      await upsertGoals.mutateAsync({
+        sleep_target_hours: sleepTarget ? parseFloat(sleepTarget) : null,
+        water_target_liters: waterTarget ? parseFloat(waterTarget) : null,
+        weight_target_kg: weightTarget ? parseFloat(weightTarget) : null,
+        waist_target_cm: waistTarget ? parseFloat(waistTarget) : null,
+      });
+      showSuccessToast('Goals saved');
+      setHasChanges(false);
+    } catch (e) {
+      showErrorToast(getErrorMessage(e));
+    }
   };
 
   const inputStyle = {
@@ -63,7 +70,11 @@ export default function GoalsScreen(): React.ReactElement {
       <RouterStack.Screen
         options={{
           title: 'Goals',
+          headerShown: true,
           headerBackTitle: 'Menu',
+          headerStyle: { backgroundColor: theme.background?.val },
+          headerTintColor: theme.color?.val,
+          headerTitleStyle: { color: theme.color?.val },
         }}
       />
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background?.val }} edges={['bottom']}>
@@ -175,7 +186,7 @@ export default function GoalsScreen(): React.ReactElement {
                         value={weightTarget}
                         maxLength={5}
                       />
-                      <Text fontSize={13} color="$textMuted" width={55}>kg</Text>
+                      <Text fontSize={13} color="$textMuted" width={55}>{weightUnit}</Text>
                     </XStack>
                   </XStack>
 

@@ -4,6 +4,7 @@ import { YStack, XStack } from '@tamagui/stacks';
 import { Text, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDate, getTodayISO } from '@progress/shared';
+import { useAppColorScheme } from '../hooks/useAppColorScheme';
 
 interface DatePickerFieldProps {
   value: string;
@@ -67,6 +68,7 @@ export function DatePickerField({ value, onChange, maximumDate }: DatePickerFiel
  */
 function NativeDatePicker({ value, onChange, maximumDate }: DatePickerFieldProps): React.ReactElement {
   const theme = useTheme();
+  const colorScheme = useAppColorScheme();
   const [showPicker, setShowPicker] = useState(false);
 
   // Lazy import to avoid loading the native module on web
@@ -134,7 +136,7 @@ function NativeDatePicker({ value, onChange, maximumDate }: DatePickerFieldProps
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             maximumDate={maximumDate}
             onChange={handleChange}
-            themeVariant="dark"
+            themeVariant={colorScheme === 'dark' ? 'dark' : 'light'}
           />
         </YStack>
       )}

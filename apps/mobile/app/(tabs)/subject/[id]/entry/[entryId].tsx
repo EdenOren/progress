@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ScrollView, ActivityIndicator, Pressable, Modal, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { ScrollView, ActivityIndicator, Pressable, Modal, LayoutAnimation } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -57,25 +57,15 @@ export default function EntryScreen(): React.ReactElement {
   const params = useLocalSearchParams<{ id: string; entryId: string }>();
   const subjectOrdinal = Number(params.id);
   const entryOrdinal = Number(params.entryId);
-
-  if (!Number.isInteger(subjectOrdinal) || subjectOrdinal < 1 ||
-      !Number.isInteger(entryOrdinal) || entryOrdinal < 1) {
-    return (
-      <EmptyState
-        title="Invalid URL"
-        message="This session URL is not valid"
-        actionLabel="Go Back"
-        onAction={() => router.back()}
-      />
-    );
-  }
+  const isValidParams = Number.isInteger(subjectOrdinal) && subjectOrdinal >= 1 &&
+    Number.isInteger(entryOrdinal) && entryOrdinal >= 1;
 
   // Resolve subject ordinal to UUID
-  const { data: subject, isLoading: subjectLoading, isError: subjectError } = useSubjectByOrdinal(subjectOrdinal);
+  const { data: subject, isLoading: subjectLoading, isError: subjectError } = useSubjectByOrdinal(isValidParams ? subjectOrdinal : -1);
   const subjectId = subject?.id ?? '';
 
   // Resolve entry ordinal to full entry with items
-  const { data: entry, isPending, isError } = useEntryWithItemsByOrdinal(subjectId, entryOrdinal);
+  const { data: entry, isPending, isError } = useEntryWithItemsByOrdinal(subjectId, isValidParams ? entryOrdinal : -1);
 
   const entryId = entry?.id ?? '';
 
@@ -107,19 +97,23 @@ export default function EntryScreen(): React.ReactElement {
   const [markedItems, setMarkedItems] = useState<Map<string, 'done' | 'up'>>(new Map());
   const theme = useTheme();
 
+  if (!isValidParams) {
+    return (
+      <EmptyState
+        title="Invalid URL"
+        message="This session URL is not valid"
+        actionLabel="Go Back"
+        onAction={() => router.back()}
+      />
+    );
+  }
+
   // Disable scroll when content doesn't overflow
   useEffect(() => {
     if (contentHeight > 0 && containerHeight > 0) {
       setScrollEnabled(contentHeight > containerHeight);
     }
   }, [contentHeight, containerHeight]);
-
-  // Enable LayoutAnimation on Android
-  useEffect(() => {
-    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-      UIManager.setLayoutAnimationEnabledExperimental(true);
-    }
-  }, []);
 
   // Handle expanding an item (only one can be expanded at a time)
   const handleExpandItem = useCallback((itemId: string) => {
@@ -317,14 +311,15 @@ export default function EntryScreen(): React.ReactElement {
                 <Pressable
                   onPress={handleComplete}
                   disabled={updateEntry.isPending}
-                  style={{
+                  style={({ pressed }) => ({
                     paddingHorizontal: 12,
                     paddingVertical: 6,
                     backgroundColor: updateEntry.isPending ? 'rgba(139, 92, 246, 0.5)' : (theme.primary?.val ?? '#8B5CF6'),
                     borderRadius: 16,
                     cursor: updateEntry.isPending ? 'not-allowed' : 'pointer',
                     userSelect: 'none',
-                  } as never}
+                    opacity: pressed ? 0.7 : 1,
+                  }) as never}
                 >
                   {updateEntry.isPending ? (
                     <ActivityIndicator size="small" color="white" />
@@ -389,6 +384,7 @@ export default function EntryScreen(): React.ReactElement {
           style={{ flex: 1 }}
           contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
           scrollEnabled={scrollEnabled}
+          keyboardShouldPersistTaps="handled"
           onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}
           onContentSizeChange={(_, height) => setContentHeight(height)}
         >
@@ -618,13 +614,14 @@ export default function EntryScreen(): React.ReactElement {
                 {/* Done Button */}
                 <Pressable
                   onPress={handleDismissSummary}
-                  style={{
+                  style={({ pressed }) => ({
                     backgroundColor: theme.primary?.val ?? '#8B5CF6',
                     paddingHorizontal: 32,
                     paddingVertical: 12,
                     borderRadius: 24,
                     marginTop: 8,
-                  }}
+                    opacity: pressed ? 0.7 : 1,
+                  })}
                 >
                   <Text style={{ color: 'white', fontWeight: '600', fontSize: 15 }}>
                     Done

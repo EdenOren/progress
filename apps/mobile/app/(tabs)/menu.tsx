@@ -36,7 +36,7 @@ function MenuRow({ icon, label, onPress, rightElement, color }: MenuRowProps): R
           width={36}
           height={36}
           borderRadius={18}
-          backgroundColor={color ? `${color}20` : '$blue5'}
+          backgroundColor={color ? `rgba(${parseInt(color.slice(1, 3), 16)}, ${parseInt(color.slice(3, 5), 16)}, ${parseInt(color.slice(5, 7), 16)}, 0.12)` : '$blue5'}
           alignItems="center"
           justifyContent="center"
         >
@@ -107,7 +107,7 @@ export default function MenuScreen(): React.ReactElement {
               <Text fontSize={18} fontWeight="600" color="$color">
                 {user?.user_metadata?.['display_name'] ?? 'User'}
               </Text>
-              <Text fontSize={14} color="$textMuted">
+              <Text fontSize={14} color="$textMuted" numberOfLines={1}>
                 {user?.email}
               </Text>
             </YStack>

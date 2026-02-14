@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TextInput, Pressable, ActivityIndicator, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { TextInput, Pressable, ActivityIndicator, LayoutAnimation, Platform } from 'react-native';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,11 +20,6 @@ import { useUpdateItem, useDeleteItem } from '../hooks';
 import { handleError, showSuccessToast, showAlert } from '../utils';
 import { Card } from './Card';
 import { Button } from './Button';
-
-// Enable LayoutAnimation for Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 interface ExerciseInputCardProps {
   item: ItemWithSets;
@@ -975,7 +970,7 @@ export function ExerciseInputCard({
                       }}
                       placeholder="m:ss"
                       placeholderTextColor={theme.textMuted?.val ?? '#71717A'}
-                      keyboardType="numbers-and-punctuation"
+                      keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'}
                       value={localSet.duration}
                       onChangeText={(v) => handleInputChange(index, 'duration', v)}
                       onBlur={() => handleBlur(index)}

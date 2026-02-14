@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Modal, FlatList, TextInput as RNTextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, Linking } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -225,6 +226,7 @@ export function AddExerciseSheet({ open, onClose, onSelectMultiple, excludeIds =
         presentationStyle="pageSheet"
         onRequestClose={handleClose}
       >
+        <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
@@ -383,6 +385,7 @@ export function AddExerciseSheet({ open, onClose, onSelectMultiple, excludeIds =
             </YStack>
           </YStack>
         </KeyboardAvoidingView>
+        </SafeAreaView>
       </Modal>
     );
   }
@@ -395,6 +398,7 @@ export function AddExerciseSheet({ open, onClose, onSelectMultiple, excludeIds =
       presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <YStack flex={1} backgroundColor="$background">
         {/* Header */}
         <XStack
@@ -541,6 +545,7 @@ export function AddExerciseSheet({ open, onClose, onSelectMultiple, excludeIds =
           keyboardShouldPersistTaps="handled"
         />
       </YStack>
+      </SafeAreaView>
     </Modal>
   );
 }

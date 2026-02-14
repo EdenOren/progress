@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Modal, Pressable, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack, XStack } from '@tamagui/stacks';
 import { Text, Stack, useTheme } from '@tamagui/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -117,6 +118,7 @@ export function SetDefaultsSheet({ open, onClose, onSave, templateItem }: SetDef
       presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <YStack flex={1} backgroundColor="$background">
         {/* Header */}
         <XStack
@@ -267,6 +269,7 @@ export function SetDefaultsSheet({ open, onClose, onSave, templateItem }: SetDef
           </YStack>
         </ScrollView>
       </YStack>
+      </SafeAreaView>
     </Modal>
   );
 }
