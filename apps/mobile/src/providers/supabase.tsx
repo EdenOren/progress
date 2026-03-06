@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
+import { AppState, Platform, type AppStateStatus } from 'react-native';
 import { initSupabase, getSupabase, validateEnv, type Env } from '@progress/shared';
 import type { Session, User } from '@supabase/supabase-js';
 
@@ -57,7 +57,9 @@ export function SupabaseProvider({ children }: SupabaseProviderProps): React.Rea
           SUPABASE_ANON_KEY: supabaseKey,
         });
 
-        initSupabase(env);
+        initSupabase(env, {
+          detectSessionInUrl: Platform.OS === 'web',
+        });
         setIsInitialized(true);
 
         const supabase = getSupabase();

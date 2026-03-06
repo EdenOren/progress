@@ -455,7 +455,12 @@ let supabaseInstance: SupabaseClient<Database> | null = null;
  * initSupabase(env);
  * ```
  */
-export function initSupabase(env: Env): SupabaseClient<Database> {
+export interface InitSupabaseOptions {
+  /** Set to true on web to detect OAuth session from URL hash. Defaults to false (native). */
+  detectSessionInUrl?: boolean;
+}
+
+export function initSupabase(env: Env, options?: InitSupabaseOptions): SupabaseClient<Database> {
   if (supabaseInstance) {
     return supabaseInstance;
   }
@@ -464,7 +469,7 @@ export function initSupabase(env: Env): SupabaseClient<Database> {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false, // For React Native
+      detectSessionInUrl: options?.detectSessionInUrl ?? false,
     },
   });
 

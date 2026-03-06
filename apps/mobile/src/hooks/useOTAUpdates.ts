@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
+import { AppState, Platform, type AppStateStatus } from 'react-native';
 import * as Updates from 'expo-updates';
 import { logWarn, logError } from '@progress/shared';
 import { showSuccessToast } from '../utils/toast';
@@ -22,7 +22,7 @@ async function checkAndApplyUpdate(): Promise<void> {
 
 export function useOTAUpdates(): void {
   useEffect(() => {
-    if (__DEV__) {
+    if (__DEV__ || Platform.OS === 'web') {
       return;
     }
 

@@ -8,7 +8,7 @@ import { useAppColorScheme } from '../src/hooks/useAppColorScheme';
 import { useOTAUpdates } from '../src/hooks/useOTAUpdates';
 
 // Force LTR layout on all devices (prevents RTL mirroring on Arabic/Hebrew locales)
-if (I18nManager.isRTL) {
+if (Platform.OS !== 'web' && I18nManager.isRTL) {
   I18nManager.allowRTL(false);
   I18nManager.forceRTL(false);
 }
@@ -34,7 +34,10 @@ export default function RootLayout(): React.ReactElement {
               backgroundColor: isDark ? '#09090B' : '#FFFFFF',
             },
           }}
-        />
+        >
+          <Stack.Screen name="profile" options={{ headerShown: true, title: 'Profile', headerStyle: { backgroundColor: isDark ? '#09090B' : '#FFFFFF' }, headerTintColor: isDark ? '#FAFAFA' : '#09090B' }} />
+          <Stack.Screen name="goals" options={{ headerShown: true, title: 'Goals', headerStyle: { backgroundColor: isDark ? '#09090B' : '#FFFFFF' }, headerTintColor: isDark ? '#FAFAFA' : '#09090B' }} />
+        </Stack>
       </AppProviders>
       <Toast />
     </>
